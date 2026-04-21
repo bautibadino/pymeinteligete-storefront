@@ -39,6 +39,28 @@ Leer siempre antes de implementar:
 6. [docs/05-seo-canonical-sitemap-robots.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/docs/05-seo-canonical-sitemap-robots.md)
 7. [docs/06-blueprint-de-rutas-y-fetchers.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/docs/06-blueprint-de-rutas-y-fetchers.md)
 8. [docs/07-plan-de-implementacion.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/docs/07-plan-de-implementacion.md)
+9. [docs/08-agentes-y-mcps.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/docs/08-agentes-y-mcps.md)
+10. [.agents/README.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/README.md)
+
+Prompts locales de agentes:
+
+- [.agents/README.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/README.md)
+- [.agents/agents/bootstrap-architect.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/agents/bootstrap-architect.md)
+- [.agents/agents/contract-keeper.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/agents/contract-keeper.md)
+- [.agents/agents/seo-host-engineer.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/agents/seo-host-engineer.md)
+- [.agents/agents/storefront-shell-builder.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/agents/storefront-shell-builder.md)
+- [.agents/agents/checkout-integrator.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/agents/checkout-integrator.md)
+- [.agents/agents/qa-guardian.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/agents/qa-guardian.md)
+9. [docs/08-agentes-y-mcps.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/docs/08-agentes-y-mcps.md)
+
+Prompts de agentes listos para usar:
+
+- `/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/agents/bootstrap-architect.md`
+- `/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/agents/contract-keeper.md`
+- `/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/agents/seo-host-engineer.md`
+- `/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/agents/storefront-shell-builder.md`
+- `/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/agents/checkout-integrator.md`
+- `/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/agents/qa-guardian.md`
 
 ## Reglas operativas
 
@@ -72,4 +94,3 @@ El repo queda bien encaminado cuando puede implementar:
 3. metadata y SEO por host
 4. checkout basico
 5. confirmacion por `orderToken`
-
