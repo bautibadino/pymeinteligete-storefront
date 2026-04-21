@@ -1,0 +1,84 @@
+{
+  "$schema": "dev-example-only",
+  "description": "Ejemplo de configuración visual para BYM. No es fuente productiva y no se importa en runtime.",
+  "branding": {
+    "name": "BYM Repuestos",
+    "theme": {
+      "preset": "industrialWarm",
+      "name": "Taller industrial BYM",
+      "colors": {
+        "primary": "#8b3f16",
+        "accent": "#245f68",
+        "background": "#f2eadf"
+      }
+    }
+  },
+  "modules": [
+    {
+      "id": "bym-hero-workshop",
+      "type": "hero",
+      "variant": "workshop",
+      "eyebrow": "Repuestos y servicio técnico",
+      "title": "Equipá tu taller con respaldo real",
+      "description": "Catálogo público de repuestos, herramientas e insumos con compra validada por PyMEInteligente.",
+      "primaryAction": {
+        "label": "Explorar catálogo",
+        "href": "/catalogo"
+      },
+      "secondaryAction": {
+        "label": "Consultar checkout",
+        "href": "/checkout"
+      }
+    },
+    {
+      "id": "bym-categorias",
+      "type": "categoryRail",
+      "variant": "rail",
+      "eyebrow": "Rubros de taller",
+      "title": "Buscá por sistema, máquina o necesidad",
+      "description": "Las categorías visibles vienen del endpoint público del tenant.",
+      "limit": 8
+    },
+    {
+      "id": "bym-destacados",
+      "type": "featuredProducts",
+      "variant": "grid",
+      "eyebrow": "Selección operativa",
+      "title": "Productos destacados para resolver hoy",
+      "description": "Precios y disponibilidad se muestran desde catálogo público; el ERP sigue siendo la fuente de verdad.",
+      "limit": 6
+    },
+    {
+      "id": "bym-confianza",
+      "type": "trustBar",
+      "variant": "cards",
+      "title": "Servicio de mostrador, experiencia digital",
+      "items": [
+        {
+          "title": "Asesoramiento técnico",
+          "description": "Canales de contacto configurados desde el bootstrap del tenant."
+        },
+        {
+          "title": "Disponibilidad validada",
+          "description": "El storefront no decide stock ni precios fuera del backend."
+        },
+        {
+          "title": "Pedido trazable",
+          "description": "Confirmación y seguimiento usan token firmado cuando existe una orden."
+        }
+      ]
+    },
+    {
+      "id": "bym-promo-servicio",
+      "type": "promoBand",
+      "variant": "split",
+      "eyebrow": "Servicios",
+      "title": "Comprá online y coordiná retiro o envío",
+      "description": "La operación comercial real queda validada por PyMEInteligente según el estado de tienda y métodos disponibles.",
+      "action": {
+        "label": "Ver medios de pago",
+        "href": "/checkout"
+      }
+    }
+  ]
+}

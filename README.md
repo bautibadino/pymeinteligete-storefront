@@ -24,6 +24,7 @@ Este repo existe para construir la app publica multi-tenant que consume al backe
 - [docs/08-agentes-y-mcps.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/docs/08-agentes-y-mcps.md)
 - [docs/09-migracion-tienda-actual.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/docs/09-migracion-tienda-actual.md)
 - [docs/10-roadmap-ux.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/docs/10-roadmap-ux.md)
+- [docs/11-theming-y-modulos-reutilizables.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/docs/11-theming-y-modulos-reutilizables.md)
 - [docs/08-agentes-y-mcps.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/docs/08-agentes-y-mcps.md)
 - [.agents/README.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/.agents/README.md)
 - [docs/08-agentes-y-mcps.md](/Users/bautistabadino/Desktop/repositorios/pymeinteligente-storefront/docs/08-agentes-y-mcps.md)

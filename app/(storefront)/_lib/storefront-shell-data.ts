@@ -4,6 +4,7 @@ import { getStorefrontRuntimeSnapshot } from "@/lib/runtime/storefront-request-c
 import {
   getBootstrap,
   getCatalog,
+  getCategories,
   getPaymentMethods,
   getProduct,
   StorefrontApiError,
@@ -11,6 +12,7 @@ import {
   type StorefrontBootstrap,
   type StorefrontCatalog,
   type StorefrontCatalogQuery,
+  type StorefrontCategory,
   type StorefrontPaymentMethods,
   type StorefrontProductDetail,
 } from "@/lib/storefront-api";
@@ -18,7 +20,7 @@ import {
 export type SurfaceKind = "home" | "catalog" | "product" | "checkout" | "order";
 
 export type FetchIssue = {
-  surface: SurfaceKind | "bootstrap" | "payment-methods";
+  surface: SurfaceKind | "bootstrap" | "categories" | "payment-methods";
   message: string;
   code?: string;
   status?: number;
@@ -39,6 +41,12 @@ type ProductExperience = BootstrapExperience & {
 };
 
 type CheckoutExperience = BootstrapExperience & {
+  paymentMethods: StorefrontPaymentMethods | null;
+};
+
+type HomeExperience = BootstrapExperience & {
+  catalog: StorefrontCatalog | null;
+  categories: StorefrontCategory[];
   paymentMethods: StorefrontPaymentMethods | null;
 };
 
@@ -250,4 +258,34 @@ export async function loadCheckoutExperience(): Promise<CheckoutExperience> {
       ],
     };
   }
+}
+
+export async function loadHomeExperience(): Promise<HomeExperience> {
+  const [catalogExperience, checkoutExperience] = await Promise.all([
+    loadCatalogExperience({ pageSize: 8 }),
+    loadCheckoutExperience(),
+  ]);
+  let categories: StorefrontCategory[] = [];
+  let categoryIssues: FetchIssue[] = [];
+
+  if (canBrowseCatalog(catalogExperience.bootstrap?.shopStatus ?? null)) {
+    try {
+      categories = await getCategories(catalogExperience.runtime.context);
+    } catch (error) {
+      categoryIssues = [
+        normalizeApiError(
+          error,
+          "categories",
+          "No se pudieron recuperar las categorías públicas del tenant actual.",
+        ),
+      ];
+    }
+  }
+
+  return {
+    ...catalogExperience,
+    categories,
+    paymentMethods: checkoutExperience.paymentMethods,
+    issues: [...catalogExperience.issues, ...checkoutExperience.issues, ...categoryIssues],
+  };
 }

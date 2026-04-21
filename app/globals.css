@@ -18,9 +18,16 @@
   --accent-disabled: #7d2c2c;
   --accent-disabled-soft: rgba(125, 44, 44, 0.12);
   --shadow: 0 26px 80px rgba(57, 36, 18, 0.09);
+  --module-accent: #1f5967;
+  --module-accent-soft: rgba(31, 89, 103, 0.12);
+  --action-contrast: #fffaf2;
+  --font-heading: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+  --font-body: "Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif;
+  --font-mono: "SFMono-Regular", "SF Mono", "Roboto Mono", monospace;
   --radius-xl: 34px;
   --radius-lg: 24px;
   --radius-md: 18px;
+  --radius-pill: 999px;
   --content-width: 1180px;
 }
 
@@ -42,10 +49,7 @@ body {
     radial-gradient(circle at 50% 100%, rgba(154, 102, 56, 0.1), transparent 26%),
     linear-gradient(180deg, #f8f2e9 0%, #efe5d8 100%);
   font-family:
-    "Avenir Next",
-    "Segoe UI Variable",
-    "Helvetica Neue",
-    sans-serif;
+    var(--font-body);
 }
 
 a {
@@ -59,12 +63,18 @@ img {
 }
 
 .mono {
-  font-family:
-    "SFMono-Regular",
-    "SF Mono",
-    "Roboto Mono",
-    monospace;
+  font-family: var(--font-mono);
   font-size: 0.92rem;
+}
+
+.tenant-theme {
+  min-height: 100dvh;
+  overflow: hidden;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 2% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 30%),
+    radial-gradient(circle at 98% 8%, color-mix(in srgb, var(--module-accent) 14%, transparent), transparent 26%),
+    linear-gradient(180deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 86%, var(--panel-strong)) 100%);
 }
 
 .eyebrow,
@@ -138,11 +148,7 @@ img {
 }
 
 .storefront-brandmark span {
-  font-family:
-    "Iowan Old Style",
-    "Palatino Linotype",
-    "Book Antiqua",
-    serif;
+  font-family: var(--font-heading);
   font-size: 1.6rem;
   font-weight: 700;
 }
@@ -154,11 +160,7 @@ img {
 
 .storefront-title {
   margin: 0;
-  font-family:
-    "Iowan Old Style",
-    "Palatino Linotype",
-    "Book Antiqua",
-    serif;
+  font-family: var(--font-heading);
   font-size: clamp(2rem, 4vw, 3.2rem);
   line-height: 0.95;
   font-weight: 600;
@@ -379,10 +381,7 @@ img {
 .product-card h3 {
   margin: 10px 0 12px;
   font-family:
-    "Iowan Old Style",
-    "Palatino Linotype",
-    "Book Antiqua",
-    serif;
+    var(--font-heading);
   line-height: 0.97;
 }
 
@@ -420,9 +419,9 @@ img {
   justify-content: center;
   min-height: 46px;
   padding: 0 18px;
-  border-radius: 999px;
-  background: var(--ink);
-  color: #fffaf2;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--action-contrast);
 }
 
 .secondary-action {
@@ -537,10 +536,7 @@ img {
 
 .product-card-placeholder span {
   font-family:
-    "Iowan Old Style",
-    "Palatino Linotype",
-    "Book Antiqua",
-    serif;
+    var(--font-heading);
   font-size: 3rem;
   color: rgba(31, 26, 23, 0.66);
 }
@@ -581,6 +577,304 @@ img {
 .payment-card,
 .empty-state-card,
 .surface-state-card {
+  padding: 18px;
+}
+
+.sf-module-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.sf-module {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--panel);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.32) inset;
+}
+
+.sf-module h2,
+.sf-module h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  line-height: 0.98;
+}
+
+.sf-module p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.sf-module-header {
+  display: grid;
+  gap: 12px;
+  max-width: 720px;
+}
+
+.sf-module-header h2 {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+}
+
+.sf-module-header-compact h2 {
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+}
+
+.sf-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 24px;
+  min-height: 430px;
+  padding: clamp(24px, 5vw, 48px);
+}
+
+.sf-hero-workshop {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 42%),
+    repeating-linear-gradient(
+      -8deg,
+      color-mix(in srgb, var(--line) 45%, transparent) 0 1px,
+      transparent 1px 18px
+    ),
+    var(--panel);
+}
+
+.sf-hero-editorial {
+  align-items: end;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--ink) 18%, transparent), transparent 58%),
+    var(--panel);
+}
+
+.sf-hero-split {
+  background:
+    radial-gradient(circle at 80% 0%, var(--module-accent-soft), transparent 34%),
+    var(--panel);
+}
+
+.sf-hero-copy {
+  display: grid;
+  align-content: center;
+  gap: 18px;
+}
+
+.sf-hero-copy h2 {
+  max-width: 12ch;
+  font-size: clamp(3rem, 8vw, 6.8rem);
+}
+
+.sf-hero-copy p {
+  max-width: 58ch;
+  font-size: clamp(1rem, 1.7vw, 1.22rem);
+}
+
+.sf-hero-panel {
+  display: grid;
+  align-content: end;
+  gap: 12px;
+  min-height: 280px;
+  overflow: hidden;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--panel-strong) 74%, transparent), var(--panel)),
+    var(--module-accent-soft);
+}
+
+.sf-hero-panel img {
+  width: calc(100% + 44px);
+  height: calc(100% + 44px);
+  margin: -22px;
+  object-fit: cover;
+}
+
+.sf-hero-panel-label {
+  color: var(--muted);
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sf-featured,
+.sf-categories {
+  display: grid;
+  gap: 22px;
+  padding: 24px;
+}
+
+.sf-featured-spotlight .sf-product-list {
+  grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 0.8fr));
+}
+
+.sf-product-list,
+.sf-category-list,
+.sf-trust-list {
+  display: grid;
+  gap: 16px;
+}
+
+.sf-product-list {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.sf-product-card,
+.sf-category-tile,
+.sf-trust-item,
+.sf-empty-module {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--panel-strong) 76%, transparent);
+}
+
+.sf-product-card {
+  overflow: hidden;
+}
+
+.sf-product-media {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 0.82;
+  background:
+    radial-gradient(circle at top, var(--accent-soft), transparent 34%),
+    color-mix(in srgb, var(--bg) 72%, var(--panel-strong));
+}
+
+.sf-product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sf-product-media span {
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  color: color-mix(in srgb, var(--ink) 58%, transparent);
+}
+
+.sf-product-copy {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.sf-product-copy > span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.sf-product-copy h3 {
+  font-size: 1.2rem;
+  line-height: 1.12;
+}
+
+.sf-product-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sf-product-footer a {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.sf-category-list {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.sf-categories-rail .sf-category-list {
+  grid-template-columns: repeat(4, minmax(190px, 1fr));
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.sf-category-tile {
+  display: grid;
+  gap: 10px;
+  min-height: 150px;
+  padding: 18px;
+}
+
+.sf-category-tile img,
+.sf-category-tile > span {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  object-fit: cover;
+}
+
+.sf-category-tile strong {
+  font-size: 1.08rem;
+}
+
+.sf-promo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 26px;
+  background:
+    linear-gradient(90deg, var(--accent-soft), transparent 56%),
+    var(--panel);
+}
+
+.sf-promo-split {
+  border-left: 8px solid var(--accent);
+}
+
+.sf-promo h2,
+.sf-rich-text h2 {
+  margin-top: 10px;
+  margin-bottom: 12px;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+}
+
+.sf-trust {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.sf-trust-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.sf-trust-inline .sf-trust-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.sf-trust-item {
+  padding: 16px;
+}
+
+.sf-trust-item strong::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--module-accent);
+}
+
+.sf-rich-text {
+  display: grid;
+  gap: 14px;
+  max-width: 840px;
+  padding: 26px;
+}
+
+.sf-rich-text-compact {
+  max-width: none;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr) auto;
+  align-items: center;
+}
+
+.sf-empty-module {
   padding: 18px;
 }
 
@@ -685,11 +979,7 @@ img {
 .checkout-section-header h3,
 .confirmation-hero h3 {
   margin: 0;
-  font-family:
-    "Iowan Old Style",
-    "Palatino Linotype",
-    "Book Antiqua",
-    serif;
+  font-family: var(--font-heading);
   font-size: clamp(1.4rem, 2.2vw, 2rem);
   line-height: 1;
 }
@@ -849,8 +1139,8 @@ img {
 .checkout-submit {
   min-width: 220px;
   border-color: rgba(31, 26, 23, 0.18);
-  background: var(--ink);
-  color: #fffaf2;
+  background: var(--accent);
+  color: var(--action-contrast);
 }
 
 .checkout-submit:disabled {
@@ -880,7 +1170,9 @@ img {
   .storefront-topbar,
   .page-intro,
   .hero-stage,
-  .product-spotlight {
+  .product-spotlight,
+  .sf-hero,
+  .sf-rich-text-compact {
     grid-template-columns: 1fr;
   }
 
@@ -895,9 +1187,17 @@ img {
   .module-deck,
   .payment-strip,
   .product-grid,
+  .sf-product-list,
+  .sf-category-list,
+  .sf-trust-list,
+  .sf-featured-spotlight .sf-product-list,
   .checkout-grid,
   .confirmation-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .sf-categories-rail .sf-category-list {
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
   }
 }
 
@@ -914,7 +1214,9 @@ img {
   .split-panel,
   .page-intro,
   .hero-stage,
-  .product-spotlight {
+  .product-spotlight,
+  .sf-featured,
+  .sf-categories {
     padding-left: 18px;
     padding-right: 18px;
   }
@@ -928,11 +1230,35 @@ img {
   .payment-strip,
   .product-grid,
   .storefront-alertband,
+  .sf-product-list,
+  .sf-category-list,
+  .sf-trust-list,
+  .sf-featured-spotlight .sf-product-list,
   .detail-grid,
   .checkout-grid,
   .confirmation-grid,
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .sf-hero,
+  .sf-promo {
+    padding: 22px 18px;
+  }
+
+  .sf-hero {
+    min-height: auto;
+  }
+
+  .sf-hero-copy h2 {
+    max-width: none;
+  }
+
+  .sf-promo,
+  .sf-rich-text-compact,
+  .sf-product-footer {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .checkout-line,

@@ -21,6 +21,7 @@ export type {
   StorefrontCheckoutItemInput,
   StorefrontCheckoutRequest,
   StorefrontCheckoutResult,
+  StorefrontContentModule,
   StorefrontContact,
   StorefrontCustomerInput,
   StorefrontErrorResponse,
