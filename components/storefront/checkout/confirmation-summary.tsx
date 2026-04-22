@@ -1,8 +1,16 @@
-import type { StorefrontOrderByTokenResult } from "@/lib/storefront-api";
+import {
+  resolvePaymentDetail,
+  resolvePaymentStatusLabel,
+} from "@/lib/checkout/confirmation";
+import type { StorefrontOrderByTokenResult, StorefrontPaymentMethod } from "@/lib/storefront-api";
+
+import { ManualPaymentForm } from "./manual-payment-form";
 
 type ConfirmationSummaryProps = {
   order: StorefrontOrderByTokenResult | null;
   issue?: string | undefined;
+  orderToken: string;
+  paymentMethods: StorefrontPaymentMethod[];
 };
 
 function formatTotal(total: number | null | undefined): string {
@@ -20,6 +28,8 @@ function formatTotal(total: number | null | undefined): string {
 export function ConfirmationSummary({
   order,
   issue,
+  orderToken,
+  paymentMethods,
 }: ConfirmationSummaryProps) {
   if (!order) {
     return (
@@ -32,6 +42,8 @@ export function ConfirmationSummary({
       </section>
     );
   }
+
+  const showManualPayment = !order.isPaid && paymentMethods.length > 0;
 
   return (
     <section className="confirmation-summary">
@@ -59,9 +71,31 @@ export function ConfirmationSummary({
         </article>
         <article className="confirmation-card">
           <span>Pago</span>
-          <strong>{order.isPaid ? "Acreditado" : "Pendiente"}</strong>
+          <strong>{resolvePaymentStatusLabel(order)}</strong>
         </article>
       </div>
+
+      <div className="confirmation-detail">
+        <p>{resolvePaymentDetail(order)}</p>
+      </div>
+
+      {showManualPayment ? (
+        <div className="checkout-section">
+          <div className="checkout-section-header">
+            <span className="eyebrow">Pago manual</span>
+            <h3>Completar el pago desde aquí</h3>
+            <p>
+              La orden todavía no está marcada como pagada. Si el tenant lo permite, podés registrar un
+              pago manual con uno de los métodos visibles.
+            </p>
+          </div>
+          <ManualPaymentForm
+            orderToken={orderToken}
+            defaultAmount={order.total}
+            paymentMethods={paymentMethods}
+          />
+        </div>
+      ) : null}
     </section>
   );
 }

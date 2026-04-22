@@ -1,10 +1,20 @@
 import type { Metadata } from "next";
 
-import { loadBootstrapExperience, resolveTenantDisplayName } from "@/app/(storefront)/_lib/storefront-shell-data";
+import {
+  canFetchPaymentMethods,
+  loadBootstrapExperience,
+  resolveTenantDisplayName,
+} from "@/app/(storefront)/_lib/storefront-shell-data";
 import { ConfirmationSummary } from "@/components/storefront/checkout/confirmation-summary";
 import { PageIntro, SplitPanel } from "@/components/storefront/page-sections";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
-import { StorefrontApiError, getOrderByToken, type StorefrontOrderByTokenResult } from "@/lib/storefront-api";
+import {
+  StorefrontApiError,
+  getOrderByToken,
+  getPaymentMethods,
+  type StorefrontOrderByTokenResult,
+  type StorefrontPaymentMethod,
+} from "@/lib/storefront-api";
 
 type ConfirmationTokenPageProps = {
   params: Promise<{ token: string }>;
@@ -53,13 +63,36 @@ async function resolveOrderByToken(
   }
 }
 
+async function resolvePaymentMethodsForConfirmation(
+  context: Awaited<ReturnType<typeof loadBootstrapExperience>>["runtime"]["context"],
+  shopStatus: import("@/lib/storefront-api").ShopStatus | null,
+): Promise<StorefrontPaymentMethod[]> {
+  if (!canFetchPaymentMethods(shopStatus)) {
+    return [];
+  }
+
+  try {
+    const methods = await getPaymentMethods(context);
+
+    return methods.items ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function CheckoutConfirmationTokenPage({
   params,
 }: ConfirmationTokenPageProps) {
   const [{ token }, experience] = await Promise.all([params, loadBootstrapExperience()]);
   const host = experience.runtime.context.host;
   const displayName = resolveTenantDisplayName(experience.bootstrap, host);
-  const { order, issue } = await resolveOrderByToken(experience.runtime.context, token);
+  const [{ order, issue }, paymentMethods] = await Promise.all([
+    resolveOrderByToken(experience.runtime.context, token),
+    resolvePaymentMethodsForConfirmation(
+      experience.runtime.context,
+      experience.bootstrap?.shopStatus ?? null,
+    ),
+  ]);
 
   return (
     <>
@@ -81,7 +114,12 @@ export default async function CheckoutConfirmationTokenPage({
         }
       />
 
-      <ConfirmationSummary order={order} issue={issue} />
+      <ConfirmationSummary
+        order={order}
+        issue={issue}
+        orderToken={token}
+        paymentMethods={paymentMethods}
+      />
 
       <SplitPanel
         title="Contrato usado"

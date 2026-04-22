@@ -64,6 +64,7 @@ function FieldError({ state, field }: { state: CheckoutActionState; field: keyof
 export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps) {
   const [state, formAction] = useActionState(submitCheckoutAction, initialCheckoutActionState);
   const [items, setItems] = useState<CheckoutItemDraft[]>(() => buildInitialItems(initialItems));
+  const [paymentStrategy, setPaymentStrategy] = useState<string>("none");
   const idempotencyKeyRef = useRef<string>(crypto.randomUUID());
   const paymentOptions = paymentMethods?.items ?? [];
 
@@ -93,6 +94,7 @@ export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps
   return (
     <form className="checkout-form" action={formAction}>
       <input type="hidden" name="idempotencyKey" value={idempotencyKeyRef.current} />
+      <input type="hidden" name="paymentStrategy" value={paymentStrategy} />
 
       <div className="checkout-grid">
         <section className="checkout-section">
@@ -222,11 +224,56 @@ export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps
       <div className="checkout-grid">
         <section className="checkout-section">
           <div className="checkout-section-header">
-            <span className="eyebrow">Pago visible</span>
+            <span className="eyebrow">Estrategia de pago</span>
+            <h3>Cómo se procesa el pago</h3>
+            <p>
+              Elegí si querés solo crear la orden, dejarla lista para pago manual, o intentar pago
+              automático (cuando esté habilitado por el proveedor).
+            </p>
+          </div>
+
+          <div className="form-field form-field-full">
+            <label className="form-field">
+              <span>Opción</span>
+              <select
+                value={paymentStrategy}
+                onChange={(e) => setPaymentStrategy(e.target.value)}
+              >
+                <option value="none">Solo crear orden (sin pago ahora)</option>
+                <option value="manual">Orden + pago manual después</option>
+                <option value="auto">Orden + pago automático (próximamente)</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="checkout-note">
+            {paymentStrategy === "auto" ? (
+              <span>
+                <strong>Atención:</strong> el pago automático todavía no está habilitado porque falta la
+                integración con el proveedor de pagos (ej: MercadoPago). Si elegís esta opción, la orden
+                no se creará y verás un mensaje de error controlado.
+              </span>
+            ) : paymentStrategy === "manual" ? (
+              <span>
+                La orden se creará y serás redirigido a la confirmación, donde podés registrar el pago
+                manual con un método visible del tenant.
+              </span>
+            ) : (
+              <span>
+                La orden se creará sin intentar pago. Podés gestionar el cobro fuera del flujo web o
+                volver más tarde cuando exista integración de pagos.
+              </span>
+            )}
+          </div>
+        </section>
+
+        <section className="checkout-section">
+          <div className="checkout-section-header">
+            <span className="eyebrow">Métodos visibles</span>
             <h3>Métodos expuestos por el tenant</h3>
             <p>
-              Se muestran desde `GET /payment-methods`. El procesamiento automático todavía no se activa
-              porque esta fase no genera `paymentData` seguro de proveedor.
+              Se muestran desde `GET /payment-methods`. El procesamiento depende de la estrategia
+              seleccionada.
             </p>
           </div>
 
@@ -246,28 +293,20 @@ export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps
             </div>
           )}
         </section>
-
-        <section className="checkout-section">
-          <div className="checkout-section-header">
-            <span className="eyebrow">Notas</span>
-            <h3>Contexto del pedido</h3>
-            <p>
-              Podés sumar una nota general. No se envían datos analíticos ni billing address extra en esta
-              fase.
-            </p>
-          </div>
-
-          <label className="form-field form-field-full">
-            <span>Notas del pedido</span>
-            <textarea name="orderNotes" rows={5} placeholder="Llamar antes de despachar" />
-          </label>
-
-          <div className="checkout-note">
-            La orden oficial se crea primero. El tramo `processPayment()` queda pendiente hasta que la UI
-            tenga un payload de proveedor válido.
-          </div>
-        </section>
       </div>
+
+      <section className="checkout-section">
+        <div className="checkout-section-header">
+          <span className="eyebrow">Notas</span>
+          <h3>Contexto del pedido</h3>
+          <p>Podés sumar una nota general. No se envían datos analíticos ni billing address extra en esta fase.</p>
+        </div>
+
+        <label className="form-field form-field-full">
+          <span>Notas del pedido</span>
+          <textarea name="orderNotes" rows={5} placeholder="Llamar antes de despachar" />
+        </label>
+      </section>
 
       {state.status === "error" && state.message ? (
         <div className="checkout-error-banner">{state.message}</div>

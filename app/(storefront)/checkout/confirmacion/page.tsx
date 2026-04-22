@@ -43,6 +43,8 @@ export default async function CheckoutConfirmationPage() {
       <ConfirmationSummary
         order={null}
         issue="Falta el token firmado del pedido. Volvé al checkout o usá el enlace de confirmación recibido después de crear la orden."
+        orderToken=""
+        paymentMethods={[]}
       />
 
       <SplitPanel

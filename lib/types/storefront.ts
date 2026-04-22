@@ -283,8 +283,41 @@ export interface StorefrontOrderByTokenResult {
   payment?: StorefrontOrderPayment | null;
 }
 
-// TODO: el payload final del flujo manual no está documentado en la fuente actual.
-export type StorefrontManualPaymentRequest = Record<string, unknown>;
+/**
+ * TODO: el payload final del flujo manual no está documentado en la fuente actual del backend.
+ * Los campos listados son los mínimos probables según la forma del contrato de checkout/pagos;
+ * el backend puede exigir campos adicionales o rechazar los opcionales.
+ * No asumir estabilidad de esta interfaz hasta que el contrato se concrete.
+ */
+export interface StorefrontManualPaymentRequest {
+  /** Monto a registrar como pago manual. */
+  amount?: number;
+  /** Identificador del método de pago elegido (ej: "efectivo", "transferencia"). */
+  paymentMethodId?: string;
+  /** Notas o comprobante adjunto (referencia bancaria, etc.). */
+  reference?: string;
+  /** Notas adicionales para el operador. */
+  notes?: string;
+  /** Respaldo extensible para campos no documentados aún. */
+  [key: string]: unknown;
+}
 
-// TODO: la respuesta final del flujo manual no está congelada en la documentación actual.
-export type StorefrontManualPaymentResult = Record<string, unknown>;
+/**
+ * TODO: la respuesta final del flujo manual no está congelada en la documentación actual.
+ * Los campos son los mínimos observables en el envelope de éxito de la plataforma;
+ * pueden variar cuando el backend concrete el contrato.
+ */
+export interface StorefrontManualPaymentResult {
+  /** Identificador del pago generado. */
+  paymentId?: string | null;
+  /** Estado resumido del pago (ej: "approved", "pending", "in_process"). */
+  status?: string | null;
+  /** Detalle legible del estado. */
+  statusDetail?: string | null;
+  /** Orden asociada al pago manual. */
+  orderId?: string | null;
+  /** Monto efectivamente registrado. */
+  amount?: number | null;
+  /** Respaldo extensible para campos no documentados aún. */
+  [key: string]: unknown;
+}

@@ -3,108 +3,51 @@
 import { redirect } from "next/navigation";
 
 import { canAccessCheckout } from "@/app/(storefront)/_lib/storefront-shell-data";
+import {
+  resolveCheckoutStrategy,
+} from "@/lib/checkout/strategy";
+import {
+  buildFieldErrors,
+  hasFieldErrors,
+  parseItems,
+  readTrimmedString,
+} from "@/lib/checkout/validation";
 import { getStorefrontRuntimeSnapshot } from "@/lib/runtime/storefront-request-context";
-import { StorefrontApiError, getBootstrap, postCheckout } from "@/lib/storefront-api";
+import {
+  StorefrontApiError,
+  getBootstrap,
+  postCheckout,
+  postManualPayment,
+  type StorefrontManualPaymentRequest,
+} from "@/lib/storefront-api";
 
 export type CheckoutActionState = {
   status: "idle" | "error";
   message?: string;
-  fieldErrors?: Partial<Record<CheckoutFieldName, string>>;
+  fieldErrors?: Partial<Record<import("@/lib/checkout/validation").CheckoutFieldName, string>>;
 };
 
-type CheckoutFieldName =
-  | "customerName"
-  | "customerEmail"
-  | "shippingStreet"
-  | "shippingNumber"
-  | "shippingCity"
-  | "shippingProvince"
-  | "shippingPostalCode"
-  | "items";
+export type ManualPaymentActionState = {
+  status: "idle" | "success" | "error";
+  message?: string;
+};
 
 export const initialCheckoutActionState: CheckoutActionState = {
   status: "idle",
 };
 
-type ParsedCheckoutItem = {
-  productId: string;
-  quantity: number;
+export const initialManualPaymentActionState: ManualPaymentActionState = {
+  status: "idle",
 };
 
-type CheckoutFieldErrors = Partial<Record<CheckoutFieldName, string>>;
-
-function readTrimmedString(formData: FormData, key: string): string {
-  const value = formData.get(key);
-
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function parseItems(formData: FormData): ParsedCheckoutItem[] {
-  const productIds = formData.getAll("itemProductId");
-  const quantities = formData.getAll("itemQuantity");
-  const items: ParsedCheckoutItem[] = [];
-
-  for (let index = 0; index < productIds.length; index += 1) {
-    const rawProductId = productIds[index];
-    const rawQuantity = quantities[index];
-    const productId = typeof rawProductId === "string" ? rawProductId.trim() : "";
-    const quantityValue = typeof rawQuantity === "string" ? Number(rawQuantity) : Number.NaN;
-
-    if (!productId) {
-      continue;
-    }
-
-    items.push({
-      productId,
-      quantity: Number.isFinite(quantityValue) && quantityValue > 0 ? quantityValue : 0,
-    });
-  }
-
-  return items;
-}
-
-function buildFieldErrors(formData: FormData): CheckoutFieldErrors {
-  const errors: CheckoutFieldErrors = {};
-  const items = parseItems(formData);
-
-  if (!readTrimmedString(formData, "customerName")) {
-    errors.customerName = "Ingresá el nombre del cliente.";
-  }
-
-  if (!readTrimmedString(formData, "customerEmail")) {
-    errors.customerEmail = "Ingresá un email válido para el pedido.";
-  }
-
-  if (!readTrimmedString(formData, "shippingStreet")) {
-    errors.shippingStreet = "Ingresá la calle de entrega.";
-  }
-
-  if (!readTrimmedString(formData, "shippingNumber")) {
-    errors.shippingNumber = "Ingresá la numeración.";
-  }
-
-  if (!readTrimmedString(formData, "shippingCity")) {
-    errors.shippingCity = "Ingresá la ciudad.";
-  }
-
-  if (!readTrimmedString(formData, "shippingProvince")) {
-    errors.shippingProvince = "Ingresá la provincia.";
-  }
-
-  if (!readTrimmedString(formData, "shippingPostalCode")) {
-    errors.shippingPostalCode = "Ingresá el código postal.";
-  }
-
-  if (items.length === 0 || items.some((item) => item.quantity <= 0)) {
-    errors.items = "Necesitás al menos un producto con cantidad mayor a cero.";
-  }
-
-  return errors;
-}
-
-function hasFieldErrors(fieldErrors: CheckoutFieldErrors): boolean {
-  return Object.keys(fieldErrors).length > 0;
-}
+/**
+ * Estrategias de pago soportadas en el formulario de checkout.
+ * - "none": crea la orden y redirige a confirmación sin intentar pago.
+ * - "manual": crea la orden y redirige a confirmación; el usuario completa el pago manual desde allí.
+ * - "auto": TODO bloqueado por contrato — requiere paymentData de proveedor (token de MP, etc.)
+ *   que el frontend todavía no genera de forma segura. No activar hasta tener integración real.
+ */
+type PaymentStrategy = "none" | "manual" | "auto";
 
 export async function submitCheckoutAction(
   _previousState: CheckoutActionState,
@@ -121,6 +64,7 @@ export async function submitCheckoutAction(
   }
 
   const runtime = await getStorefrontRuntimeSnapshot();
+  const paymentStrategy = (readTrimmedString(formData, "paymentStrategy") as PaymentStrategy) || "none";
   let confirmationUrl: `/checkout/confirmacion/${string}`;
 
   try {
@@ -130,6 +74,15 @@ export async function submitCheckoutAction(
       return {
         status: "error",
         message: "La tienda actual no permite crear nuevas órdenes porque no está `active`.",
+      };
+    }
+
+    const strategyResult = resolveCheckoutStrategy(paymentStrategy);
+
+    if (!strategyResult.allowed) {
+      return {
+        status: "error",
+        message: strategyResult.message,
       };
     }
 
@@ -161,9 +114,9 @@ export async function submitCheckoutAction(
       idempotencyKey: readTrimmedString(formData, "idempotencyKey"),
     });
 
-    // TODO: no llamamos a processPayment() en esta fase porque el frontend todavía no genera
-    // paymentData seguro de proveedor. Forzar ese payload ahora inventaría contrato.
     confirmationUrl = `/checkout/confirmacion/${encodeURIComponent(checkout.orderToken)}`;
+
+    // "none" y "manual" redirigen a confirmación; en "manual" el usuario completa el pago desde allí.
   } catch (error) {
     if (error instanceof StorefrontApiError) {
       return {
@@ -179,4 +132,68 @@ export async function submitCheckoutAction(
   }
 
   redirect(confirmationUrl);
+}
+
+export async function submitManualPaymentAction(
+  _previousState: ManualPaymentActionState,
+  formData: FormData,
+): Promise<ManualPaymentActionState> {
+  const token = readTrimmedString(formData, "orderToken");
+  const amountRaw = readTrimmedString(formData, "amount");
+  const paymentMethodId = readTrimmedString(formData, "paymentMethodId");
+  const reference = readTrimmedString(formData, "reference");
+  const notes = readTrimmedString(formData, "notes");
+
+  if (!token) {
+    return {
+      status: "error",
+      message: "Falta el token de la orden para registrar el pago manual.",
+    };
+  }
+
+  const amount = Number(amountRaw);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return {
+      status: "error",
+      message: "Ingresá un monto válido mayor a cero.",
+    };
+  }
+
+  if (!paymentMethodId) {
+    return {
+      status: "error",
+      message: "Seleccioná un método de pago manual.",
+    };
+  }
+
+  const runtime = await getStorefrontRuntimeSnapshot();
+
+  try {
+    const payload: StorefrontManualPaymentRequest = {
+      amount,
+      paymentMethodId,
+      ...(reference ? { reference } : {}),
+      ...(notes ? { notes } : {}),
+    };
+
+    await postManualPayment(runtime.context, token, payload);
+
+    return {
+      status: "success",
+      message: "El pago manual se registró correctamente. El estado de la orden se actualizará en breve.",
+    };
+  } catch (error) {
+    if (error instanceof StorefrontApiError) {
+      return {
+        status: "error",
+        message: error.message,
+      };
+    }
+
+    return {
+      status: "error",
+      message: "No se pudo registrar el pago manual en este momento.",
+    };
+  }
 }
