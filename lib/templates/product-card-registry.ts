@@ -25,7 +25,7 @@ import {
 
 export interface ProductCardProps {
   product: ProductCardData;
-  displayOptions?: ProductCardDisplayOptions;
+  displayOptions?: ProductCardDisplayOptions | undefined;
 }
 
 export type ProductCardComponent = ComponentType<ProductCardProps>;

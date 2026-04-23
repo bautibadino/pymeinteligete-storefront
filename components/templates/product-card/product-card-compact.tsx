@@ -9,7 +9,7 @@ import type {
 
 interface ProductCardCompactProps {
   product: ProductCardData;
-  displayOptions?: ProductCardDisplayOptions;
+  displayOptions?: ProductCardDisplayOptions | undefined;
 }
 
 /**

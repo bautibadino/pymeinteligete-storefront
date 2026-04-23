@@ -10,7 +10,7 @@ import type {
 
 interface ProductCardClassicProps {
   product: ProductCardData;
-  displayOptions?: ProductCardDisplayOptions;
+  displayOptions?: ProductCardDisplayOptions | undefined;
 }
 
 /**

@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 /**
  * Catálogo de variantes de ProductCard.
  *
@@ -15,6 +17,7 @@
  *   - `resolveProductCardTemplateId` — nunca falla, siempre devuelve un id válido.
  *   - `ProductCardData` — interface de datos que recibe cada variante.
  *   - `ProductCardDisplayOptions` — opciones de visualización opcionales.
+ *   - `ProductCardDisplayOptionsSchema` — schema Zod para validación del editor.
  */
 
 // ---------------------------------------------------------------------------
@@ -165,9 +168,20 @@ export interface ProductCardData {
  * pasar a la card para controlar qué campos mostrar.
  */
 export interface ProductCardDisplayOptions {
-  showBrand?: boolean;
-  showBadges?: boolean;
-  showInstallments?: boolean;
-  showCashDiscount?: boolean;
-  showAddToCart?: boolean;
+  showBrand?: boolean | undefined;
+  showBadges?: boolean | undefined;
+  showInstallments?: boolean | undefined;
+  showCashDiscount?: boolean | undefined;
+  showAddToCart?: boolean | undefined;
 }
+
+/**
+ * Schema Zod de `ProductCardDisplayOptions` para validación del editor.
+ */
+export const ProductCardDisplayOptionsSchema = z.object({
+  showBrand: z.boolean().optional(),
+  showBadges: z.boolean().optional(),
+  showInstallments: z.boolean().optional(),
+  showCashDiscount: z.boolean().optional(),
+  showAddToCart: z.boolean().optional(),
+});

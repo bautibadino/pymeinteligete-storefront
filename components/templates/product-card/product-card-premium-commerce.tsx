@@ -12,7 +12,7 @@ import type {
 
 interface ProductCardPremiumCommerceProps {
   product: ProductCardData;
-  displayOptions?: ProductCardDisplayOptions;
+  displayOptions?: ProductCardDisplayOptions | undefined;
 }
 
 const BADGE_VARIANT_MAP: Record<

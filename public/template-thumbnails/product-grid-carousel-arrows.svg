@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160" fill="none">
+  <rect width="240" height="160" rx="8" fill="#F8F8F8"/>
+  <rect x="1" y="1" width="238" height="158" rx="7" stroke="#E5E7EB" stroke-width="1"/>
+  <!-- Carousel arrows -->
+  <rect x="12" y="12" width="216" height="110" rx="4" fill="#F3F4F6"/>
+  
+  <!-- visible cards -->
+  <rect x="24" y="24" width="56" height="86" rx="3" fill="#E5E7EB"/>
+  <rect x="32" y="32" width="40" height="36" rx="2" fill="#D1D5DB"/>
+  <rect x="32" y="74" width="30" height="4" rx="1" fill="#9CA3AF"/>
+  <rect x="32" y="82" width="20" height="4" rx="1" fill="#374151"/>
+  <rect x="32" y="92" width="26" height="6" rx="1" fill="#111827"/>
+
+  <rect x="92" y="24" width="56" height="86" rx="3" fill="#E5E7EB"/>
+  <rect x="100" y="32" width="40" height="36" rx="2" fill="#D1D5DB"/>
+  <rect x="100" y="74" width="30" height="4" rx="1" fill="#9CA3AF"/>
+  <rect x="100" y="82" width="20" height="4" rx="1" fill="#374151"/>
+  <rect x="100" y="92" width="26" height="6" rx="1" fill="#111827"/>
+
+  <rect x="160" y="24" width="56" height="86" rx="3" fill="#E5E7EB"/>
+  <rect x="168" y="32" width="40" height="36" rx="2" fill="#D1D5DB"/>
+  <rect x="168" y="74" width="30" height="4" rx="1" fill="#9CA3AF"/>
+  <rect x="168" y="82" width="20" height="4" rx="1" fill="#374151"/>
+  <rect x="168" y="92" width="26" height="6" rx="1" fill="#111827"/>
+
+  <!-- arrows -->
+  <circle cx="18" cy="67" r="10" fill="#D1D5DB"/>
+  <polyline points="22,63 14,67 22,71" fill="none" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="222" cy="67" r="10" fill="#D1D5DB"/>
+  <polyline points="218,63 226,67 218,71" fill="none" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="120" y="148" font-family="system-ui, sans-serif" font-size="9" fill="#9CA3AF" text-anchor="middle">product-grid — carousel-arrows</text>
+</svg>

@@ -8,7 +8,7 @@ import type {
 
 interface ProductCardEditorialProps {
   product: ProductCardData;
-  displayOptions?: ProductCardDisplayOptions;
+  displayOptions?: ProductCardDisplayOptions | undefined;
 }
 
 /**
