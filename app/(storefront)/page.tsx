@@ -28,7 +28,7 @@ export default async function HomePage() {
   return (
     <>
       <SurfaceStateCard
-        shopStatus={experience.bootstrap?.shopStatus ?? null}
+        shopStatus={experience.bootstrap?.tenant.status ?? null}
         surface="home"
         title="La tienda todavía no está abierta al tráfico público normal."
         description="El bootstrap existe como contrato base, pero el `shopStatus` actual no habilita una home comercial completa."
@@ -39,9 +39,9 @@ export default async function HomePage() {
         bootstrap={experience.bootstrap}
         theme={theme}
         host={host}
-        products={experience.catalog?.items ?? []}
+        products={experience.catalog?.products ?? []}
         categories={experience.categories}
-        paymentMethods={experience.paymentMethods?.items ?? []}
+        paymentMethods={experience.paymentMethods?.paymentMethods ?? []}
       />
     </>
   );

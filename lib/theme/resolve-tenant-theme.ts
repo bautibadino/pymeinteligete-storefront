@@ -270,7 +270,7 @@ function readThemeConfig(value: unknown): ThemeConfig {
 }
 
 export function resolveTenantTheme(bootstrap: StorefrontBootstrap | null): TenantTheme {
-  const config = readThemeConfig(bootstrap?.branding?.theme);
+  const config = readThemeConfig(bootstrap?.theme?.preset);
   const preset = config.preset ?? "industrialWarm";
   const base = THEME_PRESETS[preset];
 

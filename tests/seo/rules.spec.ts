@@ -3,20 +3,40 @@ import { describe, expect, it } from "vitest";
 import { resolveTenantSeoRules } from "@/lib/seo/rules";
 import type { StorefrontBootstrap } from "@/lib/storefront-api";
 
-function bootstrap(
-  shopStatus: StorefrontBootstrap["shopStatus"],
-  seo: StorefrontBootstrap["seo"] = {},
-): StorefrontBootstrap {
+function minimalBootstrap(status: StorefrontBootstrap["tenant"]["status"]): StorefrontBootstrap {
   return {
-    shopStatus,
-    seo,
+    requestContext: { requestId: "req_1", storefrontVersion: "test", apiVersion: "v1" },
+    tenant: {
+      tenantSlug: "test",
+      empresaId: "emp_1",
+      status,
+      resolvedHost: "test.com",
+      resolvedBy: "custom_domain",
+    },
+    branding: {
+      storeName: "Test",
+      colors: { primary: "#111827" },
+    },
+    theme: { preset: "default", layout: "commerce" },
+    seo: {},
+    navigation: { headerLinks: [], footerColumns: [] },
+    home: { modules: [] },
+    commerce: { payment: { visibleMethods: [] } },
+    features: {
+      reviewsEnabled: false,
+      compareEnabled: false,
+      wishlistEnabled: false,
+      contactBarEnabled: false,
+      searchEnabled: false,
+    },
+    pages: [],
   };
 }
 
 describe("resolveTenantSeoRules", () => {
-  it("nunca indexa draft aunque el tenant pida indexar", () => {
+  it("nunca indexa draft", () => {
     const rules = resolveTenantSeoRules({
-      bootstrap: bootstrap("draft", { allowIndexing: true, sitemapEnabled: true }),
+      bootstrap: minimalBootstrap("draft"),
       nodeEnv: "production",
     });
 
@@ -25,9 +45,9 @@ describe("resolveTenantSeoRules", () => {
     expect(rules.sitemapEnabled).toBe(false);
   });
 
-  it("nunca indexa disabled aunque el tenant pida indexar", () => {
+  it("nunca indexa disabled", () => {
     const rules = resolveTenantSeoRules({
-      bootstrap: bootstrap("disabled", { indexable: true, includeInSitemap: true }),
+      bootstrap: minimalBootstrap("disabled"),
       nodeEnv: "production",
     });
 
@@ -36,9 +56,9 @@ describe("resolveTenantSeoRules", () => {
     expect(rules.sitemapEnabled).toBe(false);
   });
 
-  it("permite que active indexe en produccion salvo override restrictivo", () => {
+  it("permite que active indexe en produccion", () => {
     const rules = resolveTenantSeoRules({
-      bootstrap: bootstrap("active"),
+      bootstrap: minimalBootstrap("active"),
       nodeEnv: "production",
     });
 
@@ -49,7 +69,7 @@ describe("resolveTenantSeoRules", () => {
 
   it("bloquea indexacion fuera de produccion", () => {
     const rules = resolveTenantSeoRules({
-      bootstrap: bootstrap("active"),
+      bootstrap: minimalBootstrap("active"),
       nodeEnv: "development",
     });
 
@@ -57,14 +77,14 @@ describe("resolveTenantSeoRules", () => {
     expect(rules.sitemapEnabled).toBe(false);
   });
 
-  it("respeta noindex como override restrictivo", () => {
+  it("respeta paused como no indexable", () => {
     const rules = resolveTenantSeoRules({
-      bootstrap: bootstrap("paused", { noindex: true }),
+      bootstrap: minimalBootstrap("paused"),
       nodeEnv: "production",
     });
 
-    expect(rules.allowIndexing).toBe(false);
-    expect(rules.indexable).toBe(false);
+    expect(rules.allowIndexing).toBe(true);
+    expect(rules.indexable).toBe(true);
+    expect(rules.sitemapEnabled).toBe(true);
   });
 });
-

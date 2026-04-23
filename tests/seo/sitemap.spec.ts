@@ -45,8 +45,8 @@ describe("buildTenantSitemap", () => {
 
   it("incluye categorías con slug", () => {
     const result = buildTenantSitemap(snapshot(), [
-      { slug: "autos", name: "Autos" },
-      { slug: "", name: "Sin slug" },
+      { categoryId: "1", slug: "autos", name: "Autos" },
+      { categoryId: "2", slug: "", name: "Sin slug" },
     ]);
     const urls = result.map((entry) => entry.url);
 
@@ -56,8 +56,8 @@ describe("buildTenantSitemap", () => {
 
   it("incluye productos con slug", () => {
     const result = buildTenantSitemap(snapshot(), [], [
-      { slug: "cubierta-16", name: "Cubierta 16" },
-      { slug: "", name: "Sin slug" },
+      { productId: "1", slug: "cubierta-16", name: "Cubierta 16" },
+      { productId: "2", slug: "", name: "Sin slug" },
     ]);
     const urls = result.map((entry) => entry.url);
 

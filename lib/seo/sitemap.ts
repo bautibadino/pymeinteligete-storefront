@@ -53,6 +53,21 @@ function buildProductSitemapEntries(
     }));
 }
 
+function buildPageSitemapEntries(
+  baseUrl: URL,
+  pages: Array<{ slug: string }>,
+): MetadataRoute.Sitemap {
+  return pages
+    .filter((page): page is { slug: string } =>
+      typeof page.slug === "string" && page.slug.trim().length > 0,
+    )
+    .map((page) => ({
+      url: buildCanonicalUrl(baseUrl, `/${encodeURIComponent(page.slug)}`),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    }));
+}
+
 export function buildTenantSitemap(
   snapshot: TenantSeoSnapshot,
   categories: StorefrontCategory[] = [],
@@ -70,6 +85,10 @@ export function buildTenantSitemap(
 
   const categoryEntries = buildCategorySitemapEntries(snapshot.canonicalBaseUrl, categories);
   const productEntries = buildProductSitemapEntries(snapshot.canonicalBaseUrl, products);
+  const pageEntries = buildPageSitemapEntries(
+    snapshot.canonicalBaseUrl,
+    snapshot.bootstrap?.pages ?? [],
+  );
 
-  return [...baseEntries, ...categoryEntries, ...productEntries];
+  return [...baseEntries, ...categoryEntries, ...productEntries, ...pageEntries];
 }

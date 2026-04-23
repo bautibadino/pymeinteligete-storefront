@@ -79,7 +79,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       />
 
       <SurfaceStateCard
-        shopStatus={experience.bootstrap?.shopStatus ?? null}
+        shopStatus={experience.bootstrap?.tenant.status ?? null}
         surface="product"
         title="El detalle de producto no está disponible para este estado de tienda."
       />

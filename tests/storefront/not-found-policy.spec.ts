@@ -3,9 +3,33 @@ import { describe, expect, it } from "vitest";
 import { resolveNotFoundPolicy } from "@/lib/seo/not-found-policy";
 import type { StorefrontBootstrap } from "@/lib/storefront-api";
 
-function bootstrap(shopStatus: StorefrontBootstrap["shopStatus"]): StorefrontBootstrap {
+function bootstrap(status: StorefrontBootstrap["tenant"]["status"]): StorefrontBootstrap {
   return {
-    shopStatus,
+    requestContext: { requestId: "req_1", storefrontVersion: "test", apiVersion: "v1" },
+    tenant: {
+      tenantSlug: "test",
+      empresaId: "emp_1",
+      status,
+      resolvedHost: "test.com",
+      resolvedBy: "custom_domain",
+    },
+    branding: {
+      storeName: "Test",
+      colors: { primary: "#111827" },
+    },
+    theme: { preset: "default", layout: "commerce" },
+    seo: {},
+    navigation: { headerLinks: [], footerColumns: [] },
+    home: { modules: [] },
+    commerce: { payment: { visibleMethods: [] } },
+    features: {
+      reviewsEnabled: false,
+      compareEnabled: false,
+      wishlistEnabled: false,
+      contactBarEnabled: false,
+      searchEnabled: false,
+    },
+    pages: [],
   };
 }
 

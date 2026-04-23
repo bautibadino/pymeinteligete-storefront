@@ -27,7 +27,7 @@ export function resolveNotFoundPolicy(
     };
   }
 
-  switch (bootstrap.shopStatus) {
+  switch (bootstrap.tenant.status) {
     case "disabled":
       return {
         statusLabel: "No disponible",

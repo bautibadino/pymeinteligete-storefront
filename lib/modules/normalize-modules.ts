@@ -24,6 +24,8 @@ const MODULE_TYPE_ALIASES: Record<string, StorefrontModuleType> = {
   "featured-products": "featuredProducts",
   featured_products: "featuredProducts",
   featuredProducts: "featuredProducts",
+  product_collection: "featuredProducts",
+  "product-collection": "featuredProducts",
   categories: "categoryRail",
   "category-rail": "categoryRail",
   category_rail: "categoryRail",
@@ -78,14 +80,14 @@ function readModuleType(module: Record<string, unknown>): StorefrontModuleType |
   return rawType ? MODULE_TYPE_ALIASES[rawType] : undefined;
 }
 
-function readVariant(module: Record<string, unknown>, type: StorefrontModuleType): ModuleVariant {
+function readVariant(module: Record<string, unknown>, type: StorefrontModuleType): ModuleVariant | undefined {
   const rawVariant = readString(module.variant);
 
   if (rawVariant && ALLOWED_VARIANTS[type].has(rawVariant as ModuleVariant)) {
     return rawVariant as ModuleVariant;
   }
 
-  return DEFAULT_VARIANTS[type];
+  return undefined;
 }
 
 function readAction(value: unknown, fallback?: ModuleAction): ModuleAction | undefined {
@@ -169,27 +171,34 @@ function normalizeModule(module: unknown, index: number): StorefrontModule | nul
     return null;
   }
 
-  const type = readModuleType(module);
+  const payload = isRecord(module.payload) ? module.payload : {};
+  const type = readModuleType(module) ?? readModuleType(payload);
 
   if (!type) {
     return null;
   }
 
   const id = readModuleId(module, index, type);
-  const variant = readVariant(module, type);
-  const title = readString(module.title);
+  const variant = readVariant(module, type) ?? readVariant(payload, type) ?? DEFAULT_VARIANTS[type];
+  const title = readString(module.title) ?? readString(payload.title);
   const description =
-    readString(module.description) ?? readString(module.subtitle) ?? readString(module.body);
-  const eyebrow = readString(module.eyebrow) ?? readString(module.kicker);
+    readString(module.description) ??
+    readString(module.subtitle) ??
+    readString(module.body) ??
+    readString(payload.description) ??
+    readString(payload.subtitle) ??
+    readString(payload.body);
+  const eyebrow =
+    readString(module.eyebrow) ?? readString(module.kicker) ?? readString(payload.eyebrow) ?? readString(payload.kicker);
 
   switch (type) {
-    case "hero":
-      const image = readImage(module.image ?? module.imageUrl);
-      const primaryAction = readAction(module.primaryAction ?? module.cta, {
+    case "hero": {
+      const image = readImage(module.image ?? module.imageUrl ?? payload.image ?? payload.imageUrl);
+      const primaryAction = readAction(module.primaryAction ?? module.cta ?? payload.primaryAction ?? payload.cta, {
         label: "Ver catálogo",
         href: "/catalogo",
       });
-      const secondaryAction = readAction(module.secondaryAction);
+      const secondaryAction = readAction(module.secondaryAction ?? payload.secondaryAction);
       const heroModule: HeroModule = {
         id,
         type,
@@ -215,6 +224,7 @@ function normalizeModule(module: unknown, index: number): StorefrontModule | nul
       }
 
       return heroModule;
+    }
     case "featuredProducts":
       return {
         id,
@@ -223,7 +233,7 @@ function normalizeModule(module: unknown, index: number): StorefrontModule | nul
         ...(eyebrow ? { eyebrow } : {}),
         title: title ?? "Productos destacados",
         ...(description ? { description } : {}),
-        limit: readNumber(module.limit) ?? 6,
+        limit: readNumber(module.limit) ?? readNumber(payload.limit) ?? 6,
       };
     case "categoryRail":
       return {
@@ -233,10 +243,10 @@ function normalizeModule(module: unknown, index: number): StorefrontModule | nul
         ...(eyebrow ? { eyebrow } : {}),
         title: title ?? "Categorías",
         ...(description ? { description } : {}),
-        limit: readNumber(module.limit) ?? 8,
+        limit: readNumber(module.limit) ?? readNumber(payload.limit) ?? 8,
       };
-    case "promoBand":
-      const promoAction = readAction(module.action ?? module.cta);
+    case "promoBand": {
+      const promoAction = readAction(module.action ?? module.cta ?? payload.action ?? payload.cta);
       const promoModule: PromoBandModule = {
         id,
         type,
@@ -254,6 +264,7 @@ function normalizeModule(module: unknown, index: number): StorefrontModule | nul
       }
 
       return promoModule;
+    }
     case "trustBar":
       return {
         id,
@@ -261,10 +272,10 @@ function normalizeModule(module: unknown, index: number): StorefrontModule | nul
         variant: variant as "inline" | "cards",
         ...(eyebrow ? { eyebrow } : {}),
         ...(title ? { title } : {}),
-        items: readItems(module.items).slice(0, 6),
+        items: readItems(module.items ?? payload.items).slice(0, 6),
       };
-    case "richText":
-      const richTextAction = readAction(module.action ?? module.cta);
+    case "richText": {
+      const richTextAction = readAction(module.action ?? module.cta ?? payload.action ?? payload.cta);
       const richTextModule: RichTextModule = {
         id,
         type,
@@ -282,17 +293,17 @@ function normalizeModule(module: unknown, index: number): StorefrontModule | nul
       }
 
       return richTextModule;
+    }
   }
 }
 
 function buildFallbackModules({ bootstrap, theme, host }: NormalizeModulesInput): StorefrontModule[] {
   const displayName =
-    bootstrap?.branding?.name ??
-    bootstrap?.tenant?.displayName ??
+    bootstrap?.branding?.storeName ??
     bootstrap?.tenant?.tenantSlug ??
     host;
   const description =
-    bootstrap?.seo?.description ??
+    bootstrap?.seo?.defaultDescription ??
     "Una experiencia pública configurada por theme y módulos, conectada al backend de PyMEInteligente.";
 
   if (theme.preset === "editorialDark") {
@@ -401,10 +412,10 @@ function buildFallbackModules({ bootstrap, theme, host }: NormalizeModulesInput)
 }
 
 export function normalizeModules(input: NormalizeModulesInput): StorefrontModule[] {
-  const rawModules = Array.isArray(input.bootstrap?.modules) ? input.bootstrap.modules : [];
+  const rawModules = Array.isArray(input.bootstrap?.home?.modules) ? input.bootstrap.home.modules : [];
   const normalized =
     rawModules
-      .map((module: StorefrontContentModule | unknown, index) => normalizeModule(module, index))
+      .map((module: StorefrontContentModule | unknown, index: number) => normalizeModule(module, index))
       .filter((module): module is StorefrontModule => module !== null);
 
   if (normalized.length > 0) {

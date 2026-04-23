@@ -56,7 +56,7 @@ export const getTenantSitemapData = cache(async (): Promise<TenantSitemapData> =
     issues.push(bootstrapResult.issue);
   }
 
-  const shopStatus = bootstrapResult.data?.shopStatus ?? null;
+  const shopStatus = bootstrapResult.data?.tenant.status ?? null;
 
   if (shopStatus === "draft" || shopStatus === "disabled") {
     return {
@@ -69,7 +69,7 @@ export const getTenantSitemapData = cache(async (): Promise<TenantSitemapData> =
   const [{ data: categories, issue: categoriesIssue }, { data: catalog, issue: catalogIssue }] =
     await Promise.all([
       safeFetch(() => getCategories(runtime.context), [], "categories"),
-      safeFetch(() => getCatalog(runtime.context, { pageSize: 500 }), { items: [] }, "catalog"),
+      safeFetch(() => getCatalog(runtime.context, { pageSize: 500 }), { products: [], pagination: { page: 1, pageSize: 500, total: 0, totalPages: 0 } }, "catalog"),
     ]);
 
   if (categoriesIssue) {
@@ -81,7 +81,7 @@ export const getTenantSitemapData = cache(async (): Promise<TenantSitemapData> =
   }
 
   // Solo incluir productos con slug definido (requerido para URL canónica)
-  const products = (catalog?.items ?? []).filter(
+  const products = (catalog?.products ?? []).filter(
     (product): product is StorefrontCatalogProduct & { slug: string } =>
       typeof product.slug === "string" && product.slug.trim().length > 0,
   );

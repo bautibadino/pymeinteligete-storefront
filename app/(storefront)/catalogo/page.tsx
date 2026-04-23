@@ -67,14 +67,14 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
             </div>
             <div className="stat-box">
               <span>Resultados</span>
-              <strong>{experience.catalog?.items.length ?? 0}</strong>
+              <strong>{experience.catalog?.products.length ?? 0}</strong>
             </div>
           </div>
         }
       />
 
       <SurfaceStateCard
-        shopStatus={experience.bootstrap?.shopStatus ?? null}
+        shopStatus={experience.bootstrap?.tenant.status ?? null}
         surface="catalog"
         title="El catálogo no está habilitado para este estado de tienda."
       />
@@ -95,7 +95,7 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
         description="Los ítems mostrados salen del endpoint real `GET /api/storefront/v1/catalog` y no de mocks locales."
       >
         <CatalogGrid
-          products={experience.catalog?.items ?? []}
+          products={experience.catalog?.products ?? []}
           emptyTitle="Sin productos para mostrar"
           emptyDescription="La tienda actual no devolvió productos públicos para la consulta activa o el backend todavía no expone el payload final esperado."
         />

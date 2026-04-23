@@ -55,14 +55,14 @@ export async function InstitutionalPageShell({
             </div>
             <div className="stat-box">
               <span>Estado tienda</span>
-              <strong>{experience.bootstrap?.shopStatus ?? "sin resolver"}</strong>
+              <strong>{experience.bootstrap?.tenant.status ?? "sin resolver"}</strong>
             </div>
           </div>
         }
       />
 
       <SurfaceStateCard
-        shopStatus={experience.bootstrap?.shopStatus ?? null}
+        shopStatus={experience.bootstrap?.tenant.status ?? null}
         surface="home"
         title="La tienda todavía no está abierta al tráfico público normal."
         description="El bootstrap existe como contrato base, pero el `shopStatus` actual no habilita contenido institucional completo."

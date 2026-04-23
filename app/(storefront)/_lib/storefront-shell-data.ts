@@ -88,15 +88,14 @@ export function canFetchPaymentMethods(shopStatus: ShopStatus | null): boolean {
 
 export function resolveTenantDisplayName(bootstrap: StorefrontBootstrap | null, host: string): string {
   return (
-    bootstrap?.branding?.name ??
-    bootstrap?.tenant?.displayName ??
+    bootstrap?.branding?.storeName ??
     bootstrap?.tenant?.tenantSlug ??
     host
   );
 }
 
 export function resolveTenantDescription(bootstrap: StorefrontBootstrap | null): string | null {
-  return bootstrap?.seo?.description ?? bootstrap?.contact?.address ?? null;
+  return bootstrap?.seo?.defaultDescription ?? bootstrap?.contact?.address ?? null;
 }
 
 export function resolveTenantLogoUrl(bootstrap: StorefrontBootstrap | null): string | null {
@@ -104,7 +103,7 @@ export function resolveTenantLogoUrl(bootstrap: StorefrontBootstrap | null): str
 }
 
 export function resolveModules(bootstrap: StorefrontBootstrap | null) {
-  return bootstrap?.modules ?? [];
+  return bootstrap?.home?.modules ?? [];
 }
 
 export function resolveStatusTone(shopStatus: ShopStatus | null): "live" | "paused" | "draft" | "disabled" {
@@ -172,7 +171,7 @@ export async function loadCatalogExperience(
 ): Promise<CatalogExperience> {
   const base = await loadBootstrapExperience();
 
-  if (!canBrowseCatalog(base.bootstrap?.shopStatus ?? null)) {
+  if (!canBrowseCatalog(base.bootstrap?.tenant.status ?? null)) {
     return {
       ...base,
       catalog: null,
@@ -201,7 +200,7 @@ export async function loadCatalogExperience(
 export async function loadProductExperience(slug: string): Promise<ProductExperience> {
   const base = await loadBootstrapExperience();
 
-  if (!canBrowseCatalog(base.bootstrap?.shopStatus ?? null)) {
+  if (!canBrowseCatalog(base.bootstrap?.tenant.status ?? null)) {
     return {
       ...base,
       product: null,
@@ -230,7 +229,7 @@ export async function loadProductExperience(slug: string): Promise<ProductExperi
 export async function loadCheckoutExperience(): Promise<CheckoutExperience> {
   const base = await loadBootstrapExperience();
 
-  if (!canFetchPaymentMethods(base.bootstrap?.shopStatus ?? null)) {
+  if (!canFetchPaymentMethods(base.bootstrap?.tenant.status ?? null)) {
     return {
       ...base,
       paymentMethods: null,
@@ -268,7 +267,7 @@ export async function loadHomeExperience(): Promise<HomeExperience> {
   let categories: StorefrontCategory[] = [];
   let categoryIssues: FetchIssue[] = [];
 
-  if (canBrowseCatalog(catalogExperience.bootstrap?.shopStatus ?? null)) {
+  if (canBrowseCatalog(catalogExperience.bootstrap?.tenant.status ?? null)) {
     try {
       categories = await getCategories(catalogExperience.runtime.context);
     } catch (error) {

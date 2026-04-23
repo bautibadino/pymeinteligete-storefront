@@ -1,6 +1,8 @@
 import type { StorefrontRequestContext } from "@/lib/runtime/storefront-request-context";
 
-export type ShopStatus = "active" | "paused" | "draft" | "disabled";
+// ─────────────────────────────────────────────────────────────
+// Envelope base (común a todos los endpoints)
+// ─────────────────────────────────────────────────────────────
 
 export type StorefrontSuccessResponse<TData> = {
   success: true;
@@ -18,6 +20,10 @@ export type StorefrontResponseEnvelope<TData> =
   | StorefrontSuccessResponse<TData>
   | StorefrontErrorResponse;
 
+// ─────────────────────────────────────────────────────────────
+// Query / fetch helpers
+// ─────────────────────────────────────────────────────────────
+
 export type StorefrontQueryPrimitive = string | number | boolean;
 export type StorefrontQueryValue =
   | StorefrontQueryPrimitive
@@ -28,145 +34,320 @@ export type StorefrontQueryParams = Record<string, StorefrontQueryValue>;
 
 export type StorefrontFetchInput = string | StorefrontRequestContext;
 
+// ─────────────────────────────────────────────────────────────
+// Tenant
+// ─────────────────────────────────────────────────────────────
+
+export type ShopStatus = "active" | "paused" | "draft" | "disabled";
+
+export type ResolvedBy = "custom_domain" | "platform_subdomain" | "dev_fallback";
+
 export interface StorefrontTenantIdentity {
-  [key: string]: unknown;
-  tenantSlug?: string | null;
-  host?: string | null;
-  canonicalHost?: string | null;
-  canonicalUrl?: string | null;
-  displayName?: string | null;
+  tenantSlug: string;
+  empresaId: string;
+  status: ShopStatus;
+  resolvedHost: string;
+  resolvedBy: ResolvedBy;
+  canonicalDomain?: string;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Branding
+// ─────────────────────────────────────────────────────────────
+
+export interface StorefrontBrandingColors {
+  primary: string;
+  secondary?: string;
+  accent?: string;
+  neutral?: string;
+}
+
+export interface StorefrontBrandingTypography {
+  heading?: string;
+  body?: string;
 }
 
 export interface StorefrontBranding {
-  [key: string]: unknown;
-  name?: string | null;
-  logoUrl?: string | null;
-  faviconUrl?: string | null;
-  theme?: unknown;
+  storeName: string;
+  legalName?: string;
+  logoUrl?: string;
+  faviconUrl?: string;
+  colors: StorefrontBrandingColors;
+  typography?: StorefrontBrandingTypography;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Theme
+// ─────────────────────────────────────────────────────────────
+
+export interface StorefrontTheme {
+  preset: string;
+  layout: string;
+  tokensVersion?: string;
+}
+
+// ─────────────────────────────────────────────────────────────
+// SEO
+// ─────────────────────────────────────────────────────────────
+
 export interface StorefrontSeoConfig {
-  [key: string]: unknown;
-  title?: string | null;
-  description?: string | null;
-  canonicalUrl?: string | null;
-  ogImageUrl?: string | null;
-  keywords?: string[] | null;
+  defaultTitle?: string;
+  titleTemplate?: string;
+  defaultDescription?: string;
+  ogImage?: string;
+  keywords?: string[];
+}
+
+// ─────────────────────────────────────────────────────────────
+// Navigation
+// ─────────────────────────────────────────────────────────────
+
+export interface StorefrontNavLink {
+  label: string;
+  href: string;
+  external?: boolean;
+}
+
+export interface StorefrontFooterColumn {
+  title: string;
+  links: StorefrontNavLink[];
+}
+
+export interface StorefrontNavigation {
+  headerLinks: StorefrontNavLink[];
+  footerColumns: StorefrontFooterColumn[];
+}
+
+// ─────────────────────────────────────────────────────────────
+// Home modules
+// ─────────────────────────────────────────────────────────────
+
+export type StorefrontModuleType =
+  | "hero"
+  | "ticker"
+  | "trust_chips"
+  | "intent_cards"
+  | "product_collection"
+  | "reviews"
+  | "info_banners";
+
+export interface StorefrontContentModule {
+  id: string;
+  type: StorefrontModuleType;
+  enabled: boolean;
+  order: number;
+  payload: Record<string, unknown>;
+}
+
+export interface StorefrontHomeConfig {
+  modules: StorefrontContentModule[];
+}
+
+// ─────────────────────────────────────────────────────────────
+// Contact
+// ─────────────────────────────────────────────────────────────
+
+export interface StorefrontSocialLinks {
+  facebook?: string;
+  instagram?: string;
 }
 
 export interface StorefrontContact {
-  [key: string]: unknown;
-  email?: string | null;
-  phone?: string | null;
-  whatsapp?: string | null;
-  address?: string | null;
+  phone?: string;
+  email?: string;
+  whatsapp?: string;
+  address?: string;
+  social?: StorefrontSocialLinks;
 }
 
-export interface StorefrontContentModule {
-  [key: string]: unknown;
-  id?: string | null;
-  type?: string | null;
-  title?: string | null;
+// ─────────────────────────────────────────────────────────────
+// Commerce
+// ─────────────────────────────────────────────────────────────
+
+export interface StorefrontInstallmentsConfig {
+  enabled: boolean;
+  count?: number;
+  label?: string;
+}
+
+export interface StorefrontCommercePayment {
+  visibleMethods: string[];
+  installments?: StorefrontInstallmentsConfig;
+}
+
+export interface StorefrontCommerceConfig {
+  payment: StorefrontCommercePayment;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Features
+// ─────────────────────────────────────────────────────────────
+
+export interface StorefrontFeatures {
+  reviewsEnabled: boolean;
+  compareEnabled: boolean;
+  wishlistEnabled: boolean;
+  contactBarEnabled: boolean;
+  searchEnabled: boolean;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Pages
+// ─────────────────────────────────────────────────────────────
+
+export interface StorefrontPage {
+  slug: string;
+  title: string;
+  excerpt?: string;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Analytics
+// ─────────────────────────────────────────────────────────────
+
+export interface StorefrontPixelConfig {
+  enabled: boolean;
+  pixelId?: string;
+  testEventCode?: string;
+}
+
+export interface StorefrontAnalytics {
+  pixel?: StorefrontPixelConfig;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Bootstrap
+// ─────────────────────────────────────────────────────────────
+
+export interface StorefrontRequestContextData {
+  requestId: string;
+  storefrontVersion: string;
+  apiVersion: "v1";
 }
 
 export interface StorefrontBootstrap {
-  [key: string]: unknown;
-  tenant?: StorefrontTenantIdentity;
-  shopStatus: ShopStatus;
-  branding?: StorefrontBranding;
-  seo?: StorefrontSeoConfig;
+  requestContext: StorefrontRequestContextData;
+  tenant: StorefrontTenantIdentity;
+  branding: StorefrontBranding;
+  theme: StorefrontTheme;
+  seo: StorefrontSeoConfig;
+  navigation: StorefrontNavigation;
+  home: StorefrontHomeConfig;
   contact?: StorefrontContact;
-  modules?: StorefrontContentModule[] | null;
-  features?: unknown;
-  paymentSettings?: unknown;
+  commerce: StorefrontCommerceConfig;
+  features: StorefrontFeatures;
+  pages: StorefrontPage[];
+  analytics?: StorefrontAnalytics;
 }
+
+// ─────────────────────────────────────────────────────────────
+// Catalog
+// ─────────────────────────────────────────────────────────────
 
 export interface StorefrontCatalogQuery extends StorefrontQueryParams {
   page?: number;
   pageSize?: number;
+  sortBy?: "name" | "price" | "createdAt" | "brand";
+  sortOrder?: "asc" | "desc";
   search?: string;
-  sort?: string;
-  category?: string;
+  categoryId?: string;
   brand?: string;
-  availability?: string;
+  family?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  onlyImmediate?: boolean;
 }
 
 export interface StorefrontPrice {
-  [key: string]: unknown;
-  amount?: number | null;
-  currency?: string | null;
-  compareAt?: number | null;
+  amount: number;
+  currency: string;
+  compareAt?: number;
 }
 
 export interface StorefrontCatalogProduct {
-  [key: string]: unknown;
-  productId?: string | null;
-  slug?: string | null;
-  sku?: string | null;
-  name?: string | null;
-  description?: string | null;
-  imageUrl?: string | null;
-  images?: string[] | null;
-  brand?: string | null;
-  category?: string | null;
-  price?: StorefrontPrice | null;
+  productId: string;
+  slug: string;
+  sku?: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  images?: string[];
+  brand?: string;
+  category?: string;
+  price?: StorefrontPrice;
   availability?: unknown;
 }
 
 export interface StorefrontPagination {
-  [key: string]: unknown;
-  page?: number | null;
-  pageSize?: number | null;
-  totalItems?: number | null;
-  totalPages?: number | null;
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
 }
 
 export interface StorefrontCatalog {
-  [key: string]: unknown;
-  items: StorefrontCatalogProduct[];
-  pagination?: StorefrontPagination;
-  filters?: unknown;
+  products: StorefrontCatalogProduct[];
+  pagination: StorefrontPagination;
 }
+
+// ─────────────────────────────────────────────────────────────
+// Categories
+// ─────────────────────────────────────────────────────────────
 
 export interface StorefrontCategory {
-  [key: string]: unknown;
-  categoryId?: string | null;
-  slug?: string | null;
-  name?: string | null;
-  description?: string | null;
-  imageUrl?: string | null;
+  categoryId: string;
+  slug: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  children?: StorefrontCategory[];
 }
 
+// ─────────────────────────────────────────────────────────────
+// Product detail
+// ─────────────────────────────────────────────────────────────
+
 export interface StorefrontProductDetail {
-  [key: string]: unknown;
-  productId?: string | null;
-  slug?: string | null;
-  sku?: string | null;
-  name?: string | null;
-  description?: string | null;
-  images?: string[] | null;
-  category?: string | null;
-  brand?: string | null;
-  price?: StorefrontPrice | null;
+  productId: string;
+  slug: string;
+  sku?: string;
+  name: string;
+  description?: string;
+  images?: string[];
+  category?: string;
+  brand?: string;
+  price?: StorefrontPrice;
   availability?: unknown;
   deliveryInfo?: unknown;
   commercialInfo?: unknown;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Payment methods
+// ─────────────────────────────────────────────────────────────
+
+export interface StorefrontPaymentMethodDiscount {
+  type: "percentage" | "fixed";
+  value: number;
+}
+
 export interface StorefrontPaymentMethod {
-  [key: string]: unknown;
-  id?: string | null;
-  code?: string | null;
-  name?: string | null;
-  provider?: string | null;
-  discountLabel?: string | null;
-  publicConfig?: unknown;
+  methodId: string;
+  methodType: string;
+  displayName: string;
+  description: string;
+  icon: string | null;
+  color: string | null;
+  discount: StorefrontPaymentMethodDiscount | null;
 }
 
 export interface StorefrontPaymentMethods {
-  [key: string]: unknown;
-  items: StorefrontPaymentMethod[];
+  paymentMethods: StorefrontPaymentMethod[];
 }
+
+// ─────────────────────────────────────────────────────────────
+// Checkout
+// ─────────────────────────────────────────────────────────────
 
 export interface StorefrontCustomerInput {
   name: string;
@@ -193,10 +374,10 @@ export interface StorefrontCheckoutItemInput {
 }
 
 export interface StorefrontAnalyticsInput {
-  [key: string]: string | null | undefined;
   fbc?: string;
   fbp?: string;
   ga_client_id?: string;
+  anonymous_id?: string;
 }
 
 export interface StorefrontCheckoutRequest {
@@ -205,119 +386,122 @@ export interface StorefrontCheckoutRequest {
   billingAddress?: StorefrontAddressInput;
   items: StorefrontCheckoutItemInput[];
   notes?: string;
-  idempotencyKey: string;
+  idempotencyKey?: string;
   analytics?: StorefrontAnalyticsInput;
 }
 
 export interface StorefrontCheckoutResult {
-  [key: string]: unknown;
   orderId: string;
   orderToken: string;
   orderNumber: string;
   total: number;
+  payerEmail: string;
+  idempotent?: boolean;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Payment processing (MercadoPago)
+// ─────────────────────────────────────────────────────────────
+
+export interface StorefrontPaymentPayerIdentification {
+  type: string;
+  number: string;
 }
 
 export interface StorefrontPaymentPayer {
-  email?: string;
-  identification?: {
-    type?: string;
-    number?: string;
-  };
+  email: string;
+  identification?: StorefrontPaymentPayerIdentification;
 }
 
 export interface StorefrontPaymentData {
-  [key: string]: unknown;
   token?: string;
-  payment_method_id?: string;
-  transaction_amount?: number;
+  payment_method_id: string;
+  transaction_amount: number;
   installments?: number;
-  payer?: StorefrontPaymentPayer;
+  issuer_id?: string;
+  payer: StorefrontPaymentPayer;
 }
 
 export interface StorefrontProcessPaymentRequest {
   orderId: string;
-  idempotencyKey: string;
+  idempotencyKey?: string;
   paymentData: StorefrontPaymentData;
 }
 
 export interface StorefrontProcessPaymentResult {
-  [key: string]: unknown;
-  paymentId?: string | null;
-  status?: string | null;
-  statusDetail?: string | null;
-  orderId?: string | null;
+  paymentId: string;
+  status: string;
+  statusDetail: string;
+  orderId: string;
+  orderToken: string;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Order by token
+// ─────────────────────────────────────────────────────────────
+
 export interface StorefrontOrderCustomer {
-  [key: string]: unknown;
-  name?: string | null;
-  email?: string | null;
-  phone?: string | null;
+  name: string;
+  email: string;
+  phone?: string;
+}
+
+export interface StorefrontOrderAddress {
+  street: string;
+  number: string;
+  city: string;
+  province: string;
+  postalCode: string;
 }
 
 export interface StorefrontOrderLine {
-  [key: string]: unknown;
-  productId?: string | null;
-  description?: string | null;
-  quantity?: number | null;
-  unitPrice?: number | null;
-  total?: number | null;
+  productId: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
 }
 
 export interface StorefrontOrderPayment {
-  [key: string]: unknown;
-  provider?: string | null;
-  reference?: string | null;
-  status?: string | null;
+  provider: string;
+  reference: string;
 }
 
 export interface StorefrontOrderByTokenResult {
-  [key: string]: unknown;
-  orderId?: string | null;
-  orderNumber?: string | null;
-  status?: string | null;
-  isPaid?: boolean | null;
-  total?: number | null;
-  customer?: StorefrontOrderCustomer;
-  items?: StorefrontOrderLine[] | null;
-  payment?: StorefrontOrderPayment | null;
+  orderId: string;
+  orderNumber: string;
+  status: string;
+  isPaid: boolean;
+  total: number;
+  createdAt: string;
+  customer: StorefrontOrderCustomer;
+  shippingAddress: StorefrontOrderAddress;
+  items: StorefrontOrderLine[];
+  payment: StorefrontOrderPayment | null;
 }
 
-/**
- * TODO: el payload final del flujo manual no está documentado en la fuente actual del backend.
- * Los campos listados son los mínimos probables según la forma del contrato de checkout/pagos;
- * el backend puede exigir campos adicionales o rechazar los opcionales.
- * No asumir estabilidad de esta interfaz hasta que el contrato se concrete.
- */
+// ─────────────────────────────────────────────────────────────
+// Manual payment
+// BLOQUEO: el endpoint POST /orders/:token/payment/manual NO está
+// documentado en la API reference v1. Los campos mínimos se mantienen
+// con estabilidad no garantizada hasta que el backend concrete el contrato.
+// ─────────────────────────────────────────────────────────────
+
 export interface StorefrontManualPaymentRequest {
-  /** Monto a registrar como pago manual. */
   amount?: number;
-  /** Identificador del método de pago elegido (ej: "efectivo", "transferencia"). */
   paymentMethodId?: string;
-  /** Notas o comprobante adjunto (referencia bancaria, etc.). */
   reference?: string;
-  /** Notas adicionales para el operador. */
   notes?: string;
-  /** Respaldo extensible para campos no documentados aún. */
+  /** Respaldo extensible hasta congelar contrato. */
   [key: string]: unknown;
 }
 
-/**
- * TODO: la respuesta final del flujo manual no está congelada en la documentación actual.
- * Los campos son los mínimos observables en el envelope de éxito de la plataforma;
- * pueden variar cuando el backend concrete el contrato.
- */
 export interface StorefrontManualPaymentResult {
-  /** Identificador del pago generado. */
   paymentId?: string | null;
-  /** Estado resumido del pago (ej: "approved", "pending", "in_process"). */
   status?: string | null;
-  /** Detalle legible del estado. */
   statusDetail?: string | null;
-  /** Orden asociada al pago manual. */
   orderId?: string | null;
-  /** Monto efectivamente registrado. */
   amount?: number | null;
-  /** Respaldo extensible para campos no documentados aún. */
+  /** Respaldo extensible hasta congelar contrato. */
   [key: string]: unknown;
 }

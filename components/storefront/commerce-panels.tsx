@@ -79,16 +79,23 @@ export function ModuleDeck({ bootstrap }: ModuleDeckProps) {
 
   return (
     <section className="module-deck">
-      {modules.map((module, index) => (
-        <article key={module.id ?? module.title ?? `module-${index}`} className="module-panel">
-          <span className="eyebrow">{module.type ?? "modulo"}</span>
-          <h3>{module.title ?? "Contenido configurable"}</h3>
-          <p>
-            Este panel representa un módulo de home expuesto por bootstrap. El render específico
-            queda abierto hasta congelar la forma final del backend.
-          </p>
-        </article>
-      ))}
+      {modules.map((module: import("@/lib/storefront-api").StorefrontContentModule, index: number) => {
+        const payloadTitle =
+          typeof module.payload === "object" && module.payload !== null && "title" in module.payload
+            ? String((module.payload as Record<string, unknown>).title)
+            : undefined;
+
+        return (
+          <article key={module.id ?? `module-${index}`} className="module-panel">
+            <span className="eyebrow">{module.type ?? "modulo"}</span>
+            <h3>{payloadTitle ?? "Contenido configurable"}</h3>
+            <p>
+              Este panel representa un módulo de home expuesto por bootstrap. El render específico
+              queda abierto hasta congelar la forma final del backend.
+            </p>
+          </article>
+        );
+      })}
     </section>
   );
 }
@@ -167,7 +174,7 @@ type PaymentMethodsPanelProps = {
 };
 
 export function PaymentMethodsPanel({ paymentMethods }: PaymentMethodsPanelProps) {
-  const items = paymentMethods?.items ?? [];
+  const items = paymentMethods?.paymentMethods ?? [];
 
   if (items.length === 0) {
     return (
@@ -183,11 +190,11 @@ export function PaymentMethodsPanel({ paymentMethods }: PaymentMethodsPanelProps
 
   return (
     <section className="payment-strip">
-      {items.map((method, index) => (
-        <article key={method.id ?? method.code ?? `payment-${index}`} className="payment-card">
-          <span>{method.provider ?? "provider"}</span>
-          <strong>{method.name ?? method.code ?? "Método activo"}</strong>
-          <p>{method.discountLabel ?? "Disponibilidad operativa sujeta a backend."}</p>
+      {items.map((method: import("@/lib/storefront-api").StorefrontPaymentMethod, index: number) => (
+        <article key={method.methodId ?? `payment-${index}`} className="payment-card">
+          <span>{method.methodType ?? "provider"}</span>
+          <strong>{method.displayName ?? "Método activo"}</strong>
+          <p>{method.description ?? "Disponibilidad operativa sujeta a backend."}</p>
         </article>
       ))}
     </section>

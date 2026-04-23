@@ -1,7 +1,6 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 
-import type { StorefrontBootstrap } from "@/lib/storefront-api";
+import type { StorefrontBootstrap, StorefrontNavLink } from "@/lib/storefront-api";
 
 import {
   resolveModules,
@@ -13,6 +12,12 @@ import {
   type FetchIssue,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
 
+const FALLBACK_NAVIGATION: StorefrontNavLink[] = [
+  { href: "/", label: "Inicio" },
+  { href: "/catalogo", label: "Catalogo" },
+  { href: "/checkout", label: "Checkout" },
+];
+
 type StorefrontShellProps = {
   bootstrap: StorefrontBootstrap | null;
   host: string;
@@ -20,23 +25,19 @@ type StorefrontShellProps = {
   issues: FetchIssue[];
 };
 
-const NAVIGATION_ITEMS = [
-  { href: "/", label: "Inicio" },
-  { href: "/catalogo", label: "Catalogo" },
-  { href: "/checkout", label: "Checkout" },
-] as const;
-
 export function StorefrontShell({ bootstrap, host, children, issues }: StorefrontShellProps) {
   const displayName = resolveTenantDisplayName(bootstrap, host);
   const description =
     resolveTenantDescription(bootstrap) ??
     "Storefront host-driven conectado a PyMEInteligente sin replicar lógica del ERP.";
   const logoUrl = resolveTenantLogoUrl(bootstrap);
-  const statusTone = resolveStatusTone(bootstrap?.shopStatus ?? null);
-  const statusMessage = resolveStatusMessage(bootstrap?.shopStatus ?? null);
+  const statusTone = resolveStatusTone(bootstrap?.tenant.status ?? null);
+  const statusMessage = resolveStatusMessage(bootstrap?.tenant.status ?? null);
   const modules = resolveModules(bootstrap);
   const contactEmail = bootstrap?.contact?.email;
   const contactPhone = bootstrap?.contact?.phone;
+  const headerLinks = bootstrap?.navigation?.headerLinks ?? FALLBACK_NAVIGATION;
+  const footerColumns = bootstrap?.navigation?.footerColumns ?? [];
 
   return (
     <main className="storefront-frame">
@@ -60,10 +61,15 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
 
           <div className="storefront-meta">
             <nav className="storefront-nav" aria-label="Navegación pública">
-              {NAVIGATION_ITEMS.map((item) => (
-                <Link key={item.href} className="storefront-navlink" href={item.href}>
+              {headerLinks.map((item) => (
+                <a
+                  key={item.href}
+                  className="storefront-navlink"
+                  href={item.href}
+                  {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                >
                   {item.label}
-                </Link>
+                </a>
               ))}
             </nav>
 
@@ -111,16 +117,47 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
 
         {modules.length > 0 ? (
           <section className="storefront-modulebar" aria-label="Módulos expuestos por bootstrap">
-            {modules.slice(0, 4).map((module, index) => (
-              <article key={module.id ?? module.title ?? `module-${index}`} className="module-chip">
-                <span className="module-chip-type">{module.type ?? "modulo"}</span>
-                <strong>{module.title ?? "Contenido configurable"}</strong>
-              </article>
-            ))}
+            {modules.slice(0, 4).map((module, index) => {
+              const payloadTitle =
+                typeof module.payload === "object" && module.payload !== null && "title" in module.payload
+                  ? String((module.payload as Record<string, unknown>).title)
+                  : undefined;
+
+              return (
+                <article key={module.id ?? `module-${index}`} className="module-chip">
+                  <span className="module-chip-type">{module.type ?? "modulo"}</span>
+                  <strong>{payloadTitle ?? "Contenido configurable"}</strong>
+                </article>
+              );
+            })}
           </section>
         ) : null}
 
         <div className="storefront-content">{children}</div>
+
+        {footerColumns.length > 0 ? (
+          <footer className="storefront-footer" aria-label="Pie de página">
+            <div className="footer-columns">
+              {footerColumns.map((column) => (
+                <div key={column.title} className="footer-column">
+                  <strong>{column.title}</strong>
+                  <ul>
+                    {column.links.map((link) => (
+                      <li key={link.href}>
+                        <a
+                          href={link.href}
+                          {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                        >
+                          {link.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </footer>
+        ) : null}
       </div>
     </main>
   );

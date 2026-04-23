@@ -1,5 +1,10 @@
 import { STOREFRONT_INTERNAL_ERROR_CODES } from "@/lib/contracts/storefront-v1";
 import { getServerEnvSnapshot } from "@/lib/env/server-env";
+import {
+  logStorefrontError,
+  logStorefrontRequest,
+  logStorefrontResponse,
+} from "@/lib/runtime/logger";
 import type { StorefrontRequestContext } from "@/lib/runtime/storefront-request-context";
 import type {
   StorefrontErrorResponse,
@@ -186,11 +191,14 @@ export async function requestStorefrontApi<TData, TBody = undefined>({
     requestInit.body = JSON.stringify(body);
   }
 
+  logStorefrontRequest({ context, path, method: method ?? "GET" });
+
   let response: Response;
 
   try {
     response = await fetch(url, requestInit);
   } catch (error) {
+    logStorefrontError({ context, path, error, code: STOREFRONT_INTERNAL_ERROR_CODES.network });
     throw new StorefrontApiError({
       message: `No se pudo conectar con la plataforma en ${path}.`,
       code: STOREFRONT_INTERNAL_ERROR_CODES.network,
@@ -201,14 +209,17 @@ export async function requestStorefrontApi<TData, TBody = undefined>({
     });
   }
 
+  logStorefrontResponse({ context, path, status: response.status });
   const payload = await readResponsePayload(response);
 
   if (!response.ok) {
-    throw toStorefrontApiError(payload, response, context, path);
+    const apiError = toStorefrontApiError(payload, response, context, path);
+    logStorefrontError({ context, path, error: apiError, code: apiError.code });
+    throw apiError;
   }
 
   if (!isSuccessEnvelope<TData>(payload)) {
-    throw new StorefrontApiError({
+    const envelopeError = new StorefrontApiError({
       message: `La plataforma respondio un envelope invalido para ${path}.`,
       code: STOREFRONT_INTERNAL_ERROR_CODES.invalidEnvelope,
       status: response.status,
@@ -217,6 +228,8 @@ export async function requestStorefrontApi<TData, TBody = undefined>({
       requestId: context.requestId,
       details: payload,
     });
+    logStorefrontError({ context, path, error: envelopeError, code: envelopeError.code });
+    throw envelopeError;
   }
 
   return payload.data;
