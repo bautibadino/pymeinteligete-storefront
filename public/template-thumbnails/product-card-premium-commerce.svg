@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="300" viewBox="0 0 240 300" fill="none">
+  <rect width="240" height="300" rx="8" fill="#F8F8F8"/>
+  <rect x="1" y="1" width="238" height="298" rx="7" stroke="#E5E7EB" stroke-width="1"/>
+  <rect x="16" y="16" width="208" height="130" rx="6" fill="#E5E7EB"/>
+  <circle cx="120" cy="81" r="28" fill="#D1D5DB"/>
+  <circle cx="120" cy="66" r="10" fill="#9CA3AF"/>
+  <rect x="84" y="84" width="72" height="6" rx="2" fill="#9CA3AF"/>
+  <rect x="24" y="24" width="34" height="14" rx="4" fill="#111827"/>
+  <rect x="29" y="29" width="24" height="4" rx="1" fill="#F9FAFB"/>
+  <rect x="24" y="118" width="120" height="14" rx="4" fill="#00000080"/>
+  <rect x="30" y="123" width="80" height="4" rx="1" fill="#F9FAFB"/>
+  <rect x="16" y="158" width="40" height="7" rx="2" fill="#D1D5DB"/>
+  <rect x="16" y="172" width="188" height="9" rx="3" fill="#374151"/>
+  <rect x="16" y="185" width="130" height="9" rx="3" fill="#374151"/>
+  <rect x="16" y="203" width="54" height="7" rx="2" fill="#D1D5DB"/>
+  <line x1="16" y1="207" x2="70" y2="207" stroke="#9CA3AF" stroke-width="1"/>
+  <rect x="76" y="201" width="62" height="11" rx="3" fill="#DBEAFE"/>
+  <rect x="82" y="205" width="44" height="3" rx="1" fill="#2563EB"/>
+  <rect x="16" y="218" width="90" height="14" rx="3" fill="#111827"/>
+  <rect x="16" y="238" width="120" height="7" rx="2" fill="#D1D5DB"/>
+  <rect x="16" y="254" width="208" height="22" rx="5" fill="#111827"/>
+  <rect x="68" y="262" width="104" height="6" rx="2" fill="#F9FAFB"/>
+  <text x="120" y="293" font-family="system-ui, sans-serif" font-size="8" fill="#9CA3AF" text-anchor="middle">product-card · premium-commerce</text>
+</svg>
