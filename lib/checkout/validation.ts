@@ -6,7 +6,12 @@ export type CheckoutFieldName =
   | "shippingCity"
   | "shippingProvince"
   | "shippingPostalCode"
-  | "items";
+  | "items"
+  | "paymentToken"
+  | "paymentMethodId"
+  | "payerEmail"
+  | "payerIdType"
+  | "payerIdNumber";
 
 export type CheckoutFieldErrors = Partial<Record<CheckoutFieldName, string>>;
 
@@ -45,6 +50,10 @@ export function parseItems(formData: FormData): ParsedCheckoutItem[] {
   return items;
 }
 
+function isAutoPaymentStrategy(formData: FormData): boolean {
+  return readTrimmedString(formData, "paymentStrategy") === "auto";
+}
+
 export function buildFieldErrors(formData: FormData): CheckoutFieldErrors {
   const errors: CheckoutFieldErrors = {};
   const items = parseItems(formData);
@@ -79,6 +88,28 @@ export function buildFieldErrors(formData: FormData): CheckoutFieldErrors {
 
   if (items.length === 0 || items.some((item) => item.quantity <= 0)) {
     errors.items = "Necesitás al menos un producto con cantidad mayor a cero.";
+  }
+
+  if (isAutoPaymentStrategy(formData)) {
+    if (!readTrimmedString(formData, "paymentToken")) {
+      errors.paymentToken = "Falta el token de pago. En producción lo genera el Payment Brick.";
+    }
+
+    if (!readTrimmedString(formData, "paymentMethodId")) {
+      errors.paymentMethodId = "Seleccioná el método de pago.";
+    }
+
+    if (!readTrimmedString(formData, "payerEmail")) {
+      errors.payerEmail = "Ingresá el email del pagador.";
+    }
+
+    if (!readTrimmedString(formData, "payerIdType")) {
+      errors.payerIdType = "Seleccioná el tipo de documento (DNI o CUIT).";
+    }
+
+    if (!readTrimmedString(formData, "payerIdNumber")) {
+      errors.payerIdNumber = "Ingresá el número de documento del pagador.";
+    }
   }
 
   return errors;

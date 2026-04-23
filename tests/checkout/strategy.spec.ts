@@ -3,12 +3,10 @@ import { describe, expect, it } from "vitest";
 import { resolveCheckoutStrategy } from "@/lib/checkout/strategy";
 
 describe("resolveCheckoutStrategy", () => {
-  it("bloquea auto con mensaje de contrato faltante", () => {
+  it("permite auto", () => {
     const result = resolveCheckoutStrategy("auto");
 
-    expect(result.allowed).toBe(false);
-    expect(result).toHaveProperty("message");
-    expect((result as { message: string }).message).toContain("pago automático");
+    expect(result.allowed).toBe(true);
   });
 
   it("permite none", () => {

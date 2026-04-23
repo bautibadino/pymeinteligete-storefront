@@ -65,9 +65,9 @@ export function ManualPaymentForm({ orderToken, defaultAmount, paymentMethods }:
             <option value="" disabled>
               Seleccionar...
             </option>
-            {paymentMethods.map((method) => (
-              <option key={method.id ?? method.code ?? method.name} value={resolvePaymentMethodOptionValue(method)}>
-                {method.name ?? method.code ?? "Método"}
+            {paymentMethods.map((method: import("@/lib/storefront-api").StorefrontPaymentMethod) => (
+              <option key={method.methodId} value={resolvePaymentMethodOptionValue(method)}>
+                {method.displayName ?? "Método"}
               </option>
             ))}
           </select>

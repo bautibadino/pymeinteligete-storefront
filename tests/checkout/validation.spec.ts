@@ -120,4 +120,68 @@ describe("buildFieldErrors", () => {
 
     expect(errors.items).toBe("Necesitás al menos un producto con cantidad mayor a cero.");
   });
+
+  it("no exige campos de pago cuando la estrategia no es auto", () => {
+    const formData = createFormData({
+      paymentStrategy: "none",
+      customerName: "Juan Perez",
+      customerEmail: "juan@mail.com",
+      shippingStreet: "Belgrano",
+      shippingNumber: "123",
+      shippingCity: "Corral de Bustos",
+      shippingProvince: "Cordoba",
+      shippingPostalCode: "2645",
+      itemProductId: ["prod_1"],
+      itemQuantity: ["2"],
+    });
+    const errors = buildFieldErrors(formData);
+
+    expect(errors.paymentToken).toBeUndefined();
+    expect(errors.paymentMethodId).toBeUndefined();
+  });
+
+  it("exige campos de pago cuando la estrategia es auto", () => {
+    const formData = createFormData({
+      paymentStrategy: "auto",
+      customerName: "Juan Perez",
+      customerEmail: "juan@mail.com",
+      shippingStreet: "Belgrano",
+      shippingNumber: "123",
+      shippingCity: "Corral de Bustos",
+      shippingProvince: "Cordoba",
+      shippingPostalCode: "2645",
+      itemProductId: ["prod_1"],
+      itemQuantity: ["2"],
+    });
+    const errors = buildFieldErrors(formData);
+
+    expect(errors.paymentToken).toBeDefined();
+    expect(errors.paymentMethodId).toBeDefined();
+    expect(errors.payerEmail).toBeDefined();
+    expect(errors.payerIdType).toBeDefined();
+    expect(errors.payerIdNumber).toBeDefined();
+  });
+
+  it("no devuelve errores de pago en auto cuando los campos están completos", () => {
+    const formData = createFormData({
+      paymentStrategy: "auto",
+      customerName: "Juan Perez",
+      customerEmail: "juan@mail.com",
+      shippingStreet: "Belgrano",
+      shippingNumber: "123",
+      shippingCity: "Corral de Bustos",
+      shippingProvince: "Cordoba",
+      shippingPostalCode: "2645",
+      itemProductId: ["prod_1"],
+      itemQuantity: ["2"],
+      paymentToken: "tok_123",
+      paymentMethodId: "visa",
+      payerEmail: "juan@mail.com",
+      payerIdType: "DNI",
+      payerIdNumber: "30111222",
+    });
+    const errors = buildFieldErrors(formData);
+
+    expect(hasFieldErrors(errors)).toBe(false);
+  });
 });

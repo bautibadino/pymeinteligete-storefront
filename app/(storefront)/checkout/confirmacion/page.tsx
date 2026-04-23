@@ -34,7 +34,7 @@ export default async function CheckoutConfirmationPage() {
             </div>
             <div className="stat-box">
               <span>Estado tienda</span>
-              <strong>{experience.bootstrap?.shopStatus ?? "sin resolver"}</strong>
+              <strong>{experience.bootstrap?.tenant.status ?? "sin resolver"}</strong>
             </div>
           </div>
         }

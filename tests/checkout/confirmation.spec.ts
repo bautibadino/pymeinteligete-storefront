@@ -13,6 +13,11 @@ function order(overrides: Partial<StorefrontOrderByTokenResult> = {}): Storefron
     status: "pending",
     isPaid: false,
     total: 1000,
+    createdAt: "2026-04-23T12:00:00.000Z",
+    customer: { name: "Juan", email: "juan@mail.com" },
+    shippingAddress: { street: "Belgrano", number: "123", city: "Córdoba", province: "Córdoba", postalCode: "5000" },
+    items: [],
+    payment: null,
     ...overrides,
   };
 }
@@ -27,15 +32,15 @@ describe("resolvePaymentStatusLabel", () => {
   });
 
   it("devuelve En revisión para in_process", () => {
-    expect(resolvePaymentStatusLabel(order({ payment: { status: "in_process" } }))).toBe("En revisión");
+    expect(resolvePaymentStatusLabel(order({ status: "in_process" }))).toBe("En revisión");
   });
 
   it("devuelve Rechazado para rejected", () => {
-    expect(resolvePaymentStatusLabel(order({ payment: { status: "rejected" } }))).toBe("Rechazado");
+    expect(resolvePaymentStatusLabel(order({ status: "rejected" }))).toBe("Rechazado");
   });
 
   it("devuelve el valor crudo si no coincide con conocidos", () => {
-    expect(resolvePaymentStatusLabel(order({ payment: { status: "custom" } }))).toBe("custom");
+    expect(resolvePaymentStatusLabel(order({ status: "custom" }))).toBe("custom");
   });
 });
 

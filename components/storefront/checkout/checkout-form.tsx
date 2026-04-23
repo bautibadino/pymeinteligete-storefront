@@ -41,12 +41,20 @@ function buildInitialItems(
   }));
 }
 
-function SubmitButton() {
+function SubmitButton({ paymentStrategy }: { paymentStrategy: string }) {
   const { pending } = useFormStatus();
+  const label =
+    paymentStrategy === "auto"
+      ? pending
+        ? "Creando orden y procesando pago..."
+        : "Crear orden y pagar"
+      : pending
+        ? "Creando orden..."
+        : "Crear orden oficial";
 
   return (
     <button className="checkout-submit" type="submit" disabled={pending}>
-      {pending ? "Creando orden..." : "Crear orden oficial"}
+      {label}
     </button>
   );
 }
@@ -66,7 +74,7 @@ export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps
   const [items, setItems] = useState<CheckoutItemDraft[]>(() => buildInitialItems(initialItems));
   const [paymentStrategy, setPaymentStrategy] = useState<string>("none");
   const idempotencyKeyRef = useRef<string>(crypto.randomUUID());
-  const paymentOptions = paymentMethods?.items ?? [];
+  const paymentOptions = paymentMethods?.paymentMethods ?? [];
 
   function updateItem(index: number, patch: Partial<CheckoutItemDraft>) {
     setItems((current) =>
@@ -228,7 +236,7 @@ export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps
             <h3>Cómo se procesa el pago</h3>
             <p>
               Elegí si querés solo crear la orden, dejarla lista para pago manual, o intentar pago
-              automático (cuando esté habilitado por el proveedor).
+              automático con los datos del proveedor.
             </p>
           </div>
 
@@ -241,7 +249,7 @@ export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps
               >
                 <option value="none">Solo crear orden (sin pago ahora)</option>
                 <option value="manual">Orden + pago manual después</option>
-                <option value="auto">Orden + pago automático (próximamente)</option>
+                <option value="auto">Orden + pago automático</option>
               </select>
             </label>
           </div>
@@ -249,9 +257,8 @@ export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps
           <div className="checkout-note">
             {paymentStrategy === "auto" ? (
               <span>
-                <strong>Atención:</strong> el pago automático todavía no está habilitado porque falta la
-                integración con el proveedor de pagos (ej: MercadoPago). Si elegís esta opción, la orden
-                no se creará y verás un mensaje de error controlado.
+                Se creará la orden y luego se procesará el pago usando los datos de tarjeta ingresados.
+                Si el pago falla, la orden queda creada y podés completarla manualmente desde la confirmación.
               </span>
             ) : paymentStrategy === "manual" ? (
               <span>
@@ -279,11 +286,11 @@ export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps
 
           {paymentOptions.length > 0 ? (
             <div className="checkout-methods">
-              {paymentOptions.map((method, index) => (
-                <article key={method.id ?? method.code ?? `method-${index}`} className="checkout-method">
-                  <span>{method.provider ?? "provider"}</span>
-                  <strong>{method.name ?? method.code ?? "Método activo"}</strong>
-                  <p>{method.discountLabel ?? "Disponibilidad operativa sujeta a backend."}</p>
+              {paymentOptions.map((method: import("@/lib/storefront-api").StorefrontPaymentMethod, index: number) => (
+                <article key={method.methodId ?? `method-${index}`} className="checkout-method">
+                  <span>{method.methodType ?? "provider"}</span>
+                  <strong>{method.displayName ?? "Método activo"}</strong>
+                  <p>{method.description ?? "Disponibilidad operativa sujeta a backend."}</p>
                 </article>
               ))}
             </div>
@@ -294,6 +301,71 @@ export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps
           )}
         </section>
       </div>
+
+      {paymentStrategy === "auto" ? (
+        <section className="checkout-section">
+          <div className="checkout-section-header">
+            <span className="eyebrow">Datos de pago</span>
+            <h3>Información para procesar el pago</h3>
+            <p>
+              En producción estos datos se generan con el Payment Brick del proveedor. Acá se envían
+              explícitamente para completar el contrato `POST /payments/process`.
+            </p>
+          </div>
+
+          <div className="form-grid">
+            <label className="form-field form-field-full">
+              <span>Token de tarjeta</span>
+              <input name="paymentToken" placeholder="Token del Payment Brick" />
+              <FieldError field="paymentToken" state={state} />
+            </label>
+
+            <label className="form-field">
+              <span>Método de pago</span>
+              <select name="paymentMethodId" defaultValue="">
+                <option value="" disabled>
+                  Seleccionar...
+                </option>
+                {paymentOptions.map((method: import("@/lib/storefront-api").StorefrontPaymentMethod) => (
+                  <option key={method.methodId} value={method.methodId}>
+                    {method.displayName}
+                  </option>
+                ))}
+              </select>
+              <FieldError field="paymentMethodId" state={state} />
+            </label>
+
+            <label className="form-field">
+              <span>Cuotas</span>
+              <input name="installments" type="number" min="1" step="1" defaultValue="1" />
+            </label>
+
+            <label className="form-field">
+              <span>Email del pagador</span>
+              <input name="payerEmail" type="email" placeholder="juan@mail.com" />
+              <FieldError field="payerEmail" state={state} />
+            </label>
+
+            <label className="form-field">
+              <span>Tipo de documento</span>
+              <select name="payerIdType" defaultValue="">
+                <option value="" disabled>
+                  Seleccionar...
+                </option>
+                <option value="DNI">DNI</option>
+                <option value="CUIT">CUIT</option>
+              </select>
+              <FieldError field="payerIdType" state={state} />
+            </label>
+
+            <label className="form-field">
+              <span>Número de documento</span>
+              <input name="payerIdNumber" placeholder="30111222" />
+              <FieldError field="payerIdNumber" state={state} />
+            </label>
+          </div>
+        </section>
+      ) : null}
 
       <section className="checkout-section">
         <div className="checkout-section-header">
@@ -317,7 +389,7 @@ export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps
           Al enviar este formulario se llama al backend real por `POST /api/storefront/v1/checkout` usando
           el `host` actual como contexto de tenant.
         </p>
-        <SubmitButton />
+        <SubmitButton paymentStrategy={paymentStrategy} />
       </div>
     </form>
   );

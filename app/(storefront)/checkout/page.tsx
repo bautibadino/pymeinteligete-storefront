@@ -51,8 +51,8 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   const host = experience.runtime.context.host;
   const displayName = resolveTenantDisplayName(experience.bootstrap, host);
   const initialItems = parseInitialItems(resolvedSearchParams);
-  const canCheckout = canAccessCheckout(experience.bootstrap?.shopStatus ?? null);
-  const visibleMethods = experience.paymentMethods?.items.length ?? 0;
+  const canCheckout = canAccessCheckout(experience.bootstrap?.tenant.status ?? null);
+  const visibleMethods = experience.paymentMethods?.paymentMethods.length ?? 0;
 
   return (
     <>
@@ -75,7 +75,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
       />
 
       <SurfaceStateCard
-        shopStatus={experience.bootstrap?.shopStatus ?? null}
+        shopStatus={experience.bootstrap?.tenant.status ?? null}
         surface="checkout"
         title="El checkout sólo está habilitado cuando la tienda está activa."
         description="La política documentada bloquea esta superficie para `paused`, `draft` y `disabled`. La UI ya refleja esa restricción sin recalcular negocio."

@@ -5,13 +5,13 @@ export function resolvePaymentStatusLabel(order: StorefrontOrderByTokenResult): 
     return "Acreditado";
   }
 
-  const paymentStatus = order.payment?.status;
+  const orderStatus = order.status;
 
-  if (!paymentStatus) {
+  if (!orderStatus) {
     return "Pendiente";
   }
 
-  const normalized = paymentStatus.toLowerCase();
+  const normalized = orderStatus.toLowerCase();
 
   if (normalized === "pending" || normalized === "pendiente") {
     return "Pendiente";
@@ -25,11 +25,11 @@ export function resolvePaymentStatusLabel(order: StorefrontOrderByTokenResult): 
     return "Rechazado";
   }
 
-  if (normalized === "approved" || normalized === "acreditado") {
+  if (normalized === "approved" || normalized === "acreditado" || normalized === "confirmado") {
     return "Acreditado";
   }
 
-  return paymentStatus;
+  return orderStatus;
 }
 
 export function resolvePaymentDetail(order: StorefrontOrderByTokenResult): string {

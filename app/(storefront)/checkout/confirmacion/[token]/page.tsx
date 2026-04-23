@@ -74,7 +74,7 @@ async function resolvePaymentMethodsForConfirmation(
   try {
     const methods = await getPaymentMethods(context);
 
-    return methods.items ?? [];
+    return methods.paymentMethods ?? [];
   } catch {
     return [];
   }
@@ -90,7 +90,7 @@ export default async function CheckoutConfirmationTokenPage({
     resolveOrderByToken(experience.runtime.context, token),
     resolvePaymentMethodsForConfirmation(
       experience.runtime.context,
-      experience.bootstrap?.shopStatus ?? null,
+      experience.bootstrap?.tenant.status ?? null,
     ),
   ]);
 
@@ -108,7 +108,7 @@ export default async function CheckoutConfirmationTokenPage({
             </div>
             <div className="stat-box">
               <span>Estado tienda</span>
-              <strong>{experience.bootstrap?.shopStatus ?? "sin resolver"}</strong>
+              <strong>{experience.bootstrap?.tenant.status ?? "sin resolver"}</strong>
             </div>
           </div>
         }

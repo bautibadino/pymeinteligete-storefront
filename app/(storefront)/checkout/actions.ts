@@ -3,9 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { canAccessCheckout } from "@/app/(storefront)/_lib/storefront-shell-data";
-import {
-  resolveCheckoutStrategy,
-} from "@/lib/checkout/strategy";
+import { resolveCheckoutStrategy } from "@/lib/checkout/strategy";
 import {
   buildFieldErrors,
   hasFieldErrors,
@@ -18,6 +16,7 @@ import {
   getBootstrap,
   postCheckout,
   postManualPayment,
+  processPayment,
   type StorefrontManualPaymentRequest,
 } from "@/lib/storefront-api";
 
@@ -40,13 +39,6 @@ export const initialManualPaymentActionState: ManualPaymentActionState = {
   status: "idle",
 };
 
-/**
- * Estrategias de pago soportadas en el formulario de checkout.
- * - "none": crea la orden y redirige a confirmación sin intentar pago.
- * - "manual": crea la orden y redirige a confirmación; el usuario completa el pago manual desde allí.
- * - "auto": TODO bloqueado por contrato — requiere paymentData de proveedor (token de MP, etc.)
- *   que el frontend todavía no genera de forma segura. No activar hasta tener integración real.
- */
 type PaymentStrategy = "none" | "manual" | "auto";
 
 export async function submitCheckoutAction(
@@ -65,12 +57,11 @@ export async function submitCheckoutAction(
 
   const runtime = await getStorefrontRuntimeSnapshot();
   const paymentStrategy = (readTrimmedString(formData, "paymentStrategy") as PaymentStrategy) || "none";
-  let confirmationUrl: `/checkout/confirmacion/${string}`;
 
   try {
     const bootstrap = await getBootstrap(runtime.context);
 
-    if (!canAccessCheckout(bootstrap.shopStatus)) {
+    if (!canAccessCheckout(bootstrap.tenant.status)) {
       return {
         status: "error",
         message: "La tienda actual no permite crear nuevas órdenes porque no está `active`.",
@@ -114,9 +105,38 @@ export async function submitCheckoutAction(
       idempotencyKey: readTrimmedString(formData, "idempotencyKey"),
     });
 
-    confirmationUrl = `/checkout/confirmacion/${encodeURIComponent(checkout.orderToken)}`;
+    if (paymentStrategy === "auto") {
+      const paymentToken = readTrimmedString(formData, "paymentToken");
+      const paymentResult = await processPayment(runtime.context, {
+        orderId: checkout.orderId,
+        idempotencyKey: crypto.randomUUID(),
+        paymentData: {
+          ...(paymentToken ? { token: paymentToken } : {}),
+          payment_method_id: readTrimmedString(formData, "paymentMethodId"),
+          transaction_amount: checkout.total,
+          installments: Number(readTrimmedString(formData, "installments")) || 1,
+          payer: {
+            email: readTrimmedString(formData, "payerEmail"),
+            identification: {
+              type: readTrimmedString(formData, "payerIdType"),
+              number: readTrimmedString(formData, "payerIdNumber"),
+            },
+          },
+        },
+      });
 
-    // "none" y "manual" redirigen a confirmación; en "manual" el usuario completa el pago desde allí.
+      if (paymentResult.status === "approved" || paymentResult.status === "pending") {
+        redirect(`/checkout/confirmacion/${encodeURIComponent(checkout.orderToken)}`);
+      }
+
+      return {
+        status: "error",
+        message: `El pago no pudo completarse (${paymentResult.statusDetail || paymentResult.status}). La orden ya fue creada; podés completar el pago manualmente desde la confirmación.`,
+      };
+    }
+
+    // "none" y "manual" redirigen a confirmación.
+    redirect(`/checkout/confirmacion/${encodeURIComponent(checkout.orderToken)}`);
   } catch (error) {
     if (error instanceof StorefrontApiError) {
       return {
@@ -127,11 +147,9 @@ export async function submitCheckoutAction(
 
     return {
       status: "error",
-      message: "No se pudo crear la orden en este momento.",
+      message: "No se pudo crear la orden o procesar el pago en este momento.",
     };
   }
-
-  redirect(confirmationUrl);
 }
 
 export async function submitManualPaymentAction(

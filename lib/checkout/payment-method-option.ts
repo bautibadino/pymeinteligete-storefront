@@ -1,6 +1,5 @@
 export function resolvePaymentMethodOptionValue(method: {
-  id?: string | null;
-  code?: string | null;
+  methodId?: string | null;
 }): string {
-  return method.id ?? method.code ?? "";
+  return method.methodId ?? "";
 }
