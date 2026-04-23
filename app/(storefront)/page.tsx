@@ -5,7 +5,12 @@ import { ModuleRenderer } from "@/components/modules/ModuleRenderer";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
 import { normalizeModules } from "@/lib/modules";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
+import { applyTemplateOverrides } from "@/lib/templates/apply-overrides";
 import { resolveTenantTheme } from "@/lib/theme";
+
+type HomePageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const snapshot = await resolveTenantSeoSnapshot();
@@ -15,15 +20,22 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function HomePage() {
-  const experience = await loadHomeExperience();
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const [experience, resolvedSearchParams] = await Promise.all([
+    loadHomeExperience(),
+    searchParams,
+  ]);
   const host = experience.runtime.context.host;
   const theme = resolveTenantTheme(experience.bootstrap);
-  const modules = normalizeModules({
+  const baseModules = normalizeModules({
     bootstrap: experience.bootstrap,
     theme,
     host,
   });
+  // Permite previsualizar templates desde la URL (`?hero=workshop`)
+  // sin mutar la configuración persistida del tenant. El editor del
+  // ERP usará el mismo mecanismo para el preview iframe (Fase 4).
+  const modules = applyTemplateOverrides(baseModules, resolvedSearchParams);
 
   return (
     <>

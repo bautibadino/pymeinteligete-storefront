@@ -4,7 +4,6 @@ import type { Route } from "next";
 import type {
   CategoryRailModule,
   FeaturedProductsModule,
-  HeroModule,
   ModuleRendererProps,
   PromoBandModule,
   RichTextModule,
@@ -12,6 +11,7 @@ import type {
   TrustBarModule,
 } from "@/lib/modules";
 import type { StorefrontCatalogProduct, StorefrontCategory } from "@/lib/storefront-api";
+import { resolveHeroTemplate } from "@/lib/templates/registry";
 
 function formatPrice(product: StorefrontCatalogProduct): string {
   const amount = product.price?.amount;
@@ -40,35 +40,10 @@ function renderAction(action: { label: string; href: string } | undefined, class
   );
 }
 
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_STOREFRONT_DEBUG === "true";
-
-function HeroModuleView({ module, host }: { module: HeroModule; host: string }) {
-  return (
-    <section className={`sf-module sf-hero sf-hero-${module.variant}`}>
-      <div className="sf-hero-copy">
-        {module.eyebrow ? <span className="eyebrow">{module.eyebrow}</span> : null}
-        <h2>{module.title}</h2>
-        <p>{module.description}</p>
-        <div className="hero-actions">
-          {renderAction(module.primaryAction, "primary-action")}
-          {renderAction(module.secondaryAction, "secondary-action")}
-        </div>
-      </div>
-
-      {module.image ? (
-        <div className="sf-hero-panel" aria-hidden="true">
-          <img src={module.image.src} alt={module.image.alt} />
-        </div>
-      ) : DEBUG_ENABLED ? (
-        <div className="sf-hero-panel" aria-label="Contexto de tienda (debug)">
-          <span className="sf-hero-panel-label">Host activo</span>
-          <strong className="mono">{host}</strong>
-          <p>El tenant se resuelve por dominio y el contenido visible sale del bootstrap.</p>
-        </div>
-      ) : null}
-    </section>
-  );
-}
+// Nota: el hero ya no tiene un componente propio acá. Se resuelve
+// vía `resolveHeroTemplate()` del Template Registry (ver switch en
+// `renderModule`). Así podemos agregar variantes nuevas sin tocar
+// este archivo.
 
 function ProductCard({ product }: { product: StorefrontCatalogProduct }) {
   const slug = product.slug ? `/producto/${product.slug}` : "/catalogo";
@@ -223,8 +198,10 @@ function RichTextModuleView({ module }: { module: RichTextModule }) {
 
 function renderModule(module: StorefrontModule, props: ModuleRendererProps) {
   switch (module.type) {
-    case "hero":
-      return <HeroModuleView module={module} host={props.host} />;
+    case "hero": {
+      const HeroTemplate = resolveHeroTemplate(module.variant);
+      return <HeroTemplate module={module} />;
+    }
     case "featuredProducts":
       return <FeaturedProductsModuleView module={module} products={props.products ?? []} />;
     case "categoryRail":
