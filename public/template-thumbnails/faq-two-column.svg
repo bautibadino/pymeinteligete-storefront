@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" fill="none">
+  <rect width="320" height="200" rx="8" fill="#f8f7f4"/>
+  <!-- Title -->
+  <rect x="80" y="16" width="160" height="12" rx="6" fill="#d4cfc5"/>
+  <!-- Left column cards -->
+  <rect x="16" y="40" width="136" height="60" rx="6" fill="#ffffff" stroke="#e5e1d8" stroke-width="1"/>
+  <rect x="28" y="54" width="90" height="8" rx="4" fill="#c4bfb5"/>
+  <rect x="28" y="68" width="110" height="6" rx="3" fill="#e5e1d8"/>
+  <rect x="28" y="78" width="80" height="6" rx="3" fill="#e5e1d8"/>
+
+  <rect x="16" y="108" width="136" height="60" rx="6" fill="#ffffff" stroke="#e5e1d8" stroke-width="1"/>
+  <rect x="28" y="122" width="70" height="8" rx="4" fill="#c4bfb5"/>
+  <rect x="28" y="136" width="110" height="6" rx="3" fill="#e5e1d8"/>
+  <rect x="28" y="146" width="90" height="6" rx="3" fill="#e5e1d8"/>
+
+  <!-- Right column cards -->
+  <rect x="168" y="40" width="136" height="60" rx="6" fill="#ffffff" stroke="#e5e1d8" stroke-width="1"/>
+  <rect x="180" y="54" width="100" height="8" rx="4" fill="#c4bfb5"/>
+  <rect x="180" y="68" width="110" height="6" rx="3" fill="#e5e1d8"/>
+  <rect x="180" y="78" width="70" height="6" rx="3" fill="#e5e1d8"/>
+
+  <rect x="168" y="108" width="136" height="60" rx="6" fill="#ffffff" stroke="#e5e1d8" stroke-width="1"/>
+  <rect x="180" y="122" width="80" height="8" rx="4" fill="#c4bfb5"/>
+  <rect x="180" y="136" width="110" height="6" rx="3" fill="#e5e1d8"/>
+  <rect x="180" y="146" width="95" height="6" rx="3" fill="#e5e1d8"/>
+  <!-- Label -->
+  <text x="160" y="193" font-family="sans-serif" font-size="10" fill="#a09890" text-anchor="middle">FAQ  Dos columnas</text>
+</svg>
