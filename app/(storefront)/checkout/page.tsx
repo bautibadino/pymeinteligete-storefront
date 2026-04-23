@@ -53,6 +53,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   const initialItems = parseInitialItems(resolvedSearchParams);
   const canCheckout = canAccessCheckout(experience.bootstrap?.tenant.status ?? null);
   const visibleMethods = experience.paymentMethods?.paymentMethods.length ?? 0;
+  const publicKey = experience.bootstrap?.commerce.payment.publicKey;
 
   return (
     <>
@@ -86,7 +87,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
           title="Crear orden oficial"
           description="La superficie envía cliente, dirección e items explícitos al backend. No replica reglas del ERP ni construye pagos inventados del lado del frontend."
         >
-          <CheckoutForm paymentMethods={experience.paymentMethods} initialItems={initialItems} />
+          <CheckoutForm paymentMethods={experience.paymentMethods} initialItems={initialItems} {...(publicKey ? { publicKey } : {})} />
         </SplitPanel>
       ) : null}
 

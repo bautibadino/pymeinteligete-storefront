@@ -172,6 +172,7 @@ export interface StorefrontInstallmentsConfig {
 
 export interface StorefrontCommercePayment {
   visibleMethods: string[];
+  publicKey?: string;
   installments?: StorefrontInstallmentsConfig;
 }
 
@@ -482,26 +483,33 @@ export interface StorefrontOrderByTokenResult {
 
 // ─────────────────────────────────────────────────────────────
 // Manual payment
-// BLOQUEO: el endpoint POST /orders/:token/payment/manual NO está
-// documentado en la API reference v1. Los campos mínimos se mantienen
-// con estabilidad no garantizada hasta que el backend concrete el contrato.
+// Contrato formalizado en ERP commit 5f0996a4.
+// POST /api/storefront/v1/orders/:token/payment/manual
 // ─────────────────────────────────────────────────────────────
 
 export interface StorefrontManualPaymentRequest {
-  amount?: number;
-  paymentMethodId?: string;
-  reference?: string;
-  notes?: string;
-  /** Respaldo extensible hasta congelar contrato. */
-  [key: string]: unknown;
+  methodId: string;
+}
+
+export interface StorefrontManualPaymentBankAccount {
+  bank: string;
+  cbu: string;
+  alias?: string;
+}
+
+export interface StorefrontManualPaymentContactInfo {
+  email?: string;
+  phone?: string;
+  whatsapp?: string;
 }
 
 export interface StorefrontManualPaymentResult {
-  paymentId?: string | null;
-  status?: string | null;
-  statusDetail?: string | null;
-  orderId?: string | null;
-  amount?: number | null;
-  /** Respaldo extensible hasta congelar contrato. */
-  [key: string]: unknown;
+  paymentAttemptId: string;
+  orderId: string;
+  orderToken: string;
+  amount: number;
+  instructions?: string;
+  bankAccounts?: StorefrontManualPaymentBankAccount[];
+  contactInfo?: StorefrontManualPaymentContactInfo;
+  methodDisplayName: string;
 }

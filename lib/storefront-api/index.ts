@@ -29,6 +29,8 @@ export type {
   StorefrontFooterColumn,
   StorefrontManualPaymentRequest,
   StorefrontManualPaymentResult,
+  StorefrontManualPaymentBankAccount,
+  StorefrontManualPaymentContactInfo,
   StorefrontNavLink,
   StorefrontOrderByTokenResult,
   StorefrontPage,

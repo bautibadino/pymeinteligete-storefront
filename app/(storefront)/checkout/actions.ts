@@ -17,13 +17,17 @@ import {
   postCheckout,
   postManualPayment,
   processPayment,
-  type StorefrontManualPaymentRequest,
 } from "@/lib/storefront-api";
 
 export type CheckoutActionState = {
-  status: "idle" | "error";
+  status: "idle" | "error" | "success";
   message?: string;
   fieldErrors?: Partial<Record<import("@/lib/checkout/validation").CheckoutFieldName, string>>;
+  orderId?: string;
+  orderToken?: string;
+  orderNumber?: string;
+  total?: number;
+  payerEmail?: string;
 };
 
 export type ManualPaymentActionState = {
@@ -106,32 +110,15 @@ export async function submitCheckoutAction(
     });
 
     if (paymentStrategy === "auto") {
-      const paymentToken = readTrimmedString(formData, "paymentToken");
-      const paymentResult = await processPayment(runtime.context, {
-        orderId: checkout.orderId,
-        idempotencyKey: crypto.randomUUID(),
-        paymentData: {
-          ...(paymentToken ? { token: paymentToken } : {}),
-          payment_method_id: readTrimmedString(formData, "paymentMethodId"),
-          transaction_amount: checkout.total,
-          installments: Number(readTrimmedString(formData, "installments")) || 1,
-          payer: {
-            email: readTrimmedString(formData, "payerEmail"),
-            identification: {
-              type: readTrimmedString(formData, "payerIdType"),
-              number: readTrimmedString(formData, "payerIdNumber"),
-            },
-          },
-        },
-      });
-
-      if (paymentResult.status === "approved" || paymentResult.status === "pending") {
-        redirect(`/checkout/confirmacion/${encodeURIComponent(checkout.orderToken)}`);
-      }
-
+      // Flujo legacy de 2 pasos: primero crear orden, luego mostrar Payment Brick.
+      // Devolvemos los datos de la orden para que el cliente avance al paso de pago.
       return {
-        status: "error",
-        message: `El pago no pudo completarse (${paymentResult.statusDetail || paymentResult.status}). La orden ya fue creada; podés completar el pago manualmente desde la confirmación.`,
+        status: "success",
+        orderId: checkout.orderId,
+        orderToken: checkout.orderToken,
+        orderNumber: checkout.orderNumber,
+        total: checkout.total,
+        payerEmail: checkout.payerEmail,
       };
     }
 
@@ -152,54 +139,71 @@ export async function submitCheckoutAction(
   }
 }
 
-export async function submitManualPaymentAction(
-  _previousState: ManualPaymentActionState,
+/**
+ * Procesa el pago automático para una orden ya creada.
+ * Usada por el Payment Brick en el flujo de 2 pasos (legacy parity).
+ */
+export async function processPaymentAction(
+  _previousState: CheckoutActionState,
   formData: FormData,
-): Promise<ManualPaymentActionState> {
-  const token = readTrimmedString(formData, "orderToken");
-  const amountRaw = readTrimmedString(formData, "amount");
+): Promise<CheckoutActionState> {
+  const orderId = readTrimmedString(formData, "orderId");
+  const orderToken = readTrimmedString(formData, "orderToken");
+  const paymentToken = readTrimmedString(formData, "paymentToken");
   const paymentMethodId = readTrimmedString(formData, "paymentMethodId");
-  const reference = readTrimmedString(formData, "reference");
-  const notes = readTrimmedString(formData, "notes");
+  const installments = Number(readTrimmedString(formData, "installments")) || 1;
+  const payerEmail = readTrimmedString(formData, "payerEmail");
+  const payerIdType = readTrimmedString(formData, "payerIdType");
+  const payerIdNumber = readTrimmedString(formData, "payerIdNumber");
+  const issuerId = readTrimmedString(formData, "issuerId");
 
-  if (!token) {
+  if (!orderId || !orderToken) {
     return {
       status: "error",
-      message: "Falta el token de la orden para registrar el pago manual.",
-    };
-  }
-
-  const amount = Number(amountRaw);
-
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return {
-      status: "error",
-      message: "Ingresá un monto válido mayor a cero.",
+      message: "Faltan datos de la orden para procesar el pago.",
     };
   }
 
   if (!paymentMethodId) {
     return {
       status: "error",
-      message: "Seleccioná un método de pago manual.",
+      message: "Falta el método de pago.",
     };
   }
 
   const runtime = await getStorefrontRuntimeSnapshot();
 
   try {
-    const payload: StorefrontManualPaymentRequest = {
-      amount,
-      paymentMethodId,
-      ...(reference ? { reference } : {}),
-      ...(notes ? { notes } : {}),
-    };
+    const paymentResult = await processPayment(runtime.context, {
+      orderId,
+      idempotencyKey: crypto.randomUUID(),
+      paymentData: {
+        ...(paymentToken ? { token: paymentToken } : {}),
+        payment_method_id: paymentMethodId,
+        transaction_amount: Number(readTrimmedString(formData, "transactionAmount")) || 0,
+        installments,
+        ...(issuerId ? { issuer_id: issuerId } : {}),
+        payer: {
+          email: payerEmail,
+          ...(payerIdType && payerIdNumber
+            ? {
+                identification: {
+                  type: payerIdType,
+                  number: payerIdNumber,
+                },
+              }
+            : {}),
+        },
+      },
+    });
 
-    await postManualPayment(runtime.context, token, payload);
+    if (paymentResult.status === "approved" || paymentResult.status === "pending") {
+      redirect(`/checkout/confirmacion/${encodeURIComponent(orderToken)}`);
+    }
 
     return {
-      status: "success",
-      message: "El pago manual se registró correctamente. El estado de la orden se actualizará en breve.",
+      status: "error",
+      message: `El pago no pudo completarse (${paymentResult.statusDetail || paymentResult.status}). La orden ya fue creada; podés completar el pago manualmente desde la confirmación.`,
     };
   } catch (error) {
     if (error instanceof StorefrontApiError) {
@@ -211,7 +215,52 @@ export async function submitManualPaymentAction(
 
     return {
       status: "error",
-      message: "No se pudo registrar el pago manual en este momento.",
+      message: "No se pudo procesar el pago en este momento.",
+    };
+  }
+}
+
+export async function submitManualPaymentAction(
+  _previousState: ManualPaymentActionState,
+  formData: FormData,
+): Promise<ManualPaymentActionState> {
+  const token = readTrimmedString(formData, "orderToken");
+  const methodId = readTrimmedString(formData, "methodId");
+
+  if (!token) {
+    return {
+      status: "error",
+      message: "Falta el token de la orden para iniciar el pago manual.",
+    };
+  }
+
+  if (!methodId) {
+    return {
+      status: "error",
+      message: "Seleccioná un método de pago manual.",
+    };
+  }
+
+  const runtime = await getStorefrontRuntimeSnapshot();
+
+  try {
+    await postManualPayment(runtime.context, token, { methodId });
+
+    return {
+      status: "success",
+      message: "Pago manual iniciado. Seguí las instrucciones que te enviaremos para completar la transferencia.",
+    };
+  } catch (error) {
+    if (error instanceof StorefrontApiError) {
+      return {
+        status: "error",
+        message: error.message,
+      };
+    }
+
+    return {
+      status: "error",
+      message: "No se pudo iniciar el pago manual en este momento.",
     };
   }
 }

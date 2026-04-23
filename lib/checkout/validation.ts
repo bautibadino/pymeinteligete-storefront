@@ -90,27 +90,9 @@ export function buildFieldErrors(formData: FormData): CheckoutFieldErrors {
     errors.items = "Necesitás al menos un producto con cantidad mayor a cero.";
   }
 
-  if (isAutoPaymentStrategy(formData)) {
-    if (!readTrimmedString(formData, "paymentToken")) {
-      errors.paymentToken = "Falta el token de pago. En producción lo genera el Payment Brick.";
-    }
-
-    if (!readTrimmedString(formData, "paymentMethodId")) {
-      errors.paymentMethodId = "Seleccioná el método de pago.";
-    }
-
-    if (!readTrimmedString(formData, "payerEmail")) {
-      errors.payerEmail = "Ingresá el email del pagador.";
-    }
-
-    if (!readTrimmedString(formData, "payerIdType")) {
-      errors.payerIdType = "Seleccioná el tipo de documento (DNI o CUIT).";
-    }
-
-    if (!readTrimmedString(formData, "payerIdNumber")) {
-      errors.payerIdNumber = "Ingresá el número de documento del pagador.";
-    }
-  }
+  // Nota: en el flujo legacy de 2 pasos, los datos de pago (token, methodId, payer)
+  // se generan y validan en el Payment Brick (paso 2), no en el formulario de checkout
+  // (paso 1). Por eso no exigimos estos campos durante la creación de la orden.
 
   return errors;
 }

@@ -91,7 +91,6 @@ export function ConfirmationSummary({
           </div>
           <ManualPaymentForm
             orderToken={orderToken}
-            defaultAmount={order.total}
             paymentMethods={paymentMethods}
           />
         </div>

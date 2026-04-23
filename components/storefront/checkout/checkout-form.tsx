@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { initialCheckoutActionState, submitCheckoutAction, type CheckoutActionState } from "@/app/(storefront)/checkout/actions";
+import { PaymentBrick } from "@/components/storefront/checkout/payment-brick";
 import type { StorefrontPaymentMethods } from "@/lib/storefront-api";
 
 type CheckoutItemDraft = {
@@ -15,10 +16,19 @@ type CheckoutItemDraft = {
 
 type CheckoutFormProps = {
   paymentMethods: StorefrontPaymentMethods | null;
+  publicKey?: string;
   initialItems?: Array<{
     productId: string;
     quantity?: number;
   }>;
+};
+
+type OrderState = {
+  orderId: string;
+  orderToken: string;
+  orderNumber: string;
+  total: number;
+  payerEmail: string;
 };
 
 function buildInitialItems(
@@ -46,8 +56,8 @@ function SubmitButton({ paymentStrategy }: { paymentStrategy: string }) {
   const label =
     paymentStrategy === "auto"
       ? pending
-        ? "Creando orden y procesando pago..."
-        : "Crear orden y pagar"
+        ? "Creando orden..."
+        : "Continuar al pago"
       : pending
         ? "Creando orden..."
         : "Crear orden oficial";
@@ -69,12 +79,28 @@ function FieldError({ state, field }: { state: CheckoutActionState; field: keyof
   return <span className="field-error">{message}</span>;
 }
 
-export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps) {
+export function CheckoutForm({ paymentMethods, publicKey, initialItems }: CheckoutFormProps) {
   const [state, formAction] = useActionState(submitCheckoutAction, initialCheckoutActionState);
   const [items, setItems] = useState<CheckoutItemDraft[]>(() => buildInitialItems(initialItems));
   const [paymentStrategy, setPaymentStrategy] = useState<string>("none");
+  const [step, setStep] = useState<"form" | "payment">("form");
+  const [orderState, setOrderState] = useState<OrderState | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const idempotencyKeyRef = useRef<string>(crypto.randomUUID());
   const paymentOptions = paymentMethods?.paymentMethods ?? [];
+
+  useEffect(() => {
+    if (state.status === "success" && state.orderId && state.orderToken) {
+      setOrderState({
+        orderId: state.orderId,
+        orderToken: state.orderToken,
+        orderNumber: state.orderNumber ?? "",
+        total: state.total ?? 0,
+        payerEmail: state.payerEmail ?? "",
+      });
+      setStep("payment");
+    }
+  }, [state]);
 
   function updateItem(index: number, patch: Partial<CheckoutItemDraft>) {
     setItems((current) =>
@@ -97,6 +123,54 @@ export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps
 
   function removeItem(index: number) {
     setItems((current) => (current.length > 1 ? current.filter((_, currentIndex) => currentIndex !== index) : current));
+  }
+
+  function handleBackToForm() {
+    setStep("form");
+    setPaymentError(null);
+  }
+
+  if (step === "payment" && orderState) {
+    return (
+      <div className="checkout-payment-step">
+        <div className="checkout-section-header">
+          <span className="eyebrow">Pago</span>
+          <h3>Completá tu pago con MercadoPago</h3>
+          <p>
+            Orden #{orderState.orderNumber} — Total: ${orderState.total.toLocaleString("es-AR")}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="line-action line-action-muted"
+          onClick={handleBackToForm}
+        >
+          Volver a mis datos
+        </button>
+
+        {paymentError && (
+          <div className="checkout-error-banner" role="alert">
+            {paymentError}
+          </div>
+        )}
+
+        <PaymentBrick
+          publicKey={publicKey ?? ""}
+          amount={orderState.total}
+          orderId={orderState.orderId}
+          orderToken={orderState.orderToken}
+          payerEmail={orderState.payerEmail}
+          onPaymentSuccess={() => {
+            // La redirección la maneja processPaymentAction internamente
+            setPaymentError(null);
+          }}
+          onPaymentError={(errorMsg) => {
+            setPaymentError(errorMsg);
+          }}
+        />
+      </div>
+    );
   }
 
   return (
@@ -301,71 +375,6 @@ export function CheckoutForm({ paymentMethods, initialItems }: CheckoutFormProps
           )}
         </section>
       </div>
-
-      {paymentStrategy === "auto" ? (
-        <section className="checkout-section">
-          <div className="checkout-section-header">
-            <span className="eyebrow">Datos de pago</span>
-            <h3>Información para procesar el pago</h3>
-            <p>
-              En producción estos datos se generan con el Payment Brick del proveedor. Acá se envían
-              explícitamente para completar el contrato `POST /payments/process`.
-            </p>
-          </div>
-
-          <div className="form-grid">
-            <label className="form-field form-field-full">
-              <span>Token de tarjeta</span>
-              <input name="paymentToken" placeholder="Token del Payment Brick" />
-              <FieldError field="paymentToken" state={state} />
-            </label>
-
-            <label className="form-field">
-              <span>Método de pago</span>
-              <select name="paymentMethodId" defaultValue="">
-                <option value="" disabled>
-                  Seleccionar...
-                </option>
-                {paymentOptions.map((method: import("@/lib/storefront-api").StorefrontPaymentMethod) => (
-                  <option key={method.methodId} value={method.methodId}>
-                    {method.displayName}
-                  </option>
-                ))}
-              </select>
-              <FieldError field="paymentMethodId" state={state} />
-            </label>
-
-            <label className="form-field">
-              <span>Cuotas</span>
-              <input name="installments" type="number" min="1" step="1" defaultValue="1" />
-            </label>
-
-            <label className="form-field">
-              <span>Email del pagador</span>
-              <input name="payerEmail" type="email" placeholder="juan@mail.com" />
-              <FieldError field="payerEmail" state={state} />
-            </label>
-
-            <label className="form-field">
-              <span>Tipo de documento</span>
-              <select name="payerIdType" defaultValue="">
-                <option value="" disabled>
-                  Seleccionar...
-                </option>
-                <option value="DNI">DNI</option>
-                <option value="CUIT">CUIT</option>
-              </select>
-              <FieldError field="payerIdType" state={state} />
-            </label>
-
-            <label className="form-field">
-              <span>Número de documento</span>
-              <input name="payerIdNumber" placeholder="30111222" />
-              <FieldError field="payerIdNumber" state={state} />
-            </label>
-          </div>
-        </section>
-      ) : null}
 
       <section className="checkout-section">
         <div className="checkout-section-header">
