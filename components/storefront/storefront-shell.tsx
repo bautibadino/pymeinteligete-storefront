@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import type { StorefrontBootstrap, StorefrontNavLink } from "@/lib/storefront-api";
 
 import {
-  resolveModules,
   resolveStatusMessage,
   resolveStatusTone,
   resolveTenantDescription,
@@ -14,7 +13,7 @@ import {
 
 const FALLBACK_NAVIGATION: StorefrontNavLink[] = [
   { href: "/", label: "Inicio" },
-  { href: "/catalogo", label: "Catalogo" },
+  { href: "/catalogo", label: "Catálogo" },
   { href: "/checkout", label: "Checkout" },
 ];
 
@@ -25,6 +24,11 @@ type StorefrontShellProps = {
   issues: FetchIssue[];
 };
 
+// Debug info (module chip bar, host activo) se muestra sólo con
+// STOREFRONT_DEBUG=true. Así un preview Vercel en producción no
+// expone información de plomería a usuarios finales.
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_STOREFRONT_DEBUG === "true";
+
 export function StorefrontShell({ bootstrap, host, children, issues }: StorefrontShellProps) {
   const displayName = resolveTenantDisplayName(bootstrap, host);
   const description =
@@ -33,7 +37,6 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
   const logoUrl = resolveTenantLogoUrl(bootstrap);
   const statusTone = resolveStatusTone(bootstrap?.tenant.status ?? null);
   const statusMessage = resolveStatusMessage(bootstrap?.tenant.status ?? null);
-  const modules = resolveModules(bootstrap);
   const contactEmail = bootstrap?.contact?.email;
   const contactPhone = bootstrap?.contact?.phone;
   const headerLinks = bootstrap?.navigation?.headerLinks ?? FALLBACK_NAVIGATION;
@@ -53,7 +56,6 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
             </div>
 
             <div className="storefront-brandcopy">
-              <span className="storefront-kicker">PyMEInteligente storefront</span>
               <h1 className="storefront-title">{displayName}</h1>
               <p className="storefront-subtitle">{description}</p>
             </div>
@@ -75,10 +77,6 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
 
             <div className="storefront-contact">
               <span className={`status-badge status-badge-${statusTone}`}>{statusMessage}</span>
-              <div className="storefront-contactline">
-                <span className="meta-label">Host</span>
-                <span className="meta-value mono">{host}</span>
-              </div>
               {contactEmail ? (
                 <div className="storefront-contactline">
                   <span className="meta-label">Contacto</span>
@@ -91,11 +89,17 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
                   <span className="meta-value">{contactPhone}</span>
                 </div>
               ) : null}
+              {DEBUG_ENABLED ? (
+                <div className="storefront-contactline">
+                  <span className="meta-label">Host</span>
+                  <span className="meta-value mono">{host}</span>
+                </div>
+              ) : null}
             </div>
           </div>
         </header>
 
-        {issues.length > 0 ? (
+        {DEBUG_ENABLED && issues.length > 0 ? (
           <section className="storefront-alertband" aria-label="Estado técnico del tenant">
             <div className="storefront-alertcopy">
               <strong>Integración parcial</strong>
@@ -112,24 +116,6 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
                 </li>
               ))}
             </ul>
-          </section>
-        ) : null}
-
-        {modules.length > 0 ? (
-          <section className="storefront-modulebar" aria-label="Módulos expuestos por bootstrap">
-            {modules.slice(0, 4).map((module, index) => {
-              const payloadTitle =
-                typeof module.payload === "object" && module.payload !== null && "title" in module.payload
-                  ? String((module.payload as Record<string, unknown>).title)
-                  : undefined;
-
-              return (
-                <article key={module.id ?? `module-${index}`} className="module-chip">
-                  <span className="module-chip-type">{module.type ?? "modulo"}</span>
-                  <strong>{payloadTitle ?? "Contenido configurable"}</strong>
-                </article>
-              );
-            })}
           </section>
         ) : null}
 

@@ -40,6 +40,8 @@ function renderAction(action: { label: string; href: string } | undefined, class
   );
 }
 
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_STOREFRONT_DEBUG === "true";
+
 function HeroModuleView({ module, host }: { module: HeroModule; host: string }) {
   return (
     <section className={`sf-module sf-hero sf-hero-${module.variant}`}>
@@ -53,17 +55,17 @@ function HeroModuleView({ module, host }: { module: HeroModule; host: string }) 
         </div>
       </div>
 
-      <div className="sf-hero-panel" aria-label="Contexto de tienda">
-        {module.image ? (
+      {module.image ? (
+        <div className="sf-hero-panel" aria-hidden="true">
           <img src={module.image.src} alt={module.image.alt} />
-        ) : (
-          <>
-            <span className="sf-hero-panel-label">Host activo</span>
-            <strong className="mono">{host}</strong>
-            <p>El tenant se resuelve por dominio y el contenido visible sale del bootstrap.</p>
-          </>
-        )}
-      </div>
+        </div>
+      ) : DEBUG_ENABLED ? (
+        <div className="sf-hero-panel" aria-label="Contexto de tienda (debug)">
+          <span className="sf-hero-panel-label">Host activo</span>
+          <strong className="mono">{host}</strong>
+          <p>El tenant se resuelve por dominio y el contenido visible sale del bootstrap.</p>
+        </div>
+      ) : null}
     </section>
   );
 }
