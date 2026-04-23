@@ -165,9 +165,9 @@ export interface ProductCardData {
  * pasar a la card para controlar qué campos mostrar.
  */
 export interface ProductCardDisplayOptions {
-  showBrand?: boolean;
-  showBadges?: boolean;
-  showInstallments?: boolean;
-  showCashDiscount?: boolean;
-  showAddToCart?: boolean;
+  showBrand?: boolean | undefined;
+  showBadges?: boolean | undefined;
+  showInstallments?: boolean | undefined;
+  showCashDiscount?: boolean | undefined;
+  showAddToCart?: boolean | undefined;
 }
