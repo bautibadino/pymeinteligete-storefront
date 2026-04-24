@@ -239,6 +239,7 @@ export interface StorefrontBootstrap {
   features: StorefrontFeatures;
   pages: StorefrontPage[];
   analytics?: StorefrontAnalytics;
+  presentation?: import("@/lib/types/presentation").Presentation;
 }
 
 // ─────────────────────────────────────────────────────────────

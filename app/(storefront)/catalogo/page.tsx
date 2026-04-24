@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 
 import { loadCatalogExperience, resolveTenantDisplayName } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { CatalogGrid } from "@/components/storefront/catalog-grid";
 import { PageIntro, SplitPanel } from "@/components/storefront/page-sections";
+import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
+import { PreviewBridge } from "@/components/presentation/PreviewBridge";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
+import { shouldUsePresentation } from "@/lib/presentation/render-utils";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
 
 type CatalogPageProps = {
@@ -52,6 +56,22 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
   const host = experience.runtime.context.host;
   const displayName = resolveTenantDisplayName(experience.bootstrap, host);
   const activeFilters = Object.entries(query).filter(([, value]) => value !== undefined);
+  const cookieStore = await cookies();
+  const hasPreview = cookieStore.has("__preview_token");
+
+  const usePresentation = shouldUsePresentation(experience.bootstrap?.presentation, "catalog");
+
+  if (usePresentation) {
+    return (
+      <>
+        {hasPreview ? <PreviewBridge /> : null}
+        <PresentationRenderer
+          presentation={experience.bootstrap!.presentation!}
+          page="catalog"
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -100,6 +120,8 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
           emptyDescription="La tienda actual no devolvió productos públicos para la consulta activa o el backend todavía no expone el payload final esperado."
         />
       </SplitPanel>
+
+      {hasPreview ? <PreviewBridge /> : null}
     </>
   );
 }
