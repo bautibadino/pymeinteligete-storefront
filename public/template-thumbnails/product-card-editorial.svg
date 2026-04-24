@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="300" viewBox="0 0 240 300" fill="none">
+  <rect width="240" height="300" rx="8" fill="#FAFAFA"/>
+  <rect x="1" y="1" width="238" height="298" rx="7" stroke="#E5E7EB" stroke-width="0.5"/>
+  <rect x="16" y="16" width="208" height="200" rx="6" fill="#F3F4F6"/>
+  <rect x="60" y="66" width="120" height="100" rx="4" fill="#E5E7EB"/>
+  <circle cx="120" cy="116" r="20" fill="#D1D5DB"/>
+  <rect x="16" y="228" width="36" height="6" rx="2" fill="#9CA3AF"/>
+  <rect x="16" y="242" width="196" height="11" rx="3" fill="#111827"/>
+  <rect x="16" y="257" width="130" height="11" rx="3" fill="#111827"/>
+  <rect x="16" y="277" width="56" height="8" rx="2" fill="#6B7280"/>
+  <rect x="80" y="279" width="40" height="5" rx="2" fill="#D1D5DB"/>
+  <line x1="80" y1="281" x2="120" y2="281" stroke="#9CA3AF" stroke-width="1"/>
+  <text x="120" y="296" font-family="system-ui, sans-serif" font-size="9" fill="#9CA3AF" text-anchor="middle">product-card · editorial</text>
+</svg>

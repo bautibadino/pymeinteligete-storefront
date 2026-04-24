@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="80" viewBox="0 0 320 80" fill="none">
+  <rect width="320" height="80" rx="10" fill="#f4efe7"/>
+  <rect y="28" width="320" height="24" fill="#8c4319"/>
+  <g transform="translate(24,32)" stroke="#fffaf2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 8v0a2 2 0 0 0 2 2h2l2 4"/>
+    <path d="M14 2s2 2 2 6-2 6-2 6"/>
+    <path d="M6 10V6"/>
+    <path d="M6 6 14 2v12L6 10z"/>
+  </g>
+  <text x="52" y="44" font-family="system-ui,sans-serif" font-size="10" fill="#fffaf2" font-weight="600">Bienvenidos · Promo vigente</text>
+  <text x="260" y="44" font-family="system-ui,sans-serif" font-size="8" fill="#fffaf2" font-weight="600" text-decoration="underline">Ver más</text>
+  <text x="12" y="70" font-family="system-ui,sans-serif" font-size="9" fill="#6f6259" font-weight="600">ESTÁTICO</text>
+</svg>

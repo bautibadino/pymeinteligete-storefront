@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" fill="none">
+  <rect width="320" height="200" rx="8" fill="#F8F9FA"/>
+  <rect x="16" y="14" width="90" height="10" rx="3" fill="#94A3B8"/>
+  <rect x="110" y="14" width="55" height="10" rx="3" fill="#CBD5E1"/>
+  <circle cx="46" cy="90" r="34" fill="#E2E8F0"/>
+  <rect x="20" y="131" width="52" height="9" rx="3" fill="#94A3B8"/>
+  <circle cx="130" cy="90" r="34" fill="#E2E8F0"/>
+  <rect x="104" y="131" width="52" height="9" rx="3" fill="#94A3B8"/>
+  <circle cx="214" cy="90" r="34" fill="#E2E8F0"/>
+  <rect x="188" y="131" width="52" height="9" rx="3" fill="#94A3B8"/>
+  <circle cx="298" cy="90" r="34" fill="#E2E8F0" opacity="0.5"/>
+  <rect x="272" y="131" width="52" height="9" rx="3" fill="#CBD5E1" opacity="0.5"/>
+  <rect x="130" y="160" width="60" height="4" rx="2" fill="#CBD5E1"/>
+  <rect x="130" y="160" width="22" height="4" rx="2" fill="#94A3B8"/>
+  <text x="160" y="185" font-family="sans-serif" font-size="9" fill="#64748B" text-anchor="middle">Rail horizontal</text>
+</svg>

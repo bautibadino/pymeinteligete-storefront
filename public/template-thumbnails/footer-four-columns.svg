@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180" fill="none">
+  <rect width="320" height="180" fill="#F8F8F8"/>
+  <!-- Header strip -->
+  <rect x="0" y="0" width="320" height="4" fill="#E5E7EB"/>
+  <!-- Logo placeholder -->
+  <rect x="16" y="16" width="48" height="10" rx="2" fill="#9CA3AF"/>
+  <!-- 4 columns -->
+  <!-- Col 1 -->
+  <rect x="16" y="40" width="52" height="6" rx="1" fill="#6B7280"/>
+  <rect x="16" y="52" width="40" height="4" rx="1" fill="#D1D5DB"/>
+  <rect x="16" y="60" width="44" height="4" rx="1" fill="#D1D5DB"/>
+  <rect x="16" y="68" width="38" height="4" rx="1" fill="#D1D5DB"/>
+  <rect x="16" y="76" width="42" height="4" rx="1" fill="#D1D5DB"/>
+  <!-- Col 2 -->
+  <rect x="88" y="40" width="52" height="6" rx="1" fill="#6B7280"/>
+  <rect x="88" y="52" width="44" height="4" rx="1" fill="#D1D5DB"/>
+  <rect x="88" y="60" width="38" height="4" rx="1" fill="#D1D5DB"/>
+  <rect x="88" y="68" width="46" height="4" rx="1" fill="#D1D5DB"/>
+  <rect x="88" y="76" width="40" height="4" rx="1" fill="#D1D5DB"/>
+  <!-- Col 3 -->
+  <rect x="160" y="40" width="52" height="6" rx="1" fill="#6B7280"/>
+  <rect x="160" y="52" width="42" height="4" rx="1" fill="#D1D5DB"/>
+  <rect x="160" y="60" width="36" height="4" rx="1" fill="#D1D5DB"/>
+  <rect x="160" y="68" width="48" height="4" rx="1" fill="#D1D5DB"/>
+  <!-- Col 4 -->
+  <rect x="232" y="40" width="52" height="6" rx="1" fill="#6B7280"/>
+  <rect x="232" y="52" width="44" height="4" rx="1" fill="#D1D5DB"/>
+  <rect x="232" y="60" width="40" height="4" rx="1" fill="#D1D5DB"/>
+  <rect x="232" y="68" width="36" height="4" rx="1" fill="#D1D5DB"/>
+  <!-- Social icons -->
+  <circle cx="20" cy="108" r="6" fill="#E5E7EB"/>
+  <circle cx="34" cy="108" r="6" fill="#E5E7EB"/>
+  <circle cx="48" cy="108" r="6" fill="#E5E7EB"/>
+  <!-- Divider -->
+  <line x1="16" y1="126" x2="304" y2="126" stroke="#E5E7EB" stroke-width="1"/>
+  <!-- Legal links -->
+  <rect x="16" y="134" width="60" height="3" rx="1" fill="#D1D5DB"/>
+  <rect x="82" y="134" width="52" height="3" rx="1" fill="#D1D5DB"/>
+  <!-- Copyright -->
+  <rect x="192" y="134" width="112" height="3" rx="1" fill="#D1D5DB"/>
+  <!-- Label -->
+  <text x="160" y="160" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#9CA3AF" font-weight="500">Cuatro Columnas</text>
+</svg>

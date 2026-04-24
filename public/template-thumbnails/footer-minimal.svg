@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180" fill="none">
+  <rect width="320" height="180" fill="#F8F8F8"/>
+  <!-- Header strip -->
+  <rect x="0" y="0" width="320" height="4" fill="#E5E7EB"/>
+  <!-- Single row layout -->
+  <rect x="0" y="70" width="320" height="40" fill="#FFFFFF"/>
+  <rect x="0" y="70" width="320" height="1" fill="#E5E7EB"/>
+  <rect x="0" y="110" width="320" height="1" fill="#E5E7EB"/>
+  <!-- Logo -->
+  <rect x="20" y="82" width="40" height="8" rx="2" fill="#9CA3AF"/>
+  <!-- Tagline -->
+  <rect x="66" y="84" width="2" height="4" rx="1" fill="#E5E7EB"/>
+  <rect x="72" y="84" width="60" height="4" rx="1" fill="#D1D5DB"/>
+  <!-- Social icons (center) -->
+  <circle cx="148" cy="90" r="6" fill="#E5E7EB"/>
+  <circle cx="162" cy="90" r="6" fill="#E5E7EB"/>
+  <circle cx="176" cy="90" r="6" fill="#E5E7EB"/>
+  <!-- Copyright (right) -->
+  <rect x="208" y="87" width="92" height="4" rx="1" fill="#D1D5DB"/>
+  <!-- Label -->
+  <text x="160" y="155" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#9CA3AF" font-weight="500">Minimal</text>
+</svg>

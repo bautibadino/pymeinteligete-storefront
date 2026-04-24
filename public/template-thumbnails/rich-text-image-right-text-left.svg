@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160" fill="none">
+  <rect width="240" height="160" rx="8" fill="#F4F4F5"/>
+  <!-- Eyebrow pill left -->
+  <rect x="16" y="24" width="60" height="8" rx="4" fill="#D4D4D8"/>
+  <!-- Title lines left -->
+  <rect x="16" y="38" width="100" height="10" rx="3" fill="#A1A1AA"/>
+  <rect x="16" y="52" width="80" height="10" rx="3" fill="#A1A1AA"/>
+  <!-- Body text lines left -->
+  <rect x="16" y="72" width="100" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="16" y="82" width="100" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="16" y="92" width="80" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="16" y="102" width="100" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="16" y="112" width="60" height="5" rx="2.5" fill="#D4D4D8"/>
+  <!-- CTA -->
+  <rect x="16" y="124" width="72" height="10" rx="5" fill="#71717A"/>
+  <!-- Image placeholder right -->
+  <rect x="128" y="20" width="96" height="120" rx="6" fill="#E4E4E7"/>
+  <!-- Image icon (picture frame) -->
+  <rect x="152" y="52" width="48" height="36" rx="3" fill="#D4D4D8"/>
+  <circle cx="164" cy="62" r="5" fill="#A1A1AA"/>
+  <path d="M152 80 L168 66 L184 78 L194 70 L200 80 Z" fill="#A1A1AA"/>
+  <!-- Label -->
+  <text x="120" y="8" font-family="sans-serif" font-size="7" fill="#71717A" text-anchor="middle" dominant-baseline="middle">Imagen derecha</text>
+</svg>

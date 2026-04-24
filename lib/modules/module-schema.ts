@@ -18,6 +18,7 @@ export type ModuleVariant =
   | "split"
   | "workshop"
   | "editorial"
+  | "commerce"
   | "grid"
   | "spotlight"
   | "rail"
@@ -50,13 +51,23 @@ export type ModuleTextItem = {
   href?: string;
 };
 
-export type HeroModule = StorefrontModuleBase<"hero", "split" | "workshop" | "editorial"> & {
+export type HeroBadge = {
+  icon?: "truck" | "shield" | "credit-card" | "star" | "clock";
+  label: string;
+};
+
+export type HeroModule = StorefrontModuleBase<"hero", "split" | "workshop" | "editorial" | "commerce"> & {
   eyebrow?: string;
   title: string;
   description: string;
   image?: ModuleImage;
   primaryAction?: ModuleAction;
   secondaryAction?: ModuleAction;
+  subtitle?: string;
+  overlayOpacity?: number;
+  badges?: HeroBadge[];
+  searchPlaceholder?: string;
+  enableSearch?: boolean;
 };
 
 export type FeaturedProductsModule = StorefrontModuleBase<"featuredProducts", "grid" | "spotlight"> & {

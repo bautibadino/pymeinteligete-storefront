@@ -196,6 +196,10 @@ function RichTextModuleView({ module }: { module: RichTextModule }) {
   );
 }
 
+// TODO: wire builder types via PresentationRenderer in Ola 3.
+// New builder module types (trustBar, categoryTile, productGrid, testimonials,
+// faq, richText builder, productDetail, catalogLayout, announcementBar,
+// header, footer) are not yet connected to this legacy renderer.
 function renderModule(module: StorefrontModule, props: ModuleRendererProps) {
   switch (module.type) {
     case "hero": {

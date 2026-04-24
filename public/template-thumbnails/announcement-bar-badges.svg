@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="80" viewBox="0 0 320 80" fill="none">
+  <rect width="320" height="80" rx="10" fill="#f4efe7"/>
+  <rect y="24" width="320" height="32" fill="rgba(255,252,247,0.94)"/>
+  <g transform="translate(30,32)" stroke="#8c4319" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="1" y="3" width="11" height="9" rx="1"/>
+    <path d="M12 6h4l2 4v4h-6V6z"/>
+    <circle cx="4" cy="14" r="1.5"/>
+    <circle cx="15" cy="14" r="1.5"/>
+  </g>
+  <text x="52" y="43" font-family="system-ui,sans-serif" font-size="9" fill="#1f1a17" font-weight="500">Envío gratis</text>
+  <line x1="106" y1="30" x2="106" y2="50" stroke="#e8dfd3" stroke-width="1"/>
+  <g transform="translate(116,32)" stroke="#8c4319" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 1L2 4v6c0 4 4 7 7 8 3-1 7-4 7-8V4L9 1z"/>
+    <polyline points="6,9 8,11 12,7"/>
+  </g>
+  <text x="138" y="43" font-family="system-ui,sans-serif" font-size="9" fill="#1f1a17" font-weight="500">Garantía oficial</text>
+  <line x1="212" y1="30" x2="212" y2="50" stroke="#e8dfd3" stroke-width="1"/>
+  <g transform="translate(220,32)" stroke="#8c4319" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="1" y="3" width="16" height="12" rx="2"/>
+    <line x1="1" y1="8" x2="17" y2="8"/>
+  </g>
+  <text x="242" y="43" font-family="system-ui,sans-serif" font-size="9" fill="#1f1a17" font-weight="500">6 cuotas sin interés</text>
+  <text x="12" y="70" font-family="system-ui,sans-serif" font-size="9" fill="#6f6259" font-weight="600">BADGES</text>
+</svg>

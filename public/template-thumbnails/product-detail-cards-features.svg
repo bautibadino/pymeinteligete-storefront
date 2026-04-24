@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" fill="none">
+  <rect width="320" height="200" rx="8" fill="#f8f7f4"/>
+  <!-- Hero image -->
+  <rect x="20" y="16" width="280" height="70" rx="6" fill="#e5e1d8"/>
+  <rect x="130" y="38" width="60" height="26" rx="4" fill="#d4cfc5"/>
+  <!-- Title + price -->
+  <rect x="20" y="96" width="140" height="10" rx="5" fill="#c4bfb5"/>
+  <rect x="20" y="112" width="80" height="10" rx="5" fill="#a09890"/>
+  <!-- CTA -->
+  <rect x="240" y="96" width="60" height="24" rx="5" fill="#8c4319"/>
+  <!-- Feature cards -->
+  <rect x="20" y="138" width="62" height="42" rx="6" fill="#ffffff" stroke="#e5e1d8" stroke-width="1"/>
+  <rect x="30" y="146" width="16" height="16" rx="4" fill="#e5e1d8"/>
+  <rect x="30" y="166" width="40" height="4" rx="2" fill="#c4bfb5"/>
+
+  <rect x="92" y="138" width="62" height="42" rx="6" fill="#ffffff" stroke="#e5e1d8" stroke-width="1"/>
+  <rect x="102" y="146" width="16" height="16" rx="4" fill="#e5e1d8"/>
+  <rect x="102" y="166" width="40" height="4" rx="2" fill="#c4bfb5"/>
+
+  <rect x="164" y="138" width="62" height="42" rx="6" fill="#ffffff" stroke="#e5e1d8" stroke-width="1"/>
+  <rect x="174" y="146" width="16" height="16" rx="4" fill="#e5e1d8"/>
+  <rect x="174" y="166" width="40" height="4" rx="2" fill="#c4bfb5"/>
+
+  <rect x="236" y="138" width="62" height="42" rx="6" fill="#ffffff" stroke="#e5e1d8" stroke-width="1"/>
+  <rect x="246" y="146" width="16" height="16" rx="4" fill="#e5e1d8"/>
+  <rect x="246" y="166" width="40" height="4" rx="2" fill="#c4bfb5"/>
+  <!-- Label -->
+  <text x="160" y="193" font-family="sans-serif" font-size="10" fill="#a09890" text-anchor="middle">ProductDetail — Cards + Features</text>
+</svg>

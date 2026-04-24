@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160" fill="none">
+  <rect width="240" height="160" rx="8" fill="#F4F4F5"/>
+  <!-- Eyebrow pill -->
+  <rect x="80" y="14" width="80" height="8" rx="4" fill="#D4D4D8"/>
+  <!-- Title full width -->
+  <rect x="24" y="28" width="192" height="12" rx="4" fill="#A1A1AA"/>
+  <!-- Left column text lines -->
+  <rect x="24" y="52" width="88" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="24" y="62" width="88" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="24" y="72" width="72" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="24" y="82" width="88" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="24" y="92" width="60" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="24" y="102" width="88" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="24" y="112" width="80" height="5" rx="2.5" fill="#D4D4D8"/>
+  <!-- Right column text lines -->
+  <rect x="128" y="52" width="88" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="128" y="62" width="88" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="128" y="72" width="64" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="128" y="82" width="88" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="128" y="92" width="76" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="128" y="102" width="88" height="5" rx="2.5" fill="#D4D4D8"/>
+  <rect x="128" y="112" width="54" height="5" rx="2.5" fill="#D4D4D8"/>
+  <!-- Column divider -->
+  <line x1="116" y1="52" x2="116" y2="120" stroke="#E4E4E7" stroke-width="1"/>
+  <!-- CTA button -->
+  <rect x="84" y="130" width="72" height="10" rx="5" fill="#71717A"/>
+  <!-- Label -->
+  <text x="120" y="8" font-family="sans-serif" font-size="7" fill="#71717A" text-anchor="middle" dominant-baseline="middle">Dos columnas</text>
+</svg>

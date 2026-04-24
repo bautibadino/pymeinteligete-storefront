@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="80" viewBox="0 0 320 80" fill="none">
+  <rect width="320" height="80" rx="10" fill="#f4efe7"/>
+  <rect y="28" width="320" height="24" fill="#8c4319"/>
+  <text x="22" y="44" font-family="system-ui,sans-serif" font-size="9" fill="#fffaf2" font-weight="500">6 cuotas sin interés</text>
+  <text x="148" y="44" font-family="system-ui,sans-serif" font-size="9" fill="rgba(255,250,242,0.55)">·</text>
+  <text x="158" y="44" font-family="system-ui,sans-serif" font-size="9" fill="rgba(255,250,242,0.7)">20% off efectivo</text>
+  <text x="262" y="44" font-family="system-ui,sans-serif" font-size="9" fill="rgba(255,250,242,0.55)">·</text>
+  <text x="272" y="44" font-family="system-ui,sans-serif" font-size="9" fill="rgba(255,250,242,0.5)">Envíos…</text>
+  <defs>
+    <linearGradient id="fade" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="80%" stop-color="#8c4319" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#8c4319" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <rect x="220" y="28" width="100" height="24" fill="url(#fade)"/>
+  <text x="12" y="70" font-family="system-ui,sans-serif" font-size="9" fill="#6f6259" font-weight="600">DESPLAZAMIENTO</text>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120">
+  <rect width="200" height="120" fill="#f8fafc" rx="8"/>
+  <!-- Comillas grandes centradas -->
+  <text x="100" y="34" font-size="28" fill="#c7d2fe" text-anchor="middle" font-family="Georgia, serif">"</text>
+  <!-- Líneas de quote centradas -->
+  <rect x="30" y="42" width="140" height="4" fill="#e2e8f0" rx="2"/>
+  <rect x="40" y="50" width="120" height="4" fill="#e2e8f0" rx="2"/>
+  <rect x="50" y="58" width="100" height="4" fill="#e2e8f0" rx="2"/>
+  <rect x="60" y="66" width="80" height="4" fill="#e2e8f0" rx="2"/>
+  <!-- Separador -->
+  <rect x="80" y="78" width="40" height="1" fill="#cbd5e1"/>
+  <!-- Avatar centrado -->
+  <circle cx="100" cy="92" r="8" fill="#c7d2fe"/>
+  <!-- Nombre centrado -->
+  <rect x="74" y="104" width="52" height="4" fill="#94a3b8" rx="2"/>
+  <!-- Label -->
+  <text x="100" y="118" font-size="7" fill="#64748b" text-anchor="middle" font-family="sans-serif">Cita destacada</text>
+</svg>
