@@ -107,7 +107,8 @@ function GlobalHeader({ presentation }: { presentation: Presentation }) {
   const Component = resolveHeaderTemplate(header.variant);
   const moduleData = adaptSectionToModule(header);
 
-  return <Component module={moduleData} />;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return <Component module={moduleData as any} />;
 }
 
 function GlobalAnnouncementBar({ presentation }: { presentation: Presentation }) {
@@ -117,7 +118,8 @@ function GlobalAnnouncementBar({ presentation }: { presentation: Presentation })
   const Component = resolveAnnouncementBarTemplate(bar.variant);
   const moduleData = adaptSectionToModule(bar);
 
-  return <Component module={moduleData} />;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return <Component module={moduleData as any} />;
 }
 
 function GlobalFooter({ presentation }: { presentation: Presentation }) {
@@ -127,7 +129,8 @@ function GlobalFooter({ presentation }: { presentation: Presentation }) {
   const Component = resolveFooterTemplate(footer.variant);
   const moduleData = adaptSectionToModule(footer);
 
-  return <Component module={moduleData} />;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return <Component module={moduleData as any} />;
 }
 
 /**
