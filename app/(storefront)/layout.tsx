@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { loadBootstrapExperience } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { TenantThemeProvider } from "@/components/theme/TenantThemeProvider";
 import { StorefrontShell } from "@/components/storefront/storefront-shell";
-import { resolveTenantTheme } from "@/lib/theme";
+import { resolveEffectiveTenantTheme } from "@/lib/theme";
 
 export default async function StorefrontLayout({ children }: { children: ReactNode }) {
   const experience = await loadBootstrapExperience();
@@ -13,7 +13,7 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
     notFound();
   }
 
-  const theme = resolveTenantTheme(experience.bootstrap);
+  const theme = resolveEffectiveTenantTheme(experience.bootstrap);
 
   return (
     <TenantThemeProvider theme={theme}>

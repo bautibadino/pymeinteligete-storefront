@@ -6,7 +6,7 @@ import { SurfaceStateCard } from "@/components/storefront/surface-state";
 import { normalizeModules } from "@/lib/modules";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
 import { applyTemplateOverrides } from "@/lib/templates/apply-overrides";
-import { resolveTenantTheme } from "@/lib/theme";
+import { resolveEffectiveTenantTheme } from "@/lib/theme";
 
 type HomePageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -26,7 +26,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     searchParams,
   ]);
   const host = experience.runtime.context.host;
-  const theme = resolveTenantTheme(experience.bootstrap);
+  const theme = resolveEffectiveTenantTheme(experience.bootstrap);
   const baseModules = normalizeModules({
     bootstrap: experience.bootstrap,
     theme,

@@ -36,6 +36,8 @@ export type {
   StorefrontPage,
   StorefrontPaymentMethod,
   StorefrontPaymentMethods,
+  StorefrontPresentation,
+  StorefrontPresentationState,
   StorefrontProcessPaymentRequest,
   StorefrontProcessPaymentResult,
   StorefrontProductDetail,

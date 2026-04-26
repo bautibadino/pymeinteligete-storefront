@@ -52,6 +52,8 @@ type ThemeConfig = {
   contentWidth?: string;
 };
 
+type BrandingThemeConfig = Pick<ThemeConfig, "colors" | "typography">;
+
 const THEME_COLOR_KEYS = [
   "background",
   "paper",
@@ -87,6 +89,63 @@ const THEME_RADIUS_KEYS = [
   "xlarge",
   "pill",
 ] as const satisfies readonly (keyof TenantTheme["radii"])[];
+
+const PRESENTATION_COLOR_TOKEN_MAP = {
+  bg: "background",
+  background: "background",
+  paper: "paper",
+  panel: "panel",
+  panelStrong: "panelStrong",
+  ink: "text",
+  text: "text",
+  muted: "muted",
+  line: "border",
+  border: "border",
+  accent: "primary",
+  primary: "primary",
+  actionContrast: "primaryContrast",
+  primaryContrast: "primaryContrast",
+  accentSoft: "primarySoft",
+  primarySoft: "primarySoft",
+  moduleAccent: "accent",
+  moduleAccentSoft: "accentSoft",
+  success: "success",
+  accentLive: "success",
+  successSoft: "successSoft",
+  accentLiveSoft: "successSoft",
+  warning: "warning",
+  accentPaused: "warning",
+  warningSoft: "warningSoft",
+  accentPausedSoft: "warningSoft",
+  draft: "draft",
+  accentDraft: "draft",
+  draftSoft: "draftSoft",
+  accentDraftSoft: "draftSoft",
+  danger: "danger",
+  accentDisabled: "danger",
+  dangerSoft: "dangerSoft",
+  accentDisabledSoft: "dangerSoft",
+} as const satisfies Record<string, keyof TenantTheme["colors"]>;
+
+const PRESENTATION_TYPOGRAPHY_TOKEN_MAP = {
+  fontHeading: "heading",
+  heading: "heading",
+  fontBody: "body",
+  body: "body",
+  fontMono: "mono",
+  mono: "mono",
+} as const satisfies Record<string, keyof TenantTheme["typography"]>;
+
+const PRESENTATION_RADIUS_TOKEN_MAP = {
+  radiusMd: "medium",
+  medium: "medium",
+  radiusLg: "large",
+  large: "large",
+  radiusXl: "xlarge",
+  xlarge: "xlarge",
+  radiusPill: "pill",
+  pill: "pill",
+} as const satisfies Record<string, keyof TenantTheme["radii"]>;
 
 export const THEME_PRESETS: Record<ThemePreset, TenantTheme> = {
   industrialWarm: {
@@ -241,6 +300,72 @@ function pickStringOverrides<TKeys extends readonly string[]>(
   return Object.keys(result).length > 0 ? result : undefined;
 }
 
+function pickPresentationThemeOverrides(value: unknown): ThemeConfig {
+  if (!isRecord(value)) {
+    return {};
+  }
+
+  const colors: Partial<TenantTheme["colors"]> = {};
+  const typography: Partial<TenantTheme["typography"]> = {};
+  const radii: Partial<TenantTheme["radii"]> = {};
+  const shadow = readString(value.shadow);
+  const contentWidth = readString(value.contentWidth);
+
+  for (const [token, themeKey] of Object.entries(PRESENTATION_COLOR_TOKEN_MAP)) {
+    const override = readString(value[token]);
+
+    if (override) {
+      colors[themeKey] = override;
+    }
+  }
+
+  for (const [token, themeKey] of Object.entries(PRESENTATION_TYPOGRAPHY_TOKEN_MAP)) {
+    const override = readString(value[token]);
+
+    if (override) {
+      typography[themeKey] = override;
+    }
+  }
+
+  for (const [token, themeKey] of Object.entries(PRESENTATION_RADIUS_TOKEN_MAP)) {
+    const override = readString(value[token]);
+
+    if (override) {
+      radii[themeKey] = override;
+    }
+  }
+
+  return {
+    ...(Object.keys(colors).length > 0 ? { colors } : {}),
+    ...(Object.keys(typography).length > 0 ? { typography } : {}),
+    ...(Object.keys(radii).length > 0 ? { radii } : {}),
+    ...(shadow ? { shadow } : {}),
+    ...(contentWidth ? { contentWidth } : {}),
+  };
+}
+
+function mergeThemeConfigs(...configs: ThemeConfig[]): ThemeConfig {
+  return configs.reduce<ThemeConfig>(
+    (merged, config) => ({
+      ...merged,
+      ...config,
+      colors: {
+        ...merged.colors,
+        ...config.colors,
+      },
+      typography: {
+        ...merged.typography,
+        ...config.typography,
+      },
+      radii: {
+        ...merged.radii,
+        ...config.radii,
+      },
+    }),
+    {},
+  );
+}
+
 function readThemeConfig(value: unknown): ThemeConfig {
   if (isThemePreset(value)) {
     return { preset: value };
@@ -257,8 +382,7 @@ function readThemeConfig(value: unknown): ThemeConfig {
   const colors = pickStringOverrides(value.colors, THEME_COLOR_KEYS);
   const typography = pickStringOverrides(value.typography, THEME_TYPOGRAPHY_KEYS);
   const radii = pickStringOverrides(value.radii, THEME_RADIUS_KEYS);
-
-  return {
+  const legacyConfig: ThemeConfig = {
     ...(preset ? { preset } : {}),
     ...(name ? { name } : {}),
     ...(colors ? { colors } : {}),
@@ -267,13 +391,37 @@ function readThemeConfig(value: unknown): ThemeConfig {
     ...(shadow ? { shadow } : {}),
     ...(contentWidth ? { contentWidth } : {}),
   };
+
+  return mergeThemeConfigs(legacyConfig, pickPresentationThemeOverrides(value.overrides));
 }
 
-export function resolveTenantTheme(bootstrap: StorefrontBootstrap | null): TenantTheme {
-  const config = readThemeConfig(bootstrap?.theme?.preset);
-  const preset = config.preset ?? "industrialWarm";
-  const base = THEME_PRESETS[preset];
+function readBrandingThemeConfig(bootstrap: StorefrontBootstrap | null): BrandingThemeConfig {
+  const primary = readString(bootstrap?.branding?.colors?.primary);
+  const accent = readString(bootstrap?.branding?.colors?.accent);
+  const heading = readString(bootstrap?.branding?.typography?.heading);
+  const body = readString(bootstrap?.branding?.typography?.body);
 
+  return {
+    ...((primary || accent)
+      ? {
+          colors: {
+            ...(primary ? { primary } : {}),
+            ...(accent ? { accent } : {}),
+          },
+        }
+      : {}),
+    ...((heading || body)
+      ? {
+          typography: {
+            ...(heading ? { heading } : {}),
+            ...(body ? { body } : {}),
+          },
+        }
+      : {}),
+  };
+}
+
+function mergeThemeConfig(base: TenantTheme, config: ThemeConfig): TenantTheme {
   return {
     ...base,
     name: config.name ?? base.name,
@@ -292,4 +440,23 @@ export function resolveTenantTheme(bootstrap: StorefrontBootstrap | null): Tenan
     shadow: config.shadow ?? base.shadow,
     contentWidth: config.contentWidth ?? base.contentWidth,
   };
+}
+
+export function resolveEffectiveTenantTheme(bootstrap: StorefrontBootstrap | null): TenantTheme {
+  const presentationConfig = readThemeConfig(bootstrap?.presentation?.theme);
+  const hasPresentationTheme =
+    bootstrap?.presentation?.theme !== undefined && bootstrap.presentation.theme !== null;
+  const legacyConfig = readThemeConfig(bootstrap?.theme);
+  const brandingConfig = readBrandingThemeConfig(bootstrap);
+  const config = hasPresentationTheme
+    ? presentationConfig
+    : mergeThemeConfigs(legacyConfig, brandingConfig);
+  const preset = config.preset ?? "industrialWarm";
+  const base = THEME_PRESETS[preset];
+
+  return mergeThemeConfig(base, config);
+}
+
+export function resolveTenantTheme(bootstrap: StorefrontBootstrap | null): TenantTheme {
+  return resolveEffectiveTenantTheme(bootstrap);
 }
