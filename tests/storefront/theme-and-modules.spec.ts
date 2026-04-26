@@ -269,6 +269,90 @@ describe("module normalization", () => {
     expect(modules[1]).toMatchObject({ type: "featuredProducts", variant: "spotlight" });
   });
 
+  it("normaliza los tipos reales que emite bootstrap v1 del ERP", () => {
+    const bootstrap = buildBootstrap({
+      home: {
+        modules: [
+          {
+            id: "hero",
+            type: "hero",
+            enabled: true,
+            order: 0,
+            payload: {
+              title: "Neumáticos y Repuestos",
+              subtitle: "Envío a todo el país.",
+              heroDesktopImage: "https://cdn.example.com/hero.png",
+              primaryCta: { label: "Ver catálogo", href: "/catalogo", enabled: true },
+            },
+          },
+          {
+            id: "ticker",
+            type: "ticker",
+            enabled: true,
+            order: 1,
+            payload: {
+              items: [{ text: "6 cuotas sin interés", enabled: true, order: 1 }],
+            },
+          },
+          {
+            id: "trust_chips",
+            type: "trust_chips",
+            enabled: true,
+            order: 2,
+            payload: {
+              chips: [{ label: "Envío gratis", enabled: true, order: 0 }],
+            },
+          },
+          {
+            id: "intent_cards",
+            type: "intent_cards",
+            enabled: true,
+            order: 3,
+            payload: { title: "Qué estás buscando" },
+          },
+          {
+            id: "featured_products",
+            type: "product_carousel" as any,
+            enabled: true,
+            order: 4,
+            payload: { title: "Destacados", count: 8 },
+          },
+        ],
+      },
+    });
+    const modules = normalizeModules({
+      bootstrap,
+      theme: resolveEffectiveTenantTheme(bootstrap),
+      host: "tenant.test",
+    });
+
+    expect(modules.map((module) => module.type)).toEqual([
+      "hero",
+      "promoBand",
+      "trustBar",
+      "categoryRail",
+      "featuredProducts",
+    ]);
+    expect(modules[0]).toMatchObject({
+      type: "hero",
+      image: { src: "https://cdn.example.com/hero.png" },
+      primaryAction: { label: "Ver catálogo", href: "/catalogo" },
+    });
+    expect(modules[1]).toMatchObject({
+      type: "promoBand",
+      description: "6 cuotas sin interés",
+    });
+    expect(modules[2]).toMatchObject({
+      type: "trustBar",
+      items: [{ title: "Envío gratis" }],
+    });
+    expect(modules[4]).toMatchObject({
+      type: "featuredProducts",
+      title: "Destacados",
+      limit: 8,
+    });
+  });
+
   it("genera fallback por preset cuando bootstrap no trae módulos", () => {
     const bootstrap = buildBootstrap({
       theme: { preset: "editorialDark", layout: "commerce" },
