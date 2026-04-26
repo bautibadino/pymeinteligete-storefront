@@ -73,6 +73,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <PresentationRenderer
           presentation={experience.bootstrap!.presentation!}
           page="product"
+          includeGlobals={false}
         />
       </>
     );

@@ -27,6 +27,7 @@ import {
 type PresentationRendererProps = {
   presentation: Presentation;
   page: PresentationPageKey;
+  includeGlobals?: boolean;
 };
 
 /**
@@ -43,6 +44,21 @@ function adaptSectionToModule(section: SectionInstance): unknown {
   };
 
   switch (section.type) {
+    case "hero": {
+      const content = section.content as Record<string, unknown>;
+      const imageUrl = typeof content.imageUrl === "string" ? content.imageUrl : "";
+      const imageAlt = typeof content.imageAlt === "string" ? content.imageAlt : "Imagen principal";
+
+      return {
+        ...base,
+        ...content,
+        description: content.description ?? content.subtitle,
+        image: imageUrl ? { src: imageUrl, alt: imageAlt } : undefined,
+        primaryAction: content.primaryAction ?? content.primaryCta,
+        secondaryAction: content.secondaryAction ?? content.secondaryCta,
+      };
+    }
+
     case "productGrid":
     case "trustBar":
     case "promoBand":
@@ -100,7 +116,7 @@ function SectionRenderer({ section }: { section: SectionInstance }) {
   return <Component module={moduleData} />;
 }
 
-function GlobalHeader({ presentation }: { presentation: Presentation }) {
+export function PresentationGlobalHeader({ presentation }: { presentation: Presentation }) {
   const header = presentation.globals.header;
   if (!header || !header.enabled) return null;
 
@@ -111,7 +127,7 @@ function GlobalHeader({ presentation }: { presentation: Presentation }) {
   return <Component module={moduleData as any} />;
 }
 
-function GlobalAnnouncementBar({ presentation }: { presentation: Presentation }) {
+export function PresentationGlobalAnnouncementBar({ presentation }: { presentation: Presentation }) {
   const bar = presentation.globals.announcementBar;
   if (!bar || !bar.enabled) return null;
 
@@ -122,7 +138,7 @@ function GlobalAnnouncementBar({ presentation }: { presentation: Presentation })
   return <Component module={moduleData as any} />;
 }
 
-function GlobalFooter({ presentation }: { presentation: Presentation }) {
+export function PresentationGlobalFooter({ presentation }: { presentation: Presentation }) {
   const footer = presentation.globals.footer;
   if (!footer || !footer.enabled) return null;
 
@@ -140,14 +156,18 @@ function GlobalFooter({ presentation }: { presentation: Presentation }) {
  * - Renderiza las secciones de la página solicitada ordenadas y filtradas.
  * - Omite secciones de tipo `productCard` (dependencia visual, no autónoma).
  */
-export function PresentationRenderer({ presentation, page }: PresentationRendererProps) {
+export function PresentationRenderer({
+  presentation,
+  page,
+  includeGlobals = true,
+}: PresentationRendererProps) {
   const pageConfig = presentation.pages[page];
   const sections = getEnabledSortedSections(pageConfig.sections);
 
   return (
     <div data-presentation-renderer="true" data-page={page}>
-      <GlobalAnnouncementBar presentation={presentation} />
-      <GlobalHeader presentation={presentation} />
+      {includeGlobals ? <PresentationGlobalAnnouncementBar presentation={presentation} /> : null}
+      {includeGlobals ? <PresentationGlobalHeader presentation={presentation} /> : null}
 
       <main>
         {sections.map((section) => (
@@ -157,7 +177,7 @@ export function PresentationRenderer({ presentation, page }: PresentationRendere
         ))}
       </main>
 
-      <GlobalFooter presentation={presentation} />
+      {includeGlobals ? <PresentationGlobalFooter presentation={presentation} /> : null}
     </div>
   );
 }
