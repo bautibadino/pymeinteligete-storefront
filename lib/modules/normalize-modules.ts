@@ -26,22 +26,43 @@ const MODULE_TYPE_ALIASES: Record<string, StorefrontModuleType> = {
   featuredProducts: "featuredProducts",
   product_collection: "featuredProducts",
   "product-collection": "featuredProducts",
+  product_carousel: "featuredProducts",
+  "product-carousel": "featuredProducts",
+  productCarousel: "featuredProducts",
+  best_sellers: "featuredProducts",
+  bestSellers: "featuredProducts",
+  on_sale: "featuredProducts",
+  onSale: "featuredProducts",
+  new_arrivals: "featuredProducts",
+  newArrivals: "featuredProducts",
+  recommended: "featuredProducts",
   categories: "categoryRail",
   "category-rail": "categoryRail",
   category_rail: "categoryRail",
   categoryRail: "categoryRail",
+  intent_cards: "categoryRail",
+  "intent-cards": "categoryRail",
+  intentCards: "categoryRail",
   promo: "promoBand",
   "promo-band": "promoBand",
   promo_band: "promoBand",
   promoBand: "promoBand",
+  ticker: "promoBand",
   trust: "trustBar",
   "trust-bar": "trustBar",
   trust_bar: "trustBar",
   trustBar: "trustBar",
+  trust_chips: "trustBar",
+  "trust-chips": "trustBar",
+  trustChips: "trustBar",
+  info_banners: "trustBar",
+  "info-banners": "trustBar",
+  infoBanners: "trustBar",
   text: "richText",
   "rich-text": "richText",
   rich_text: "richText",
   richText: "richText",
+  reviews: "richText",
 };
 
 const DEFAULT_VARIANTS: Record<StorefrontModuleType, ModuleVariant> = {
@@ -74,10 +95,20 @@ function readNumber(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
+function readPositiveNumber(value: unknown): number | undefined {
+  const number = readNumber(value);
+
+  return number && number > 0 ? number : undefined;
+}
+
 function readModuleType(module: Record<string, unknown>): StorefrontModuleType | undefined {
   const rawType = readString(module.type) ?? readString(module.moduleType) ?? readString(module.kind);
 
   return rawType ? MODULE_TYPE_ALIASES[rawType] : undefined;
+}
+
+function isExplicitlyDisabled(module: Record<string, unknown>, payload: Record<string, unknown>): boolean {
+  return module.enabled === false || payload.enabled === false;
 }
 
 function readVariant(module: Record<string, unknown>, type: StorefrontModuleType): ModuleVariant | undefined {
@@ -95,6 +126,10 @@ function readAction(value: unknown, fallback?: ModuleAction): ModuleAction | und
     return fallback;
   }
 
+  if (value.enabled === false) {
+    return undefined;
+  }
+
   const label = readString(value.label) ?? readString(value.text);
   const href = readString(value.href) ?? readString(value.url);
 
@@ -103,6 +138,28 @@ function readAction(value: unknown, fallback?: ModuleAction): ModuleAction | und
   }
 
   return { label, href };
+}
+
+function readLooseAction(
+  value: unknown,
+  ctaText: unknown,
+  ctaLink: unknown,
+  fallback?: ModuleAction,
+): ModuleAction | undefined {
+  const action = readAction(value);
+
+  if (action) {
+    return action;
+  }
+
+  const label = readString(ctaText);
+  const href = readString(ctaLink);
+
+  if (label && href) {
+    return { label, href };
+  }
+
+  return fallback;
 }
 
 function readImage(value: unknown): ModuleImage | undefined {
@@ -140,7 +197,7 @@ function readItems(value: unknown): ModuleTextItem[] {
       return [];
     }
 
-    const title = readString(item.title) ?? readString(item.label) ?? readString(item.name);
+    const title = readString(item.title) ?? readString(item.label) ?? readString(item.name) ?? readString(item.text);
 
     if (!title) {
       return [];
@@ -162,6 +219,16 @@ function readItems(value: unknown): ModuleTextItem[] {
   });
 }
 
+function readJoinedItemText(value: unknown): string | undefined {
+  const items = readItems(value);
+
+  if (items.length === 0) {
+    return undefined;
+  }
+
+  return items.map((item) => item.title).join(" · ");
+}
+
 function readModuleId(module: Record<string, unknown>, index: number, type: StorefrontModuleType): string {
   return readString(module.id) ?? `${type}-${index + 1}`;
 }
@@ -172,6 +239,10 @@ function normalizeModule(module: unknown, index: number): StorefrontModule | nul
   }
 
   const payload = isRecord(module.payload) ? module.payload : {};
+  if (isExplicitlyDisabled(module, payload)) {
+    return null;
+  }
+
   const type = readModuleType(module) ?? readModuleType(payload);
 
   if (!type) {
@@ -193,11 +264,23 @@ function normalizeModule(module: unknown, index: number): StorefrontModule | nul
 
   switch (type) {
     case "hero": {
-      const image = readImage(module.image ?? module.imageUrl ?? payload.image ?? payload.imageUrl);
-      const primaryAction = readAction(module.primaryAction ?? module.cta ?? payload.primaryAction ?? payload.cta, {
-        label: "Ver catálogo",
-        href: "/catalogo",
-      });
+      const image = readImage(
+        module.image ??
+          module.imageUrl ??
+          payload.image ??
+          payload.imageUrl ??
+          payload.heroDesktopImage ??
+          payload.heroMobileImage,
+      );
+      const primaryAction = readLooseAction(
+        module.primaryAction ?? module.cta ?? payload.primaryAction ?? payload.primaryCta ?? payload.cta,
+        module.ctaText ?? payload.ctaText,
+        module.ctaLink ?? payload.ctaLink,
+        {
+          label: "Ver catálogo",
+          href: "/catalogo",
+        },
+      );
       const secondaryAction = readAction(module.secondaryAction ?? payload.secondaryAction);
       const heroModule: HeroModule = {
         id,
@@ -233,26 +316,36 @@ function normalizeModule(module: unknown, index: number): StorefrontModule | nul
         ...(eyebrow ? { eyebrow } : {}),
         title: title ?? "Productos destacados",
         ...(description ? { description } : {}),
-        limit: readNumber(module.limit) ?? readNumber(payload.limit) ?? 6,
+        limit: readNumber(module.limit) ?? readNumber(module.count) ?? readNumber(payload.limit) ?? readNumber(payload.count) ?? 6,
       };
-    case "categoryRail":
+    case "categoryRail": {
+      const configuredItems = readItems(module.items ?? payload.items);
+
       return {
         id,
         type,
         variant: variant as "rail" | "tiles",
         ...(eyebrow ? { eyebrow } : {}),
-        title: title ?? "Categorías",
+        title: title ?? "Comprar por categoría",
         ...(description ? { description } : {}),
-        limit: readNumber(module.limit) ?? readNumber(payload.limit) ?? 8,
+        limit:
+          readPositiveNumber(module.limit) ??
+          readPositiveNumber(module.count) ??
+          readPositiveNumber(payload.limit) ??
+          readPositiveNumber(payload.count) ??
+          (configuredItems.length > 0 ? configuredItems.length : undefined) ??
+          8,
       };
+    }
     case "promoBand": {
       const promoAction = readAction(module.action ?? module.cta ?? payload.action ?? payload.cta);
+      const itemText = readJoinedItemText(module.items ?? payload.items);
       const promoModule: PromoBandModule = {
         id,
         type,
         variant: variant as "solid" | "split",
         title: title ?? "Promoción vigente",
-        description: description ?? "Consultá las condiciones comerciales disponibles para esta tienda.",
+        description: description ?? itemText ?? "Consultá las condiciones comerciales disponibles para esta tienda.",
       };
 
       if (eyebrow) {
@@ -272,16 +365,17 @@ function normalizeModule(module: unknown, index: number): StorefrontModule | nul
         variant: variant as "inline" | "cards",
         ...(eyebrow ? { eyebrow } : {}),
         ...(title ? { title } : {}),
-        items: readItems(module.items ?? payload.items).slice(0, 6),
+        items: readItems(module.items ?? payload.items ?? payload.chips ?? payload.banners).slice(0, 6),
       };
     case "richText": {
       const richTextAction = readAction(module.action ?? module.cta ?? payload.action ?? payload.cta);
+      const itemText = readJoinedItemText(module.items ?? payload.items);
       const richTextModule: RichTextModule = {
         id,
         type,
         variant: variant as "editorial" | "compact",
         title: title ?? "Información de la tienda",
-        body: description ?? "Contenido configurable pendiente de completar desde PyMEInteligente.",
+        body: description ?? itemText ?? "Contenido configurable pendiente de completar desde PyMEInteligente.",
       };
 
       if (eyebrow) {

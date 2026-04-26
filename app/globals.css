@@ -365,6 +365,48 @@ img {
   padding-bottom: 32px;
 }
 
+.storefront-footer {
+  padding: 24px 26px 28px;
+  border-top: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent-soft) 42%, transparent)),
+    color-mix(in srgb, var(--panel) 82%, transparent);
+}
+
+.footer-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.footer-column {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.footer-column strong {
+  font-family: var(--font-heading);
+  font-size: 1.08rem;
+}
+
+.footer-column ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.footer-column a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.footer-column a:hover {
+  color: var(--accent);
+}
+
 .hero-stage {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.8fr);
@@ -1188,6 +1230,7 @@ img {
 
   .storefront-alertband,
   .storefront-modulebar,
+  .footer-columns,
   .module-deck,
   .payment-strip,
   .product-grid,
@@ -1215,6 +1258,7 @@ img {
   .storefront-alertband,
   .storefront-modulebar,
   .storefront-content,
+  .storefront-footer,
   .split-panel,
   .page-intro,
   .hero-stage,
