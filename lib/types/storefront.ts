@@ -1,4 +1,5 @@
 import type { StorefrontRequestContext } from "@/lib/runtime/storefront-request-context";
+import type { Presentation } from "@/lib/types/presentation";
 
 // ─────────────────────────────────────────────────────────────
 // Envelope base (común a todos los endpoints)
@@ -85,6 +86,9 @@ export interface StorefrontTheme {
   layout: string;
   tokensVersion?: string;
 }
+
+export type StorefrontPresentation = Presentation;
+export type StorefrontPresentationState = Presentation;
 
 // ─────────────────────────────────────────────────────────────
 // SEO
@@ -230,6 +234,7 @@ export interface StorefrontBootstrap {
   requestContext: StorefrontRequestContextData;
   tenant: StorefrontTenantIdentity;
   branding: StorefrontBranding;
+  presentation?: Presentation;
   theme: StorefrontTheme;
   seo: StorefrontSeoConfig;
   navigation: StorefrontNavigation;
@@ -239,7 +244,6 @@ export interface StorefrontBootstrap {
   features: StorefrontFeatures;
   pages: StorefrontPage[];
   analytics?: StorefrontAnalytics;
-  presentation?: import("@/lib/types/presentation").Presentation;
 }
 
 // ─────────────────────────────────────────────────────────────

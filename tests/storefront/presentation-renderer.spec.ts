@@ -4,12 +4,14 @@ import {
   getEnabledSortedSections,
   shouldUsePresentation,
 } from "@/lib/presentation/render-utils";
-import type { Presentation, SectionInstance } from "@/lib/types/presentation";
+import type { Presentation, SectionInstance, SectionType } from "@/lib/types/presentation";
 
-function buildSection(overrides: Partial<SectionInstance> = {}): SectionInstance {
+function buildSection<T extends SectionType = "hero">(
+  overrides: Partial<SectionInstance<T>> = {},
+): SectionInstance<T> {
   return {
     id: "sec-1",
-    type: "hero",
+    type: "hero" as T,
     variant: "split",
     enabled: true,
     order: 0,

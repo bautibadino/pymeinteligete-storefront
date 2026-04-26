@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 
 import { loadHomeExperience } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { ModuleRenderer } from "@/components/modules/ModuleRenderer";
@@ -10,7 +9,7 @@ import { normalizeModules } from "@/lib/modules";
 import { shouldUsePresentation } from "@/lib/presentation/render-utils";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
 import { applyTemplateOverrides } from "@/lib/templates/apply-overrides";
-import { resolveTenantTheme } from "@/lib/theme";
+import { resolveEffectiveTenantTheme } from "@/lib/theme";
 
 type HomePageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -30,10 +29,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     searchParams,
   ]);
   const host = experience.runtime.context.host;
-  const theme = resolveTenantTheme(experience.bootstrap);
-  const cookieStore = await cookies();
-  const hasPreview = cookieStore.has("__preview_token");
-
+  const theme = resolveEffectiveTenantTheme(experience.bootstrap);
+  const hasPreview = Boolean(experience.runtime.context.previewToken);
   const usePresentation = shouldUsePresentation(experience.bootstrap?.presentation, "home");
 
   if (usePresentation) {

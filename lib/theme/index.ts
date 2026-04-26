@@ -1,5 +1,6 @@
 export {
   THEME_PRESETS,
+  resolveEffectiveTenantTheme,
   resolveTenantTheme,
   type TenantTheme,
   type ThemePreset,

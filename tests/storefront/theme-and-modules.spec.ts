@@ -1,8 +1,42 @@
 import { describe, expect, it } from "vitest";
 
+import { buildBootstrapFetchCacheOptions } from "@/lib/fetchers/bootstrap";
 import { normalizeModules } from "@/lib/modules";
 import type { StorefrontBootstrap } from "@/lib/storefront-api";
-import { resolveTenantTheme, themeToCssVars } from "@/lib/theme";
+import { resolveEffectiveTenantTheme, resolveTenantTheme, themeToCssVars } from "@/lib/theme";
+import type { Presentation, SectionInstance, SectionType } from "@/lib/types/presentation";
+
+function buildSection<T extends SectionType = "hero">(
+  overrides: Partial<SectionInstance<T>> = {},
+): SectionInstance<T> {
+  return {
+    id: "section-test",
+    type: "hero" as T,
+    variant: "split",
+    enabled: true,
+    order: 0,
+    content: {},
+    ...overrides,
+  };
+}
+
+function buildPresentation(theme: unknown): Presentation {
+  return {
+    version: 1,
+    updatedAt: "2026-04-26T00:00:00.000Z",
+    theme: theme as Presentation["theme"],
+    globals: {
+      announcementBar: buildSection({ type: "announcementBar", variant: "static", enabled: false }),
+      header: buildSection({ type: "header", variant: "minimal" }),
+      footer: buildSection({ type: "footer", variant: "minimal" }),
+    },
+    pages: {
+      home: { sections: [] },
+      catalog: { sections: [] },
+      product: { sections: [] },
+    },
+  };
+}
 
 function buildBootstrap(overrides: Partial<StorefrontBootstrap> = {}): StorefrontBootstrap {
   return {
@@ -37,15 +71,91 @@ function buildBootstrap(overrides: Partial<StorefrontBootstrap> = {}): Storefron
 
 describe("tenant theme", () => {
   it("usa industrialWarm como fallback seguro", () => {
-    const theme = resolveTenantTheme(buildBootstrap());
+    const theme = resolveEffectiveTenantTheme(buildBootstrap());
 
     expect(theme.preset).toBe("industrialWarm");
     expect(theme.colors.primary).toBeTruthy();
   });
 
-  it("permite overrides parciales desde bootstrap.theme", () => {
-    const theme = resolveTenantTheme(
+  it("usa presentation.theme como fuente visual principal", () => {
+    const theme = resolveEffectiveTenantTheme(
       buildBootstrap({
+        presentation: buildPresentation({
+          preset: "editorialDark",
+          name: "Draft editorial",
+          colors: {
+            primary: "#ff5500",
+            accent: "#00aa99",
+          },
+          typography: {
+            heading: '"Fraunces", serif',
+          },
+        }),
+        branding: {
+          storeName: "Tenant Test",
+          colors: { primary: "#111827", accent: "#2563eb" },
+          typography: { heading: '"Brand Heading"', body: '"Brand Body"' },
+        },
+        theme: {
+          preset: "minimalClean",
+          layout: "commerce",
+        },
+      }),
+    );
+
+    expect(theme.preset).toBe("editorialDark");
+    expect(theme.name).toBe("Draft editorial");
+    expect(theme.colors.primary).toBe("#ff5500");
+    expect(theme.colors.accent).toBe("#00aa99");
+    expect(theme.typography.heading).toBe('"Fraunces", serif');
+    expect(theme.typography.body).toBe(
+      '"Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif',
+    );
+  });
+
+  it("mapea presentation.theme.overrides al TenantTheme efectivo", () => {
+    const theme = resolveEffectiveTenantTheme(
+      buildBootstrap({
+        presentation: buildPresentation({
+          preset: "minimalClean",
+          overrides: {
+            bg: "#f1f5f9",
+            paper: "#ffffff",
+            accent: "#123456",
+            accentSoft: "rgba(18, 52, 86, 0.14)",
+            moduleAccent: "#abcdef",
+            moduleAccentSoft: "rgba(171, 205, 239, 0.18)",
+            fontHeading: "Brand",
+            radiusMd: "6px",
+            shadow: "none",
+            contentWidth: "1040px",
+          },
+        }),
+      }),
+    );
+    const vars = themeToCssVars(theme);
+
+    expect(theme.preset).toBe("minimalClean");
+    expect(vars["--bg"]).toBe("#f1f5f9");
+    expect(vars["--paper"]).toBe("#ffffff");
+    expect(vars["--accent"]).toBe("#123456");
+    expect(vars["--accent-soft"]).toBe("rgba(18, 52, 86, 0.14)");
+    expect(vars["--module-accent"]).toBe("#abcdef");
+    expect(vars["--module-accent-soft"]).toBe("rgba(171, 205, 239, 0.18)");
+    expect(vars["--font-heading"]).toBe("Brand");
+    expect(vars["--radius-md"]).toBe("6px");
+    expect(vars["--shadow"]).toBe("none");
+    expect(vars["--content-width"]).toBe("1040px");
+  });
+
+  it("usa preset legacy y overrides de branding cuando no hay presentation", () => {
+    const theme = resolveEffectiveTenantTheme(
+      buildBootstrap({
+        branding: {
+          storeName: "Tenant Test",
+          colors: { primary: "#112233", accent: "#445566" },
+          typography: { heading: '"Brand Heading"', body: '"Brand Body"' },
+        },
         theme: {
           preset: "minimalClean",
           layout: "commerce",
@@ -55,12 +165,32 @@ describe("tenant theme", () => {
     const vars = themeToCssVars(theme);
 
     expect(theme.preset).toBe("minimalClean");
-    expect(vars["--accent"]).toBe("#243f36");
+    expect(vars["--accent"]).toBe("#112233");
+    expect(vars["--module-accent"]).toBe("#445566");
+    expect(vars["--font-heading"]).toBe('"Brand Heading"');
+    expect(vars["--font-body"]).toBe('"Brand Body"');
   });
 
-  it("descarta overrides malformados y conserva el preset", () => {
-    const theme = resolveTenantTheme(
+  it("cae a industrialWarm si el preset legacy es desconocido", () => {
+    const theme = resolveEffectiveTenantTheme(
       buildBootstrap({
+        theme: {
+          preset: "futurePreset",
+          layout: "commerce",
+        },
+      }),
+    );
+
+    expect(theme.preset).toBe("industrialWarm");
+    expect(theme.colors.primary).toBe("#111827");
+  });
+
+  it("no vuelve al legacy cuando presentation.theme existe con preset desconocido", () => {
+    const theme = resolveEffectiveTenantTheme(
+      buildBootstrap({
+        presentation: buildPresentation({
+          preset: "futurePresentationPreset",
+        }),
         theme: {
           preset: "minimalClean",
           layout: "commerce",
@@ -68,8 +198,36 @@ describe("tenant theme", () => {
       }),
     );
 
-    expect(theme.preset).toBe("minimalClean");
-    expect(theme.colors.primary).toBe("#243f36");
+    expect(theme.preset).toBe("industrialWarm");
+    expect(theme.colors.primary).toBe("#8c4319");
+  });
+
+  it("mantiene resolveTenantTheme como alias compatible", () => {
+    const bootstrap = buildBootstrap({
+      presentation: buildPresentation({
+        preset: "minimalClean",
+      }),
+    });
+
+    expect(resolveTenantTheme(bootstrap)).toEqual(resolveEffectiveTenantTheme(bootstrap));
+  });
+
+  it("evita cache de bootstrap cuando hay preview token", () => {
+    const previewOptions = buildBootstrapFetchCacheOptions({
+      host: "tenant.test",
+      requestId: "req_1",
+      storefrontVersion: "test",
+      previewToken: "preview_123",
+    });
+    const productionOptions = buildBootstrapFetchCacheOptions({
+      host: "tenant.test",
+      requestId: "req_1",
+      storefrontVersion: "test",
+    });
+
+    expect(previewOptions).toEqual({ cache: "no-store" });
+    expect(productionOptions.cache).toBeUndefined();
+    expect(productionOptions.next?.tags).toContain("bootstrap:tenant.test");
   });
 });
 

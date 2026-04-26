@@ -4,7 +4,8 @@
 
 Una empresa obtiene una experiencia visual distinta combinando:
 
-- `branding.theme` en el `bootstrap`
+- `presentation.theme` en el `bootstrap` como fuente visual principal
+- `branding + theme legacy` como fallback de compatibilidad
 - `bootstrap.modules`
 - datos públicos ya existentes: catálogo, categorías, contacto, SEO y métodos de pago
 
@@ -12,18 +13,27 @@ La app no debe crear componentes por empresa. BYM, o cualquier otro tenant, entr
 
 ## Theme
 
-El theme se resuelve en `lib/theme/resolve-tenant-theme.ts`.
+El theme efectivo se resuelve en `lib/theme/resolve-tenant-theme.ts`.
+
+Precedencia:
+
+1. Preview con token: el backend debe devolver `bootstrap.presentation.theme` correspondiente a `presentation.draft`.
+2. Producción: el backend debe devolver `bootstrap.presentation.theme` correspondiente a `presentation.published`.
+3. Si no hay `presentation`, el storefront usa `bootstrap.theme.preset` si coincide con presets conocidos y aplica overrides desde `bootstrap.branding.colors.primary/accent` y `bootstrap.branding.typography.heading/body`.
+4. Si el preset falta o es desconocido, el fallback seguro es `industrialWarm`.
 
 El backend puede enviar:
 
 ```json
 {
-  "branding": {
+  "presentation": {
     "theme": {
       "preset": "industrialWarm",
-      "colors": {
-        "primary": "#8c4319",
-        "accent": "#1f5967"
+      "overrides": {
+        "accent": "#8c4319",
+        "moduleAccent": "#1f5967",
+        "fontHeading": "\"Iowan Old Style\", serif",
+        "radiusMd": "18px"
       }
     }
   }
@@ -36,7 +46,7 @@ Presets iniciales:
 - `minimalClean`: tiendas sobrias, catálogo limpio y navegación directa.
 - `editorialDark`: marcas con estética más curada, premium o editorial.
 
-Si `branding.theme` falta o viene incompleto, el storefront usa `industrialWarm` como fallback seguro.
+El preview con `?preview=<token>` se promueve a `__preview_token` y se envía al bootstrap sin cache usando `x-preview-token` para no mezclar borradores con producción.
 
 ## Módulos
 

@@ -5,6 +5,14 @@ import {
   buildStorefrontQuerySignature,
   buildStorefrontSearchParams,
 } from "@/lib/api/query";
+import {
+  STOREFRONT_LEGACY_PREVIEW_HEADER,
+  STOREFRONT_PREVIEW_COOKIE,
+  STOREFRONT_PREVIEW_HEADER,
+  buildStorefrontPreviewCookieHeader,
+  normalizeStorefrontPreviewToken,
+  readStorefrontPreviewTokenFromCookieHeader,
+} from "@/lib/preview/storefront-preview";
 
 describe("buildStorefrontHeaders", () => {
   it("inyecta headers obligatorios de storefront", () => {
@@ -47,3 +55,24 @@ describe("buildStorefrontSearchParams", () => {
   });
 });
 
+describe("storefront preview token", () => {
+  it("normaliza token y descarta valores peligrosos", () => {
+    expect(normalizeStorefrontPreviewToken("  token_123  ")).toBe("token_123");
+    expect(normalizeStorefrontPreviewToken("bad\nvalue")).toBeNull();
+    expect(normalizeStorefrontPreviewToken("")).toBeNull();
+  });
+
+  it("lee __preview_token desde cookie header", () => {
+    const cookieHeader = `other=1; ${STOREFRONT_PREVIEW_COOKIE}=draft%2Ftoken%3D; session=abc`;
+
+    expect(readStorefrontPreviewTokenFromCookieHeader(cookieHeader)).toBe("draft/token=");
+    expect(buildStorefrontPreviewCookieHeader("draft/token=")).toBe(
+      "__preview_token=draft%2Ftoken%3D",
+    );
+  });
+
+  it("usa x-preview-token como header primario y conserva el legacy", () => {
+    expect(STOREFRONT_PREVIEW_HEADER).toBe("x-preview-token");
+    expect(STOREFRONT_LEGACY_PREVIEW_HEADER).toBe("x-storefront-preview-token");
+  });
+});
