@@ -40,6 +40,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <PresentationRenderer
           presentation={experience.bootstrap!.presentation!}
           page="home"
+          includeGlobals={false}
         />
       </>
     );

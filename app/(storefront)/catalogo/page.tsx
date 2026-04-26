@@ -68,6 +68,7 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
         <PresentationRenderer
           presentation={experience.bootstrap!.presentation!}
           page="catalog"
+          includeGlobals={false}
         />
       </>
     );

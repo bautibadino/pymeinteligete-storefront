@@ -1,6 +1,11 @@
 import type { ReactNode } from "react";
 
 import type { StorefrontBootstrap, StorefrontNavLink } from "@/lib/storefront-api";
+import {
+  PresentationGlobalAnnouncementBar,
+  PresentationGlobalFooter,
+  PresentationGlobalHeader,
+} from "@/components/presentation/PresentationRenderer";
 
 import {
   resolveStatusMessage,
@@ -30,6 +35,7 @@ type StorefrontShellProps = {
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_STOREFRONT_DEBUG === "true";
 
 export function StorefrontShell({ bootstrap, host, children, issues }: StorefrontShellProps) {
+  const presentation = bootstrap?.presentation ?? null;
   const displayName = resolveTenantDisplayName(bootstrap, host);
   const description =
     resolveTenantDescription(bootstrap) ??
@@ -41,6 +47,19 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
   const contactPhone = bootstrap?.contact?.phone;
   const headerLinks = bootstrap?.navigation?.headerLinks ?? FALLBACK_NAVIGATION;
   const footerColumns = bootstrap?.navigation?.footerColumns ?? [];
+
+  if (presentation) {
+    return (
+      <main className="presentation-frame" data-storefront-mode="presentation">
+        <div data-presentation-renderer="true" data-page="shell">
+          <PresentationGlobalAnnouncementBar presentation={presentation} />
+          <PresentationGlobalHeader presentation={presentation} />
+          <div className="presentation-page-content">{children}</div>
+          <PresentationGlobalFooter presentation={presentation} />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="storefront-frame">

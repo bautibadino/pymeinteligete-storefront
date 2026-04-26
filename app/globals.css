@@ -106,6 +106,52 @@ img {
   padding: 26px 0 40px;
 }
 
+.presentation-frame {
+  min-height: 100dvh;
+  width: 100%;
+  padding: clamp(14px, 2.4vw, 34px);
+}
+
+.presentation-frame > [data-presentation-renderer="true"] {
+  width: min(100%, var(--content-width));
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--line) 84%, transparent);
+  border-radius: clamp(22px, 3vw, 40px);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--panel-strong) 94%, transparent), color-mix(in srgb, var(--panel) 90%, transparent)),
+    var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.presentation-frame main {
+  display: grid;
+  gap: clamp(14px, 2vw, 28px);
+}
+
+.presentation-page-content {
+  min-height: 40vh;
+}
+
+.presentation-frame [data-template^="hero-"],
+.presentation-frame [data-template^="trust-bar-"],
+.presentation-frame [data-template^="product-grid-"],
+.presentation-frame [data-template^="category-tile-"],
+.presentation-frame [data-template^="promo-band-"],
+.presentation-frame [data-template^="testimonials-"],
+.presentation-frame [data-template^="faq-"],
+.presentation-frame [data-template^="rich-text-"] {
+  margin-inline: clamp(12px, 2vw, 28px);
+}
+
+.presentation-frame [data-template^="hero-"] {
+  margin-top: clamp(12px, 2vw, 28px);
+}
+
+.presentation-frame [data-template^="footer-"] {
+  margin-top: clamp(10px, 2vw, 26px);
+}
+
 .storefront-shell {
   overflow: hidden;
   border: 1px solid var(--line);
@@ -629,6 +675,34 @@ img {
 .sf-module-stack {
   display: grid;
   gap: 18px;
+}
+
+[data-section-id] {
+  position: relative;
+}
+
+.preview-selected-section {
+  outline: 2px solid var(--module-accent);
+  outline-offset: 6px;
+  border-radius: var(--radius-lg);
+}
+
+.preview-selected-section::after {
+  content: "Seleccionado";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+  padding: 6px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--module-accent);
+  color: var(--action-contrast);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: var(--shadow);
+  pointer-events: none;
 }
 
 .sf-module {
