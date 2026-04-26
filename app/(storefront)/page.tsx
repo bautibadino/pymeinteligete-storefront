@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 
 import { loadHomeExperience } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { ModuleRenderer } from "@/components/modules/ModuleRenderer";
+import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
+import { PreviewBridge } from "@/components/presentation/PreviewBridge";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
 import { normalizeModules } from "@/lib/modules";
+import { shouldUsePresentation } from "@/lib/presentation/render-utils";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
 import { applyTemplateOverrides } from "@/lib/templates/apply-overrides";
 import { resolveEffectiveTenantTheme } from "@/lib/theme";
@@ -27,6 +30,21 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   ]);
   const host = experience.runtime.context.host;
   const theme = resolveEffectiveTenantTheme(experience.bootstrap);
+  const hasPreview = Boolean(experience.runtime.context.previewToken);
+  const usePresentation = shouldUsePresentation(experience.bootstrap?.presentation, "home");
+
+  if (usePresentation) {
+    return (
+      <>
+        {hasPreview ? <PreviewBridge /> : null}
+        <PresentationRenderer
+          presentation={experience.bootstrap!.presentation!}
+          page="home"
+        />
+      </>
+    );
+  }
+
   const baseModules = normalizeModules({
     bootstrap: experience.bootstrap,
     theme,
@@ -55,6 +73,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         categories={experience.categories}
         paymentMethods={experience.paymentMethods?.paymentMethods ?? []}
       />
+
+      {hasPreview ? <PreviewBridge /> : null}
     </>
   );
 }

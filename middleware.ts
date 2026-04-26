@@ -8,6 +8,12 @@ import {
   normalizeStorefrontPreviewToken,
 } from "@/lib/preview/storefront-preview";
 
+/**
+ * Middleware de preview para el Site Builder.
+ *
+ * - Si `?preview=<token>` está en la URL, setea cookie efímera.
+ * - Propaga el token como header de request para server components/fetchers.
+ */
 export function middleware(request: NextRequest) {
   const queryPreviewToken = normalizeStorefrontPreviewToken(
     request.nextUrl.searchParams.get(STOREFRONT_PREVIEW_QUERY_PARAM),

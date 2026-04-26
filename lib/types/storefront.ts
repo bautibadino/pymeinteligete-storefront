@@ -1,4 +1,5 @@
 import type { StorefrontRequestContext } from "@/lib/runtime/storefront-request-context";
+import type { Presentation } from "@/lib/types/presentation";
 
 // ─────────────────────────────────────────────────────────────
 // Envelope base (común a todos los endpoints)
@@ -86,29 +87,8 @@ export interface StorefrontTheme {
   tokensVersion?: string;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Presentation
-// ─────────────────────────────────────────────────────────────
-
-export interface StorefrontPresentationState {
-  theme?: unknown;
-  pages?: unknown;
-  globals?: unknown;
-  [key: string]: unknown;
-}
-
-export interface StorefrontPresentation {
-  /**
-   * Theme efectivo resuelto por el backend para la request actual.
-   * En preview debe representar `draft`; en produccion, `published`.
-   */
-  theme?: unknown;
-  draft?: StorefrontPresentationState;
-  published?: StorefrontPresentationState;
-  pages?: unknown;
-  globals?: unknown;
-  [key: string]: unknown;
-}
+export type StorefrontPresentation = Presentation;
+export type StorefrontPresentationState = Presentation;
 
 // ─────────────────────────────────────────────────────────────
 // SEO
@@ -254,7 +234,7 @@ export interface StorefrontBootstrap {
   requestContext: StorefrontRequestContextData;
   tenant: StorefrontTenantIdentity;
   branding: StorefrontBranding;
-  presentation?: StorefrontPresentation;
+  presentation?: Presentation;
   theme: StorefrontTheme;
   seo: StorefrontSeoConfig;
   navigation: StorefrontNavigation;

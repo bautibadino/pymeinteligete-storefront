@@ -4,6 +4,39 @@ import { buildBootstrapFetchCacheOptions } from "@/lib/fetchers/bootstrap";
 import { normalizeModules } from "@/lib/modules";
 import type { StorefrontBootstrap } from "@/lib/storefront-api";
 import { resolveEffectiveTenantTheme, resolveTenantTheme, themeToCssVars } from "@/lib/theme";
+import type { Presentation, SectionInstance, SectionType } from "@/lib/types/presentation";
+
+function buildSection<T extends SectionType = "hero">(
+  overrides: Partial<SectionInstance<T>> = {},
+): SectionInstance<T> {
+  return {
+    id: "section-test",
+    type: "hero" as T,
+    variant: "split",
+    enabled: true,
+    order: 0,
+    content: {},
+    ...overrides,
+  };
+}
+
+function buildPresentation(theme: unknown): Presentation {
+  return {
+    version: 1,
+    updatedAt: "2026-04-26T00:00:00.000Z",
+    theme: theme as Presentation["theme"],
+    globals: {
+      announcementBar: buildSection({ type: "announcementBar", variant: "static", enabled: false }),
+      header: buildSection({ type: "header", variant: "minimal" }),
+      footer: buildSection({ type: "footer", variant: "minimal" }),
+    },
+    pages: {
+      home: { sections: [] },
+      catalog: { sections: [] },
+      product: { sections: [] },
+    },
+  };
+}
 
 function buildBootstrap(overrides: Partial<StorefrontBootstrap> = {}): StorefrontBootstrap {
   return {
@@ -47,19 +80,17 @@ describe("tenant theme", () => {
   it("usa presentation.theme como fuente visual principal", () => {
     const theme = resolveEffectiveTenantTheme(
       buildBootstrap({
-        presentation: {
-          theme: {
-            preset: "editorialDark",
-            name: "Draft editorial",
-            colors: {
-              primary: "#ff5500",
-              accent: "#00aa99",
-            },
-            typography: {
-              heading: '"Fraunces", serif',
-            },
+        presentation: buildPresentation({
+          preset: "editorialDark",
+          name: "Draft editorial",
+          colors: {
+            primary: "#ff5500",
+            accent: "#00aa99",
           },
-        },
+          typography: {
+            heading: '"Fraunces", serif',
+          },
+        }),
         branding: {
           storeName: "Tenant Test",
           colors: { primary: "#111827", accent: "#2563eb" },
@@ -85,25 +116,21 @@ describe("tenant theme", () => {
   it("mapea presentation.theme.overrides al TenantTheme efectivo", () => {
     const theme = resolveEffectiveTenantTheme(
       buildBootstrap({
-        presentation: {
-          theme: {
-            preset: "minimalClean",
-            overrides: {
-              bg: "#f1f5f9",
-              paper: "#ffffff",
-              accent: "#123456",
-              accentSoft: "rgba(18, 52, 86, 0.14)",
-              moduleAccent: "#abcdef",
-              moduleAccentSoft: "rgba(171, 205, 239, 0.18)",
-              fontHeading: "Brand",
-              radiusMd: "6px",
-              shadow: "none",
-              contentWidth: "1040px",
-            },
+        presentation: buildPresentation({
+          preset: "minimalClean",
+          overrides: {
+            bg: "#f1f5f9",
+            paper: "#ffffff",
+            accent: "#123456",
+            accentSoft: "rgba(18, 52, 86, 0.14)",
+            moduleAccent: "#abcdef",
+            moduleAccentSoft: "rgba(171, 205, 239, 0.18)",
+            fontHeading: "Brand",
+            radiusMd: "6px",
+            shadow: "none",
+            contentWidth: "1040px",
           },
-          pages: [],
-          globals: { footer: { enabled: true } },
-        },
+        }),
       }),
     );
     const vars = themeToCssVars(theme);
@@ -161,11 +188,9 @@ describe("tenant theme", () => {
   it("no vuelve al legacy cuando presentation.theme existe con preset desconocido", () => {
     const theme = resolveEffectiveTenantTheme(
       buildBootstrap({
-        presentation: {
-          theme: {
-            preset: "futurePresentationPreset",
-          },
-        },
+        presentation: buildPresentation({
+          preset: "futurePresentationPreset",
+        }),
         theme: {
           preset: "minimalClean",
           layout: "commerce",
@@ -179,11 +204,9 @@ describe("tenant theme", () => {
 
   it("mantiene resolveTenantTheme como alias compatible", () => {
     const bootstrap = buildBootstrap({
-      presentation: {
-        theme: {
-          preset: "minimalClean",
-        },
-      },
+      presentation: buildPresentation({
+        preset: "minimalClean",
+      }),
     });
 
     expect(resolveTenantTheme(bootstrap)).toEqual(resolveEffectiveTenantTheme(bootstrap));

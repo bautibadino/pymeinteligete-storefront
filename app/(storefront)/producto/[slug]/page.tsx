@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 
 import {
   canBrowseCatalog,
@@ -7,7 +8,10 @@ import {
 } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { ProductDetailPanel } from "@/components/storefront/commerce-panels";
 import { PageIntro, SplitPanel } from "@/components/storefront/page-sections";
+import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
+import { PreviewBridge } from "@/components/presentation/PreviewBridge";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
+import { shouldUsePresentation } from "@/lib/presentation/render-utils";
 import {
   buildTenantMetadata,
   getTenantSeoRequestContext,
@@ -57,6 +61,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const experience = await loadProductExperience(slug);
   const host = experience.runtime.context.host;
   const displayName = resolveTenantDisplayName(experience.bootstrap, host);
+  const cookieStore = await cookies();
+  const hasPreview = cookieStore.has("__preview_token");
+
+  const usePresentation = shouldUsePresentation(experience.bootstrap?.presentation, "product");
+
+  if (usePresentation) {
+    return (
+      <>
+        {hasPreview ? <PreviewBridge /> : null}
+        <PresentationRenderer
+          presentation={experience.bootstrap!.presentation!}
+          page="product"
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -90,6 +110,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
       >
         <ProductDetailPanel product={experience.product} />
       </SplitPanel>
+
+      {hasPreview ? <PreviewBridge /> : null}
     </>
   );
 }
