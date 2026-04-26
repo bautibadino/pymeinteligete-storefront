@@ -330,7 +330,7 @@ describe("module normalization", () => {
       "hero",
       "promoBand",
       "trustBar",
-      "categoryRail",
+      "richText",
       "featuredProducts",
     ]);
     expect(modules[0]).toMatchObject({
