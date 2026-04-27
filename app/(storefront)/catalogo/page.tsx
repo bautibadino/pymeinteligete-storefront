@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import { loadCatalogExperience, resolveTenantDisplayName } from "@/app/(storefront)/_lib/storefront-shell-data";
+import { Card, CardContent } from "@/components/ui/card";
 import { CatalogGrid } from "@/components/storefront/catalog-grid";
-import { PageIntro, SplitPanel } from "@/components/storefront/page-sections";
 import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
 import { PreviewBridge } from "@/components/presentation/PreviewBridge";
 import { mapCatalogProductsToCardData } from "@/components/presentation/render-context";
@@ -86,29 +86,32 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
 
   return (
     <>
-      <PageIntro
-        eyebrow="Superficie pública"
-        title={`Catálogo de ${displayName}`}
-        description="La página ya consume bootstrap y catálogo por host, y solo navega cuando `shopStatus` permite exponer productos públicamente."
-        aside={
-          <div className="stat-stack">
-            <div className="stat-box">
-              <span>Host</span>
-              <strong className="mono">{host}</strong>
-            </div>
-            <div className="stat-box">
-              <span>Resultados</span>
-              <strong>{renderedProductsCount}</strong>
-            </div>
-          </div>
-        }
-      />
-
       <SurfaceStateCard
         shopStatus={experience.bootstrap?.tenant.status ?? null}
         surface="catalog"
         title="El catálogo no está habilitado para este estado de tienda."
       />
+
+      <Card className="rounded-[28px] border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-none">
+        <CardContent className="flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between md:p-10">
+          <div className="grid gap-2">
+            <span className="text-xs font-black uppercase tracking-[0.14em] text-muted-foreground">Catálogo online</span>
+            <h1 className="text-4xl font-black leading-none tracking-[-0.06em] text-slate-950 md:text-7xl">
+              {displayName}
+            </h1>
+            <p className="max-w-2xl leading-7 text-muted-foreground">
+              Explorá productos disponibles, precios actualizados y condiciones comerciales de la tienda.
+            </p>
+          </div>
+
+          <div className="grid min-h-24 min-w-32 place-items-center rounded-3xl border border-slate-200 bg-white p-5 text-center">
+            <strong className="text-3xl leading-none text-slate-950">{renderedProductsCount}</strong>
+            <span className="text-sm font-bold text-muted-foreground">
+              {renderedProductsCount === 1 ? "producto" : "productos"}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
       {activeFilters.length > 0 ? (
         <section className="filter-strip" aria-label="Filtros activos">
@@ -121,16 +124,11 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
         </section>
       ) : null}
 
-      <SplitPanel
-        title="Productos públicos"
-        description="Los ítems mostrados salen del endpoint real `GET /api/storefront/v1/catalog` y no de mocks locales."
-      >
-        <CatalogGrid
-          products={products}
-          emptyTitle="Sin productos para mostrar"
-          emptyDescription="La tienda actual no devolvió productos públicos para la consulta activa o el backend todavía no expone el payload final esperado."
-        />
-      </SplitPanel>
+      <CatalogGrid
+        products={products}
+        emptyTitle="Sin productos para mostrar"
+        emptyDescription="No encontramos productos para la búsqueda actual. Probá ajustar los filtros o volvé más tarde."
+      />
 
       {hasPreview ? <PreviewBridge /> : null}
     </>
