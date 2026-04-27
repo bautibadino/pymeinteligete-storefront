@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-
 import { loadCatalogExperience, resolveTenantDisplayName } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { CatalogGrid } from "@/components/storefront/catalog-grid";
@@ -59,8 +57,7 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
   const products = experience.catalog?.products ?? [];
   const renderedProductsCount = mapCatalogProductsToCardData(products, products.length).length;
   const activeFilters = Object.entries(query).filter(([, value]) => value !== undefined);
-  const cookieStore = await cookies();
-  const hasPreview = cookieStore.has("__preview_token");
+  const hasPreview = Boolean(experience.runtime.context.previewToken);
 
   const usePresentation = shouldUsePresentation(experience.bootstrap?.presentation, "catalog");
 
@@ -92,11 +89,11 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
         title="El catálogo no está habilitado para este estado de tienda."
       />
 
-      <Card className="rounded-[28px] border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-none">
+      <Card className="rounded-xl border-border bg-panel shadow-tenant">
         <CardContent className="flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between md:p-10">
           <div className="grid gap-2">
             <span className="text-xs font-black uppercase tracking-[0.14em] text-muted-foreground">Catálogo online</span>
-            <h1 className="text-4xl font-black leading-none tracking-[-0.06em] text-slate-950 md:text-7xl">
+            <h1 className="font-heading text-4xl font-black leading-none tracking-[-0.06em] text-foreground md:text-7xl">
               {displayName}
             </h1>
             <p className="max-w-2xl leading-7 text-muted-foreground">
@@ -104,8 +101,8 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
             </p>
           </div>
 
-          <div className="grid min-h-24 min-w-32 place-items-center rounded-3xl border border-slate-200 bg-white p-5 text-center">
-            <strong className="text-3xl leading-none text-slate-950">{renderedProductsCount}</strong>
+          <div className="grid min-h-24 min-w-32 place-items-center rounded-lg border border-border bg-panel-strong p-5 text-center">
+            <strong className="text-3xl leading-none text-foreground">{renderedProductsCount}</strong>
             <span className="text-sm font-bold text-muted-foreground">
               {renderedProductsCount === 1 ? "producto" : "productos"}
             </span>

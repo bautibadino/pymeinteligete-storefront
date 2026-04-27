@@ -1,23 +1,17 @@
 import type { ReactNode } from "react";
-import { headers } from "next/headers";
 
 import "./globals.css";
-import { resolveRequestHostFromHeaders } from "@/lib/tenancy/resolve-request-host";
 import { getBootstrap } from "@/lib/storefront-api";
+import { getStorefrontRuntimeSnapshot } from "@/lib/runtime/storefront-request-context";
 import { applyPresentationTheme } from "@/lib/theme/apply-presentation-theme";
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   let htmlStyle: Record<string, string> | undefined;
 
   try {
-    const headerStore = await headers();
-    const host = resolveRequestHostFromHeaders(headerStore);
+    const runtime = await getStorefrontRuntimeSnapshot();
 
-    const bootstrap = await getBootstrap({
-      host,
-      requestId: "root-layout",
-      storefrontVersion: "root-layout",
-    });
+    const bootstrap = await getBootstrap(runtime.context);
 
     if (bootstrap.presentation?.theme) {
       htmlStyle = applyPresentationTheme(bootstrap.presentation.theme);

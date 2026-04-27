@@ -234,7 +234,7 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(380px,0.9fr)] lg:gap-14">
         <div className="grid gap-4">
-          <Card className="overflow-hidden rounded-[28px] border-slate-200 bg-slate-50 shadow-none">
+          <Card className="overflow-hidden rounded-xl border-border bg-panel-strong shadow-none">
             <div className="grid min-h-[340px] place-items-center md:min-h-[560px]">
               {mainImage ? (
                 <img
@@ -243,7 +243,7 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
                   alt={product.name ?? "Producto"}
                 />
               ) : (
-                <div className="grid h-full min-h-[340px] w-full place-items-center bg-gradient-to-br from-slate-100 to-amber-50 text-5xl font-bold text-slate-400">
+                <div className="grid h-full min-h-[340px] w-full place-items-center bg-gradient-to-br from-primary-soft to-accent-soft text-5xl font-bold text-muted">
                   {product.name?.slice(0, 1).toUpperCase() ?? "P"}
                 </div>
               )}
@@ -253,7 +253,7 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
           {images.length > 1 ? (
             <div className="flex gap-3 overflow-x-auto pb-1" aria-label="Imágenes del producto">
               {images.slice(0, 5).map((image) => (
-                <Card key={image.url} className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-2xl border-slate-200 bg-white p-2 shadow-none">
+                <Card key={image.url} className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-lg border-border bg-panel p-2 shadow-none">
                   <img className="h-full w-full object-contain" src={image.url} alt={image.alt ?? product.name ?? "Producto"} />
                 </Card>
               ))}
@@ -261,7 +261,7 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
           ) : null}
         </div>
 
-        <Card className="h-fit rounded-[28px] border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)] lg:sticky lg:top-36">
+        <Card className="h-fit rounded-xl border-border bg-panel shadow-tenant lg:sticky lg:top-36">
           <CardHeader className="gap-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -284,7 +284,7 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
               ) : null}
             </div>
 
-            <h1 className="text-3xl font-black leading-none tracking-[-0.055em] text-slate-950 md:text-5xl">
+            <h1 className="font-heading text-3xl font-black leading-none tracking-[-0.055em] text-foreground md:text-5xl">
               {product.name ?? "Producto"}
             </h1>
 
@@ -294,12 +294,12 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
           </CardHeader>
 
           <CardContent className="grid gap-4">
-            <Card className="rounded-3xl border-slate-200 bg-slate-50 shadow-none">
+            <Card className="rounded-lg border-border bg-panel-strong shadow-none">
               <CardContent className="grid gap-2 p-5">
                 <span className="text-xs font-black uppercase tracking-[0.14em] text-muted-foreground">Precio final</span>
-                <strong className="text-3xl font-black tracking-[-0.05em] text-slate-950 md:text-5xl">{price}</strong>
+                <strong className="text-3xl font-black tracking-[-0.05em] text-foreground md:text-5xl">{price}</strong>
                 {installments ? (
-                  <p className="font-bold text-emerald-700">
+                  <p className="font-bold text-success">
                     {installments.count} cuotas de {installments.formatted}
                     {installments.interestFree ? " sin interés" : ""}
                   </p>
@@ -308,7 +308,7 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
             </Card>
 
             {cashDiscount ? (
-              <div className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
+              <div className="flex gap-3 rounded-lg border border-border bg-success-soft p-4 text-success">
                 <CreditCard className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
                 <div className="grid gap-1">
                   <strong>{cashDiscount.formatted}</strong>
@@ -318,24 +318,24 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
             ) : null}
 
             <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-              <Button asChild size="lg" className="h-14 rounded-2xl text-base font-black shadow-lg shadow-slate-950/15" variant={canPurchase ? "default" : "secondary"}>
+              <Button asChild size="lg" className="h-14 rounded-lg text-base font-black shadow-tenant" variant={canPurchase ? "default" : "secondary"}>
                 <Link href={(canPurchase ? checkoutHref : "/catalogo") as Route} aria-disabled={!canPurchase}>
                   <ShoppingCart className="size-5" aria-hidden="true" />
                   {canPurchase ? "Comprar ahora" : "Ver otros productos"}
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="h-14 rounded-2xl font-black">
+              <Button asChild size="lg" variant="outline" className="h-14 rounded-lg font-black">
                 <Link href="/catalogo">Seguir comprando</Link>
               </Button>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 p-3 text-sm font-semibold text-slate-600">
-                <Truck className="size-5 shrink-0 text-slate-950" aria-hidden="true" />
+              <div className="flex min-h-16 items-center gap-3 rounded-lg border border-border bg-panel p-3 text-sm font-semibold text-muted">
+                <Truck className="size-5 shrink-0 text-foreground" aria-hidden="true" />
                 <span>{stockLabel}</span>
               </div>
-              <div className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 p-3 text-sm font-semibold text-slate-600">
-                <ShieldCheck className="size-5 shrink-0 text-slate-950" aria-hidden="true" />
+              <div className="flex min-h-16 items-center gap-3 rounded-lg border border-border bg-panel p-3 text-sm font-semibold text-muted">
+                <ShieldCheck className="size-5 shrink-0 text-foreground" aria-hidden="true" />
                 <span>Compra protegida por PyME Inteligente</span>
               </div>
             </div>
