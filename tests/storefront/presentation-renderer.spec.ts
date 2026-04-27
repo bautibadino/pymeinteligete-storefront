@@ -236,6 +236,49 @@ describe("presentation renderer logic", () => {
     expect(module.products[0]?.badges?.map((badge) => badge.label)).toContain("Despacho inmediato");
   });
 
+  it("catalogLayout muestra productos reales aunque no estén marcados como featured", () => {
+    const products = [
+      {
+        _id: "mongo-prod-catalog",
+        ecommerceSlug: "catalogo-real",
+        name: "Producto de catálogo real",
+        brand: "BYM",
+        priceWithTax: 123456,
+        stock: 3,
+        images: [{ url: "https://cdn.example.com/catalogo-real.webp" }],
+      },
+    ] as unknown as StorefrontCatalogProduct[];
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "catalogLayout",
+        variant: "filters-sidebar",
+        content: {
+          cardVariant: "premium-commerce",
+          perPage: 12,
+        },
+      }),
+      { products },
+    ) as {
+      products: Array<{
+        id: string;
+        href: string;
+        imageUrl?: string;
+        price: { amount: number; formatted: string };
+        stock?: { available: boolean; label?: string };
+      }>;
+    };
+
+    expect(module.products).toHaveLength(1);
+    expect(module.products[0]).toMatchObject({
+      id: "mongo-prod-catalog",
+      href: "/producto/catalogo-real",
+      imageUrl: "https://cdn.example.com/catalogo-real.webp",
+      price: { amount: 123456 },
+      stock: { available: true, label: "Stock disponible" },
+    });
+  });
+
   it("filtra productos sin slug estable para evitar /producto/undefined", () => {
     const products = [
       {

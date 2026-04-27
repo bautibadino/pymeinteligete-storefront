@@ -3,6 +3,7 @@ import { normalizeProductGridContent } from "@/lib/modules/product-grid";
 import type { SectionInstance } from "@/lib/types/presentation";
 import {
   mapCategoriesToTiles,
+  mapCatalogProductsToCardData,
   mapPaymentMethodsToTrustItems,
   resolveStoreName,
   selectProductsForGrid,
@@ -103,9 +104,8 @@ export function adaptSectionToModule(
 
     case "catalogLayout": {
       const normalizedContent = normalizeCatalogLayoutContent(content);
-      const products = selectProductsForGrid(
+      const products = mapCatalogProductsToCardData(
         context?.products,
-        { type: "featured" },
         normalizedContent.perPage ?? 12,
       );
 

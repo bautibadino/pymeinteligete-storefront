@@ -403,6 +403,16 @@ export function selectProductsForGrid(
     .filter((product): product is ProductCardData => product !== null);
 }
 
+export function mapCatalogProductsToCardData(
+  products: StorefrontCatalogProduct[] | undefined,
+  limit = 12,
+): ProductCardData[] {
+  return (products ?? [])
+    .slice(0, limit)
+    .map(mapCatalogProductToCardData)
+    .filter((product): product is ProductCardData => product !== null);
+}
+
 export function buildCategoryCatalogHref(category: StorefrontCategory): string {
   return category.categoryId ? `/catalogo?categoryId=${encodeURIComponent(category.categoryId)}` : "/catalogo";
 }
