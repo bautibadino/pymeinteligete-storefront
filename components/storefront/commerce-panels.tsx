@@ -1,4 +1,6 @@
 import Link from "next/link";
+import type { Route } from "next";
+import { CreditCard, ShieldCheck, ShoppingCart, Truck } from "lucide-react";
 
 import type {
   StorefrontBootstrap,
@@ -105,6 +107,55 @@ type ProductDetailPanelProps = {
   product: StorefrontProductDetail | null;
 };
 
+type ProductImageView = {
+  url: string;
+  alt?: string;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function readString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function readNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function readProductImages(product: StorefrontProductDetail): ProductImageView[] {
+  const record = product as StorefrontProductDetail & Record<string, unknown>;
+  const images = Array.isArray(record.images) ? record.images : [];
+
+  return images
+    .map((image): ProductImageView | null => {
+      if (typeof image === "string" && image.trim()) {
+        return { url: image.trim(), alt: product.name };
+      }
+
+      if (isRecord(image)) {
+        const url = readString(image.url) ?? readString(image.src) ?? readString(image.imageUrl);
+        const alt = readString(image.alt) ?? product.name;
+        return url ? { url, alt } : null;
+      }
+
+      return null;
+    })
+    .filter((image): image is ProductImageView => image !== null);
+}
+
+function buildCheckoutHref(productId: string | undefined): string {
+  if (!productId) return "/checkout";
+
+  const params = new URLSearchParams({
+    productId,
+    quantity: "1",
+  });
+
+  return `/checkout?${params.toString()}`;
+}
+
 export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
   if (!product) {
     return (
@@ -119,49 +170,154 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
   }
 
   const normalizedProduct = mapCatalogProductToCardData(product);
-  const price = normalizedProduct?.price.formatted ?? "Precio a confirmar";
-  const imageUrl = normalizedProduct?.imageUrl;
-  const stockLabel = normalizedProduct?.stock?.label ?? "Disponibilidad a confirmar";
+  const productRecord = product as StorefrontProductDetail & Record<string, unknown>;
+  const images = readProductImages(product);
+  const mainImage = normalizedProduct?.imageUrl ?? images[0]?.url;
   const brand = normalizedProduct?.brand ?? product.brand ?? product.category ?? "Producto público";
+  const stock = normalizedProduct?.stock;
+  const isAvailable = stock === undefined || stock.available;
+  const stockLabel = stock?.label ?? (isAvailable ? "Disponible para comprar" : "Sin stock");
+  const productId = normalizedProduct?.id;
+  const checkoutHref = buildCheckoutHref(productId);
+  const installments = normalizedProduct?.installments;
+  const cashDiscount = normalizedProduct?.cashDiscount;
+  const dispatchType = readString(productRecord.dispatchType);
+  const stockByBranch = Array.isArray(productRecord.stockByBranch) ? productRecord.stockByBranch : [];
+  const modelName = readString(productRecord.modelName);
+  const sku = readString(product.sku);
+  const price = normalizedProduct?.price.formatted ?? "Precio a confirmar";
+  const discountedPrice = readNumber(productRecord.discountedPrice);
+  const savings =
+    typeof normalizedProduct?.price.amount === "number" && discountedPrice
+      ? normalizedProduct.price.amount - discountedPrice
+      : undefined;
 
   return (
-    <section className="product-spotlight">
-      <div className="product-spotlight-media">
-        {imageUrl ? (
-          <img src={imageUrl} alt={product.name ?? "Producto"} />
-        ) : (
-          <div className="product-card-placeholder spotlight-placeholder">
-            <span>{product.name?.slice(0, 1).toUpperCase() ?? "P"}</span>
-          </div>
-        )}
-      </div>
+    <section className="pdp-shell">
+      <nav className="pdp-breadcrumb" aria-label="Breadcrumb">
+        <Link href="/">Inicio</Link>
+        <span aria-hidden="true">/</span>
+        <Link href="/catalogo">Catálogo</Link>
+        <span aria-hidden="true">/</span>
+        <span>{product.name ?? "Producto"}</span>
+      </nav>
 
-      <div className="product-spotlight-copy">
-        <span className="eyebrow">{brand}</span>
-        <h2>{product.name ?? "Producto sin nombre expuesto"}</h2>
-        <p>
-          {product.description ??
-            "Consultá disponibilidad y especificaciones antes de finalizar la compra."}
-        </p>
+      <div className="pdp-layout">
+        <div className="pdp-gallery">
+          <div className="pdp-main-image">
+            {mainImage ? (
+              <img src={mainImage} alt={product.name ?? "Producto"} />
+            ) : (
+              <div className="product-card-placeholder spotlight-placeholder">
+                <span>{product.name?.slice(0, 1).toUpperCase() ?? "P"}</span>
+              </div>
+            )}
+          </div>
 
-        <dl className="detail-grid">
-          <div>
-            <dt>Precio</dt>
-            <dd>{price}</dd>
+          {images.length > 1 ? (
+            <div className="pdp-thumbs" aria-label="Imágenes del producto">
+              {images.slice(0, 5).map((image) => (
+                <span key={image.url} className="pdp-thumb">
+                  <img src={image.url} alt={image.alt ?? product.name ?? "Producto"} />
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        <aside className="pdp-buybox" aria-label="Información de compra">
+          <div className="pdp-brand-row">
+            <div>
+              <span className="pdp-brand">{brand}</span>
+              {modelName || sku ? (
+                <p className="pdp-model">
+                  {modelName ? `Modelo ${modelName}` : null}
+                  {modelName && sku ? " · " : null}
+                  {sku ? `SKU ${sku}` : null}
+                </p>
+              ) : null}
+            </div>
+
+            {dispatchType === "IMMEDIATE" ? (
+              <span className="pdp-stock-badge pdp-stock-badge-live">Despacho inmediato</span>
+            ) : dispatchType === "DELAYED_72H" ? (
+              <span className="pdp-stock-badge pdp-stock-badge-delay">Despacho 72 hs</span>
+            ) : null}
           </div>
-          <div>
-            <dt>Disponibilidad</dt>
-            <dd>{stockLabel}</dd>
+
+          <h1>{product.name ?? "Producto"}</h1>
+
+          {product.description ? (
+            <p className="pdp-description">{product.description}</p>
+          ) : null}
+
+          <div className="pdp-price-card">
+            <span>Precio final</span>
+            <strong>{price}</strong>
+            {installments ? (
+              <p>
+                {installments.count} cuotas de {installments.formatted}
+                {installments.interestFree ? " sin interés" : ""}
+              </p>
+            ) : null}
           </div>
-          <div>
-            <dt>SKU</dt>
-            <dd>{product.sku ?? "No expuesto"}</dd>
+
+          {cashDiscount ? (
+            <div className="pdp-benefit-card">
+              <CreditCard aria-hidden="true" />
+              <div>
+                <strong>{cashDiscount.formatted}</strong>
+                {savings && savings > 0 ? <span>Ahorrás {new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(savings)}</span> : null}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="pdp-purchase-actions">
+            <Link
+              className={`pdp-primary-cta${!isAvailable ? " pdp-primary-cta-disabled" : ""}`}
+              href={(isAvailable ? checkoutHref : "/catalogo") as Route}
+              aria-disabled={!isAvailable}
+            >
+              <ShoppingCart aria-hidden="true" />
+              {isAvailable ? "Comprar ahora" : "Ver otros productos"}
+            </Link>
+            <Link className="pdp-secondary-cta" href="/catalogo">
+              Seguir comprando
+            </Link>
           </div>
-          <div>
-            <dt>Entrega</dt>
-            <dd>{String(product.deliveryInfo ?? "A definir por backend")}</dd>
+
+          <div className="pdp-trust-grid">
+            <div>
+              <Truck aria-hidden="true" />
+              <span>{stockLabel}</span>
+            </div>
+            <div>
+              <ShieldCheck aria-hidden="true" />
+              <span>Compra protegida por PyME Inteligente</span>
+            </div>
           </div>
-        </dl>
+
+          {stockByBranch.length > 0 ? (
+            <div className="pdp-branch-stock">
+              <strong>Disponibilidad por sucursal</strong>
+              <ul>
+                {stockByBranch.slice(0, 4).map((branch, index) => {
+                  const branchRecord = isRecord(branch) ? branch : {};
+                  const branchId = readString(branchRecord.branchId) ?? `branch-${index}`;
+                  const branchName = readString(branchRecord.branchName) ?? "Sucursal";
+                  const branchStock = readNumber(branchRecord.stock) ?? 0;
+
+                  return (
+                    <li key={branchId}>
+                      <span>{branchName}</span>
+                      <strong>{branchStock} u.</strong>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+        </aside>
       </div>
     </section>
   );

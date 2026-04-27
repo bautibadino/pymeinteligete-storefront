@@ -1,3 +1,4 @@
+import { Search, ShoppingCart } from "lucide-react";
 import type { ReactNode } from "react";
 
 import type { StorefrontBootstrap, StorefrontNavLink } from "@/lib/storefront-api";
@@ -19,7 +20,7 @@ import {
 const FALLBACK_NAVIGATION: StorefrontNavLink[] = [
   { href: "/", label: "Inicio" },
   { href: "/catalogo", label: "Catálogo" },
-  { href: "/checkout", label: "Checkout" },
+  { href: "/contacto", label: "Contacto" },
 ];
 
 type StorefrontShellProps = {
@@ -70,57 +71,64 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
     <main className="storefront-frame">
       <div className="storefront-shell">
         <header className="storefront-topbar">
-          <div className="storefront-brand">
-            <div className="storefront-brandmark" aria-hidden="true">
-              {logoUrl ? (
-                <img src={logoUrl} alt="" />
-              ) : (
-                <span>{displayName.slice(0, 2).toUpperCase()}</span>
-              )}
-            </div>
+          <div className="storefront-announcement">
+            <span className={`status-badge status-badge-${statusTone}`}>{statusMessage}</span>
+            <span>{contactPhone ? `Atención: ${contactPhone}` : description}</span>
+          </div>
 
-            <div className="storefront-brandcopy">
-              <h1 className="storefront-title">{displayName}</h1>
-              <p className="storefront-subtitle">{description}</p>
+          <div className="storefront-mainbar">
+            <a className="storefront-brand" href="/" aria-label={`Inicio de ${displayName}`}>
+              <span className="storefront-brandmark" aria-hidden="true">
+                {logoUrl ? (
+                  <img src={logoUrl} alt="" />
+                ) : (
+                  <span>{displayName.slice(0, 2).toUpperCase()}</span>
+                )}
+              </span>
+              <span className="storefront-brandname">{displayName}</span>
+            </a>
+
+            <form className="storefront-search" action="/catalogo">
+              <Search className="storefront-search-icon" aria-hidden="true" />
+              <label className="sr-only" htmlFor="storefront-search-input">
+                Buscar productos
+              </label>
+              <input
+                id="storefront-search-input"
+                name="search"
+                placeholder="Buscar neumáticos, filtros, aceites..."
+                type="search"
+              />
+              <button type="submit">Buscar</button>
+            </form>
+
+            <div className="storefront-actions">
+              <a className="storefront-iconlink storefront-cartlink" href="/checkout" aria-label="Ir al checkout">
+                <ShoppingCart aria-hidden="true" />
+              </a>
             </div>
           </div>
 
-          <div className="storefront-meta">
-            <nav className="storefront-nav" aria-label="Navegación pública">
-              {headerLinks.map((item) => (
-                <a
-                  key={item.href}
-                  className="storefront-navlink"
-                  href={item.href}
-                  {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                >
-                  {item.label}
-                </a>
-              ))}
-            </nav>
+          <nav className="storefront-nav" aria-label="Navegación pública">
+            {headerLinks.map((item) => (
+              <a
+                key={item.href}
+                className="storefront-navlink"
+                href={item.href}
+                {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
 
-            <div className="storefront-contact">
-              <span className={`status-badge status-badge-${statusTone}`}>{statusMessage}</span>
-              {contactEmail ? (
-                <div className="storefront-contactline">
-                  <span className="meta-label">Contacto</span>
-                  <span className="meta-value">{contactEmail}</span>
-                </div>
-              ) : null}
-              {contactPhone ? (
-                <div className="storefront-contactline">
-                  <span className="meta-label">Teléfono</span>
-                  <span className="meta-value">{contactPhone}</span>
-                </div>
-              ) : null}
-              {DEBUG_ENABLED ? (
-                <div className="storefront-contactline">
-                  <span className="meta-label">Host</span>
-                  <span className="meta-value mono">{host}</span>
-                </div>
-              ) : null}
+          {DEBUG_ENABLED ? (
+            <div className="storefront-debugline">
+              <span className="meta-label">Host</span>
+              <span className="meta-value mono">{host}</span>
+              {contactEmail ? <span>{contactEmail}</span> : null}
             </div>
-          </div>
+          ) : null}
         </header>
 
         {DEBUG_ENABLED && issues.length > 0 ? (
