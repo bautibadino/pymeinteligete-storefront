@@ -35,7 +35,10 @@ import {
   resolveCatalogLayoutTemplateId,
 } from "@/lib/templates/catalog-layout-catalog";
 import { resolveCatalogLayoutTemplate } from "@/lib/templates/catalog-layout-registry";
-import { CATALOG_LAYOUT_VARIANTS } from "@/lib/modules/catalog-layout";
+import {
+  CATALOG_LAYOUT_VARIANTS,
+  normalizeCatalogLayoutContent,
+} from "@/lib/modules/catalog-layout";
 
 // ---------------------------------------------------------------------------
 // Catálogo
@@ -231,8 +234,6 @@ describe("CatalogLayoutContentSchema", () => {
   });
 
   it("falla si sort.default no está en sort.options", () => {
-    // Nota: el schema actual no valida esta coherencia cruzada;
-    // este test documenta el comportamiento esperado en V1.
     const result = CatalogLayoutContentSchema.safeParse({
       cardVariant: "classic",
       sort: {
@@ -240,9 +241,7 @@ describe("CatalogLayoutContentSchema", () => {
         default: "popular",
       },
     });
-    // El schema permite el valor porque default es enum independiente.
-    // En V2 se puede agregar refinamiento cruzado.
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
   });
 
   it("acepta campos opcionales omitidos", () => {
@@ -256,5 +255,41 @@ describe("CatalogLayoutContentSchema", () => {
       expect(result.data.sort).toBeUndefined();
       expect(result.data.perPage).toBeUndefined();
     }
+  });
+});
+
+describe("normalizeCatalogLayoutContent", () => {
+  it("degrada cardVariant inválido y conserva controles válidos", () => {
+    const normalized = normalizeCatalogLayoutContent({
+      cardVariant: "card-inexistente",
+      filters: {
+        brand: true,
+        priceRange: "si",
+        availability: false,
+      },
+      sort: {
+        options: ["priceAsc", "popular", "desconocido"],
+        default: "desconocido",
+      },
+      perPage: 500,
+    });
+
+    expect(normalized.cardVariant).toBe("classic");
+    expect(normalized.filters).toEqual({ brand: true, availability: false });
+    expect(normalized.sort).toEqual({ options: ["priceAsc", "popular"], default: "priceAsc" });
+    expect(normalized.perPage).toBe(96);
+  });
+
+  it("omite sort si el builder no envía opciones válidas", () => {
+    const normalized = normalizeCatalogLayoutContent({
+      cardVariant: "premium-commerce",
+      sort: {
+        options: ["desconocido"],
+        default: "popular",
+      },
+    });
+
+    expect(normalized.cardVariant).toBe("premium-commerce");
+    expect(normalized.sort).toBeUndefined();
   });
 });

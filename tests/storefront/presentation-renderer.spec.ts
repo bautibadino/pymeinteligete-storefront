@@ -4,6 +4,7 @@ import {
   getEnabledSortedSections,
   shouldUsePresentation,
 } from "@/lib/presentation/render-utils";
+import { adaptSectionToModule } from "@/components/presentation/section-adapter";
 import type { Presentation, SectionInstance, SectionType } from "@/lib/types/presentation";
 
 function buildSection<T extends SectionType = "hero">(
@@ -82,5 +83,53 @@ describe("presentation renderer logic", () => {
     expect(shouldUsePresentation(presentation, "home")).toBe(true);
     expect(shouldUsePresentation(presentation, "catalog")).toBe(false);
     expect(shouldUsePresentation(presentation, "product")).toBe(false);
+  });
+
+  it("adapta catalogLayout normalizando filtros, sort y cardVariant", () => {
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "catalogLayout",
+        variant: "filters-sidebar",
+        content: {
+          cardVariant: "no-existe",
+          filters: { brand: true, rating: "si" },
+          sort: { options: ["popular"], default: "priceAsc" },
+          perPage: 24,
+        },
+      }),
+    ) as {
+      content: {
+        cardVariant: string;
+        filters?: Record<string, boolean | undefined>;
+        sort?: { options: string[]; default: string };
+        perPage?: number;
+      };
+    };
+
+    expect(module.content.cardVariant).toBe("classic");
+    expect(module.content.filters).toEqual({ brand: true });
+    expect(module.content.sort).toEqual({ options: ["popular"], default: "popular" });
+    expect(module.content.perPage).toBe(24);
+  });
+
+  it("adapta productGrid con defaults seguros para source y cardVariant", () => {
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "productGrid",
+        variant: "grid-3",
+        content: {
+          source: { type: "category" },
+          cardVariant: "no-existe",
+        },
+      }),
+    ) as {
+      content: {
+        source: { type: string };
+        cardVariant: string;
+      };
+    };
+
+    expect(module.content.source).toEqual({ type: "featured" });
+    expect(module.content.cardVariant).toBe("classic");
   });
 });

@@ -12,7 +12,11 @@
 import { z } from "zod";
 
 import type { CatalogLayoutVariant } from "@/lib/modules/catalog-layout";
-import { CATALOG_LAYOUT_VARIANTS } from "@/lib/modules/catalog-layout";
+import {
+  CATALOG_LAYOUT_VARIANTS,
+  CatalogLayoutFiltersSchema,
+  CatalogLayoutSortSchema,
+} from "@/lib/modules/catalog-layout";
 
 // ─── IDs y defaults ─────────────────────────────────────────────────────────
 
@@ -35,21 +39,8 @@ export const CatalogLayoutContentSchema = z.object({
       showAddToCart: z.boolean().optional(),
     })
     .optional(),
-  filters: z
-    .object({
-      brand: z.boolean().optional(),
-      priceRange: z.boolean().optional(),
-      category: z.boolean().optional(),
-      availability: z.boolean().optional(),
-      rating: z.boolean().optional(),
-    })
-    .optional(),
-  sort: z
-    .object({
-      options: z.array(z.enum(["relevance", "priceAsc", "priceDesc", "newest", "popular"])),
-      default: z.enum(["relevance", "priceAsc", "priceDesc", "newest", "popular"]),
-    })
-    .optional(),
+  filters: CatalogLayoutFiltersSchema.optional(),
+  sort: CatalogLayoutSortSchema.optional(),
   perPage: z.number().min(1).max(96).optional(),
 });
 

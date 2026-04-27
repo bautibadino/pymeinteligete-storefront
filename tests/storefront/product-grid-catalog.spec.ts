@@ -33,6 +33,7 @@ import {
   isProductGridTemplateId,
   resolveProductGridTemplateId,
 } from "@/lib/templates/product-grid-catalog";
+import { normalizeProductGridContent } from "@/lib/modules/product-grid";
 
 // ---------------------------------------------------------------------------
 // Catálogo
@@ -173,5 +174,33 @@ describe("ProductGridContentSchema", () => {
       cardVariant: "no-existe",
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("normalizeProductGridContent", () => {
+  it("degrada source y cardVariant inválidos a defaults seguros", () => {
+    const normalized = normalizeProductGridContent({
+      source: { type: "collection", collectionId: "" },
+      cardVariant: "no-existe",
+      limit: 250,
+      showViewAllLink: true,
+      viewAllHref: "/catalogo",
+    });
+
+    expect(normalized.source).toEqual({ type: "featured" });
+    expect(normalized.cardVariant).toBe("classic");
+    expect(normalized.limit).toBe(100);
+    expect(normalized.showViewAllLink).toBe(true);
+    expect(normalized.viewAllHref).toBe("/catalogo");
+  });
+
+  it("normaliza handpicked descartando productIds no string", () => {
+    const normalized = normalizeProductGridContent({
+      source: { type: "handpicked", productIds: ["prod-1", 42, "prod-2"] },
+      cardVariant: "premium-commerce",
+    });
+
+    expect(normalized.source).toEqual({ type: "handpicked", productIds: ["prod-1", "prod-2"] });
+    expect(normalized.cardVariant).toBe("premium-commerce");
   });
 });

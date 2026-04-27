@@ -6,6 +6,7 @@ import type {
   SectionType,
 } from "@/lib/types/presentation";
 import { getEnabledSortedSections, type PresentationPageKey } from "@/lib/presentation/render-utils";
+import { adaptSectionToModule } from "@/components/presentation/section-adapter";
 
 // Registry resolvers
 import {
@@ -29,57 +30,6 @@ type PresentationRendererProps = {
   page: PresentationPageKey;
   includeGlobals?: boolean;
 };
-
-/**
- * Adapta una SectionInstance del contrato presentation al shape de módulo
- * que espera cada componente de template.
- *
- * Algunos tipos usan `content` anidado; otros reciben los campos planos.
- */
-function adaptSectionToModule(section: SectionInstance): unknown {
-  const base = {
-    id: section.id,
-    type: section.type,
-    variant: section.variant,
-  };
-
-  switch (section.type) {
-    case "hero": {
-      const content = section.content as Record<string, unknown>;
-      const imageUrl = typeof content.imageUrl === "string" ? content.imageUrl : "";
-      const imageAlt = typeof content.imageAlt === "string" ? content.imageAlt : "Imagen principal";
-
-      return {
-        ...base,
-        ...content,
-        description: content.description ?? content.subtitle,
-        image: imageUrl ? { src: imageUrl, alt: imageAlt } : undefined,
-        primaryAction: content.primaryAction ?? content.primaryCta,
-        secondaryAction: content.secondaryAction ?? content.secondaryCta,
-      };
-    }
-
-    case "productGrid":
-    case "trustBar":
-    case "promoBand":
-    case "richText":
-    case "footer":
-    case "catalogLayout":
-    case "productDetail":
-      return { ...base, content: section.content };
-
-    case "announcementBar":
-      return {
-        ...base,
-        enabled: section.enabled,
-        order: section.order,
-        ...section.content,
-      };
-
-    default:
-      return { ...base, ...section.content };
-  }
-}
 
 const SECTION_RESOLVERS: Record<
   Exclude<SectionType, "productCard">,
