@@ -111,6 +111,73 @@ function readProductCategory(product: ProductRecord): string | undefined {
   return readNestedString(product, "category", ["name", "label", "slug"]);
 }
 
+function readProductCategoryMatchValue(product: ProductRecord): string | undefined {
+  const category = product.category;
+
+  if (isRecord(category)) {
+    return readStringFromRecord(category, ["slug", "categoryId", "id"]) ?? readStringFromRecord(category, ["name", "label"]);
+  }
+
+  return readString(category);
+}
+
+function readProductCollectionValues(product: ProductRecord): string[] {
+  const values: string[] = [];
+  const directCollectionId = readString(product.collectionId);
+  const directCollectionSlug = readString(product.collectionSlug);
+  const collection = product.collection;
+
+  if (directCollectionId) values.push(directCollectionId);
+  if (directCollectionSlug) values.push(directCollectionSlug);
+
+  if (typeof collection === "string") {
+    const collectionValue = readString(collection);
+    if (collectionValue) values.push(collectionValue);
+  }
+
+  if (isRecord(collection)) {
+    const collectionValue = readStringFromRecord(collection, ["collectionId", "id", "slug"]);
+    if (collectionValue) values.push(collectionValue);
+  }
+
+  for (const key of ["collectionIds", "collectionSlugs", "collections"]) {
+    const rawValues = product[key];
+    if (!Array.isArray(rawValues)) continue;
+
+    for (const rawValue of rawValues) {
+      if (typeof rawValue === "string") {
+        const value = readString(rawValue);
+        if (value) values.push(value);
+        continue;
+      }
+
+      if (isRecord(rawValue)) {
+        const value = readStringFromRecord(rawValue, ["collectionId", "id", "slug"]);
+        if (value) values.push(value);
+      }
+    }
+  }
+
+  return values;
+}
+
+function readProductCreatedAt(product: ProductRecord): number | undefined {
+  const date = readStringFromRecord(product, ["createdAt", "created_at", "creationDate", "publishedAt"]);
+  if (!date) return undefined;
+
+  const timestamp = Date.parse(date);
+  return Number.isNaN(timestamp) ? undefined : timestamp;
+}
+
+function hasExplicitFeaturedFlag(product: ProductRecord): boolean {
+  return (
+    readBoolean(product.isFeatured) === true ||
+    readBoolean(product.featured) === true ||
+    readBoolean(product.is_featured) === true ||
+    readBoolean(product.featuredInStorefront) === true
+  );
+}
+
 function readPriceAmount(product: ProductRecord): number | undefined {
   if (isRecord(product.price)) {
     return readNumber(product.price.amount) ?? readNumber(product.price.value);
@@ -274,10 +341,17 @@ export function mapCatalogProductToCardData(product: StorefrontCatalogProduct): 
 
 function matchesCategory(product: StorefrontCatalogProduct, categorySlug: string): boolean {
   const record = product as ProductRecord;
-  const category = readProductCategory(record)?.toLowerCase();
+  const category = readProductCategoryMatchValue(record)?.toLowerCase();
   const slug = categorySlug.toLowerCase();
 
   return category === slug || category?.replaceAll(" ", "-") === slug;
+}
+
+function matchesCollection(product: StorefrontCatalogProduct, collectionId: string): boolean {
+  const record = product as ProductRecord;
+  const normalizedCollectionId = collectionId.toLowerCase();
+
+  return readProductCollectionValues(record).some((value) => value.toLowerCase() === normalizedCollectionId);
 }
 
 function matchesStableProductId(product: StorefrontCatalogProduct, ids: Set<string>): boolean {
@@ -302,22 +376,41 @@ export function selectProductsForGrid(
 
   if (source.type === "handpicked") {
     const ids = new Set(source.productIds);
+    // `handpicked` solo puede resolver IDs presentes en el catálogo recibido;
+    // no consulta ni inventa productos fuera de la página cargada por host.
     selected = sourceProducts.filter((product) => matchesStableProductId(product, ids));
   }
 
-  // collection/featured/newest dependen de soporte backend específico no presente
-  // en el contrato actual. En presentation usamos el catálogo recibido por host
-  // como best-effort, sin inventar ranking ni pertenencia a colecciones.
+  if (source.type === "collection") {
+    selected = sourceProducts.filter((product) => matchesCollection(product, source.collectionId));
+  }
+
+  if (source.type === "featured") {
+    selected = sourceProducts.filter((product) => hasExplicitFeaturedFlag(product as ProductRecord));
+  }
+
+  if (source.type === "newest") {
+    selected = sourceProducts
+      .map((product) => ({ product, createdAt: readProductCreatedAt(product as ProductRecord) }))
+      .filter((entry): entry is { product: StorefrontCatalogProduct; createdAt: number } => entry.createdAt !== undefined)
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .map((entry) => entry.product);
+  }
+
   return selected
     .slice(0, limit)
     .map(mapCatalogProductToCardData)
     .filter((product): product is ProductCardData => product !== null);
 }
 
+export function buildCategoryCatalogHref(category: StorefrontCategory): string {
+  return category.categoryId ? `/catalogo?categoryId=${encodeURIComponent(category.categoryId)}` : "/catalogo";
+}
+
 export function mapCategoriesToTiles(categories: StorefrontCategory[] | undefined): CategoryTileItem[] {
   return (categories ?? []).map((category) => ({
     label: category.name,
-    href: `/catalogo?category=${encodeURIComponent(category.slug)}`,
+    href: buildCategoryCatalogHref(category),
     ...(category.imageUrl ? { imageUrl: category.imageUrl } : {}),
   }));
 }
