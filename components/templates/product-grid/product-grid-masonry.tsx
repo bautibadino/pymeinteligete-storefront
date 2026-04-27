@@ -1,6 +1,6 @@
 import type { ProductGridModule } from "@/lib/modules/product-grid";
 import { resolveProductCardTemplate } from "@/lib/templates/product-card-registry";
-import { ProductGridHeader, MOCK_PRODUCTS } from "./shared";
+import { ProductGridEmptyState, ProductGridHeader } from "./shared";
 
 /**
  * ProductGrid — Masonry de altura variable con CSS columns.
@@ -12,31 +12,25 @@ import { ProductGridHeader, MOCK_PRODUCTS } from "./shared";
  * En V2 con datos reales esto será natural según el contenido.
  */
 export function ProductGridMasonry({ module }: { module: ProductGridModule }) {
-  const { cardVariant, cardDisplayOptions, limit } = module.content;
+  const { cardVariant, cardDisplayOptions } = module.content;
   const ProductCard = resolveProductCardTemplate(cardVariant);
-  const products = MOCK_PRODUCTS.slice(0, limit ?? 12);
+  const products = module.products ?? [];
 
   return (
     <section className="py-12" data-template="product-grid-masonry" aria-label={module.content.title}>
       <div className="mx-auto max-w-7xl px-4">
         <ProductGridHeader module={module} />
-        <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
-          {products.map((product, index) => (
-            <div
-              key={product.id}
-              className={`mb-4 break-inside-avoid ${
-                index % 3 === 0 ? "aspect-[3/4]" : index % 3 === 1 ? "aspect-square" : "aspect-[4/5]"
-              }`}
-            >
-              {/* 
-                En V1 renderizamos la card normal; el aspect-ratio del wrapper
-                simula la variación de altura del masonry. En V2 con contenido
-                real, el break-inside-avoid de cada card bastará.
-              */}
-              <ProductCard product={product} displayOptions={cardDisplayOptions} />
-            </div>
-          ))}
-        </div>
+        {products.length > 0 ? (
+          <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
+            {products.map((product) => (
+              <div key={product.id} className="mb-4 break-inside-avoid">
+                <ProductCard product={product} displayOptions={cardDisplayOptions} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <ProductGridEmptyState />
+        )}
       </div>
     </section>
   );

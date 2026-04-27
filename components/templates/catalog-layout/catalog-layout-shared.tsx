@@ -2,84 +2,6 @@ import { resolveProductCardTemplate } from "@/lib/templates/product-card-registr
 import type { ProductCardData, ProductCardDisplayOptions } from "@/lib/templates/product-card-catalog";
 
 /**
- * Datos mock de productos para los templates de catalogLayout.
- * En runtime real estos vendrían del backend vía fetch server-side.
- */
-export const MOCK_PRODUCTS: ProductCardData[] = [
-  {
-    id: "prod-001",
-    name: "Filtro de aceite Bosch",
-    slug: "filtro-aceite-bosch",
-    brand: "Bosch",
-    imageUrl: "",
-    price: { amount: 12500, currency: "ARS", formatted: "$12.500" },
-    compareAtPrice: { amount: 15000, formatted: "$15.000" },
-    installments: { count: 6, amount: 2083, formatted: "$2.083", interestFree: true },
-    cashDiscount: { percent: 20, formatted: "20% OFF" },
-    badges: [{ label: "Top", tone: "accent" }, { label: "Despacho Inmediato", tone: "success" }],
-    stock: { available: true, label: "Despacho Inmediato" },
-    href: "/producto/filtro-aceite-bosch",
-  },
-  {
-    id: "prod-002",
-    name: "Aceite sintético 5W-40",
-    slug: "aceite-sintetico-5w40",
-    brand: "Mobil",
-    imageUrl: "",
-    price: { amount: 48900, currency: "ARS", formatted: "$48.900" },
-    installments: { count: 6, amount: 8150, formatted: "$8.150", interestFree: true },
-    stock: { available: true },
-    href: "/producto/aceite-sintetico-5w40",
-  },
-  {
-    id: "prod-003",
-    name: "Pastillas de freno delanteras",
-    slug: "pastillas-freno-delanteras",
-    brand: "Ferodo",
-    imageUrl: "",
-    price: { amount: 34500, currency: "ARS", formatted: "$34.500" },
-    compareAtPrice: { amount: 42000, formatted: "$42.000" },
-    cashDiscount: { percent: 15, formatted: "15% OFF" },
-    badges: [{ label: "Oferta", tone: "warning" }],
-    stock: { available: true, label: "Stock disponible" },
-    href: "/producto/pastillas-freno-delanteras",
-  },
-  {
-    id: "prod-004",
-    name: "Bujía de iridio NGK",
-    slug: "bujia-iridio-ngk",
-    brand: "NGK",
-    imageUrl: "",
-    price: { amount: 8900, currency: "ARS", formatted: "$8.900" },
-    stock: { available: false, label: "Sin stock" },
-    href: "/producto/bujia-iridio-ngk",
-  },
-  {
-    id: "prod-005",
-    name: "Kit de distribución completo",
-    slug: "kit-distribucion-completo",
-    brand: "SKF",
-    imageUrl: "",
-    price: { amount: 129900, currency: "ARS", formatted: "$129.900" },
-    compareAtPrice: { amount: 155000, formatted: "$155.000" },
-    installments: { count: 12, amount: 10825, formatted: "$10.825", interestFree: false },
-    badges: [{ label: "Premium", tone: "info" }],
-    stock: { available: true, label: "Despacho Inmediato" },
-    href: "/producto/kit-distribucion-completo",
-  },
-  {
-    id: "prod-006",
-    name: "Amortiguador trasero",
-    slug: "amortiguador-trasero",
-    brand: "Monroe",
-    imageUrl: "",
-    price: { amount: 67500, currency: "ARS", formatted: "$67.500" },
-    stock: { available: true },
-    href: "/producto/amortiguador-trasero",
-  },
-];
-
-/**
  * Opciones de ordenamiento disponibles.
  */
 export const SORT_OPTIONS: { value: string; label: string }[] = [
@@ -91,7 +13,7 @@ export const SORT_OPTIONS: { value: string; label: string }[] = [
 ];
 
 /**
- * Etiquetas para filtros mock.
+ * Etiquetas para filtros configurados.
  */
 export const FILTER_LABELS: Record<string, string> = {
   brand: "Marca",
@@ -183,7 +105,7 @@ export function CatalogToolbar({
 }
 
 /**
- * Lista de filtros mock (visual, inerte en V1).
+ * Lista de filtros configurados .
  */
 export function FilterGroup({ label }: { label: string }) {
   return (

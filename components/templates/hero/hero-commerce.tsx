@@ -9,7 +9,7 @@ import type { HeroBadge, HeroModule } from "@/lib/modules";
 /**
  * Hero Commerce — imagen full-bleed con overlay configurable.
  * Paridad BYM: título + subtítulo + fila de badges de confianza
- * (ícono + texto) + CTA primario + CTA secundario + buscador visual.
+ * (ícono + texto) + CTA primario + CTA secundario + búsqueda a catálogo.
  *
  * El overlay usa `rgba()` sobre la imagen — única excepción permitida
  * al uso de colores literales en templates (necesario para opacidad
@@ -115,9 +115,10 @@ export function HeroCommerce({ module }: { module: HeroModule }) {
               ) : null}
             </div>
 
-            {/* Buscador visual inerte (V1 — solo presentación) */}
+            {/* Buscador conectado al catálogo público del tenant. */}
             {enableSearch ? (
-              <div
+              <form
+                action="/catalogo"
                 role="search"
                 className="mt-2 flex max-w-md items-center gap-2 rounded-lg bg-white/15 px-4 py-3 backdrop-blur-sm"
               >
@@ -125,10 +126,13 @@ export function HeroCommerce({ module }: { module: HeroModule }) {
                   className="size-5 shrink-0 text-white/70"
                   aria-hidden="true"
                 />
-                <span className="flex-1 text-sm text-white/60">
-                  {searchPlaceholder ?? "Buscá tu producto..."}
-                </span>
-              </div>
+                <input
+                  name="search"
+                  type="search"
+                  placeholder={searchPlaceholder ?? "Buscá tu producto..."}
+                  className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-white/60 focus:outline-none"
+                />
+              </form>
             ) : null}
           </div>
         </div>

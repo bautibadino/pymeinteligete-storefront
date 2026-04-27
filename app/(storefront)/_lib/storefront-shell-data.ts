@@ -261,7 +261,7 @@ export async function loadCheckoutExperience(): Promise<CheckoutExperience> {
 
 export async function loadHomeExperience(): Promise<HomeExperience> {
   const [catalogExperience, checkoutExperience] = await Promise.all([
-    loadCatalogExperience({ pageSize: 8 }),
+    loadCatalogExperience({ pageSize: 24 }),
     loadCheckoutExperience(),
   ]);
   let categories: StorefrontCategory[] = [];

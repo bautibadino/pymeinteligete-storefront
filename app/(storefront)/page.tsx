@@ -34,6 +34,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const usePresentation = shouldUsePresentation(experience.bootstrap?.presentation, "home");
 
   if (usePresentation) {
+    const presentationContext = {
+      bootstrap: experience.bootstrap,
+      host,
+      products: experience.catalog?.products ?? [],
+      categories: experience.categories,
+      paymentMethods: experience.paymentMethods?.paymentMethods ?? [],
+    };
+
     return (
       <>
         {hasPreview ? <PreviewBridge /> : null}
@@ -41,6 +49,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           presentation={experience.bootstrap!.presentation!}
           page="home"
           includeGlobals={false}
+          context={presentationContext}
         />
       </>
     );

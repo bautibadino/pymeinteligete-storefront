@@ -11,7 +11,8 @@ import type { HeaderModule } from "@/lib/modules/header";
  * Paridad BYM (bymlubricentro.com). Optimizado para tiendas con catálogos
  * grandes donde el buscador es el principal punto de entrada al producto.
  *
- * Search + cart son placeholders visuales V1 (no funcionales).
+ * El buscador navega a `/catalogo?search=...`; la resolución real de
+ * resultados sigue en el backend vía fetchers host-driven.
  */
 export function HeaderLeftLogoSearch({ module }: { module: HeaderModule }) {
   const {
@@ -71,16 +72,18 @@ export function HeaderLeftLogoSearch({ module }: { module: HeaderModule }) {
 
           {/* Search bar — ocupa el espacio central */}
           {showSearch ? (
-            <div className="flex flex-1 items-center">
-              <button
-                type="button"
-                aria-label={searchPlaceholder}
-                className="flex w-full items-center gap-3 rounded-md border border-border bg-panel px-4 py-2.5 text-sm text-muted shadow-sm transition-colors hover:border-primary hover:bg-paper"
-              >
+            <form action="/catalogo" className="flex flex-1 items-center">
+              <label className="flex w-full items-center gap-3 rounded-md border border-border bg-panel px-4 py-2.5 text-sm text-muted shadow-sm transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
                 <Search className="size-4 shrink-0" aria-hidden="true" />
-                <span>{searchPlaceholder}</span>
-              </button>
-            </div>
+                <span className="sr-only">{searchPlaceholder}</span>
+                <input
+                  name="search"
+                  type="search"
+                  placeholder={searchPlaceholder}
+                  className="min-w-0 flex-1 bg-transparent text-foreground placeholder:text-muted focus:outline-none"
+                />
+              </label>
+            </form>
           ) : (
             <div className="flex-1" />
           )}

@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   ProductCardDisplayOptionsSchema,
   resolveProductCardTemplateId,
+  type ProductCardData,
   type ProductCardDisplayOptions,
 } from "@/lib/templates/product-card-catalog";
 
@@ -87,6 +88,11 @@ export interface ProductGridModule {
   type: "productGrid";
   variant: ProductGridVariant;
   content: ProductGridContent;
+  /**
+   * Datos comerciales resueltos server-side por host.
+   * No forma parte del content editable del builder.
+   */
+  products?: ProductCardData[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

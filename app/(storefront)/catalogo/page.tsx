@@ -62,6 +62,12 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
   const usePresentation = shouldUsePresentation(experience.bootstrap?.presentation, "catalog");
 
   if (usePresentation) {
+    const presentationContext = {
+      bootstrap: experience.bootstrap,
+      host,
+      products: experience.catalog?.products ?? [],
+    };
+
     return (
       <>
         {hasPreview ? <PreviewBridge /> : null}
@@ -69,6 +75,7 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
           presentation={experience.bootstrap!.presentation!}
           page="catalog"
           includeGlobals={false}
+          context={presentationContext}
         />
       </>
     );
