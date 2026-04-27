@@ -11,6 +11,7 @@ import {
   resolveTenantDescription,
   resolveTenantDisplayName,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
+import { mapCatalogProductToCardData } from "@/components/presentation/render-context";
 
 type HomeHeroProps = {
   bootstrap: StorefrontBootstrap | null;
@@ -117,20 +118,17 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
     );
   }
 
-  const price =
-    typeof product.price?.amount === "number"
-      ? new Intl.NumberFormat("es-AR", {
-          style: "currency",
-          currency: product.price?.currency ?? "ARS",
-          maximumFractionDigits: 0,
-        }).format(product.price.amount)
-      : "Precio a confirmar por backend";
+  const normalizedProduct = mapCatalogProductToCardData(product);
+  const price = normalizedProduct?.price.formatted ?? "Precio a confirmar";
+  const imageUrl = normalizedProduct?.imageUrl;
+  const stockLabel = normalizedProduct?.stock?.label ?? "Disponibilidad a confirmar";
+  const brand = normalizedProduct?.brand ?? product.brand ?? product.category ?? "Producto público";
 
   return (
     <section className="product-spotlight">
       <div className="product-spotlight-media">
-        {product.images?.[0] ? (
-          <img src={product.images[0]} alt={product.name ?? "Producto"} />
+        {imageUrl ? (
+          <img src={imageUrl} alt={product.name ?? "Producto"} />
         ) : (
           <div className="product-card-placeholder spotlight-placeholder">
             <span>{product.name?.slice(0, 1).toUpperCase() ?? "P"}</span>
@@ -139,11 +137,11 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
       </div>
 
       <div className="product-spotlight-copy">
-        <span className="eyebrow">{product.brand ?? product.category ?? "Producto público"}</span>
+        <span className="eyebrow">{brand}</span>
         <h2>{product.name ?? "Producto sin nombre expuesto"}</h2>
         <p>
           {product.description ??
-            "La descripción larga del producto todavía depende de cómo el backend congele el payload final."}
+            "Consultá disponibilidad y especificaciones antes de finalizar la compra."}
         </p>
 
         <dl className="detail-grid">
@@ -153,7 +151,7 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
           </div>
           <div>
             <dt>Disponibilidad</dt>
-            <dd>{String(product.availability ?? "Sujeta a backend")}</dd>
+            <dd>{stockLabel}</dd>
           </div>
           <div>
             <dt>SKU</dt>

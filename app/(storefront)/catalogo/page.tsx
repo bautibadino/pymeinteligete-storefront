@@ -6,6 +6,7 @@ import { CatalogGrid } from "@/components/storefront/catalog-grid";
 import { PageIntro, SplitPanel } from "@/components/storefront/page-sections";
 import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
 import { PreviewBridge } from "@/components/presentation/PreviewBridge";
+import { mapCatalogProductsToCardData } from "@/components/presentation/render-context";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
 import { shouldUsePresentation } from "@/lib/presentation/render-utils";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
@@ -55,6 +56,8 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
   const experience = await loadCatalogExperience(query);
   const host = experience.runtime.context.host;
   const displayName = resolveTenantDisplayName(experience.bootstrap, host);
+  const products = experience.catalog?.products ?? [];
+  const renderedProductsCount = mapCatalogProductsToCardData(products, products.length).length;
   const activeFilters = Object.entries(query).filter(([, value]) => value !== undefined);
   const cookieStore = await cookies();
   const hasPreview = cookieStore.has("__preview_token");
@@ -65,7 +68,7 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
     const presentationContext = {
       bootstrap: experience.bootstrap,
       host,
-      products: experience.catalog?.products ?? [],
+      products,
     };
 
     return (
@@ -95,7 +98,7 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
             </div>
             <div className="stat-box">
               <span>Resultados</span>
-              <strong>{experience.catalog?.products.length ?? 0}</strong>
+              <strong>{renderedProductsCount}</strong>
             </div>
           </div>
         }
@@ -123,7 +126,7 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
         description="Los ítems mostrados salen del endpoint real `GET /api/storefront/v1/catalog` y no de mocks locales."
       >
         <CatalogGrid
-          products={experience.catalog?.products ?? []}
+          products={products}
           emptyTitle="Sin productos para mostrar"
           emptyDescription="La tienda actual no devolvió productos públicos para la consulta activa o el backend todavía no expone el payload final esperado."
         />
