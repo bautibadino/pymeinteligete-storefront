@@ -7,6 +7,7 @@ import type {
 } from "@/lib/types/presentation";
 import { getEnabledSortedSections, type PresentationPageKey } from "@/lib/presentation/render-utils";
 import { adaptSectionToModule } from "@/components/presentation/section-adapter";
+import type { PresentationRenderContext } from "@/components/presentation/render-context";
 
 // Registry resolvers
 import {
@@ -29,6 +30,7 @@ type PresentationRendererProps = {
   presentation: Presentation;
   page: PresentationPageKey;
   includeGlobals?: boolean;
+  context?: PresentationRenderContext | undefined;
 };
 
 const SECTION_RESOLVERS: Record<
@@ -50,7 +52,13 @@ const SECTION_RESOLVERS: Record<
   footer: resolveFooterTemplate as (variant: string) => ComponentType<{ module: unknown }>,
 };
 
-function SectionRenderer({ section }: { section: SectionInstance }) {
+function SectionRenderer({
+  section,
+  context,
+}: {
+  section: SectionInstance;
+  context?: PresentationRenderContext | undefined;
+}) {
   if (section.type === "productCard") {
     return null;
   }
@@ -61,39 +69,57 @@ function SectionRenderer({ section }: { section: SectionInstance }) {
   }
 
   const Component = resolveTemplate(section.variant);
-  const moduleData = adaptSectionToModule(section);
+  const moduleData = adaptSectionToModule(section, context);
 
   return <Component module={moduleData} />;
 }
 
-export function PresentationGlobalHeader({ presentation }: { presentation: Presentation }) {
+export function PresentationGlobalHeader({
+  presentation,
+  context,
+}: {
+  presentation: Presentation;
+  context?: PresentationRenderContext | undefined;
+}) {
   const header = presentation.globals.header;
   if (!header || !header.enabled) return null;
 
   const Component = resolveHeaderTemplate(header.variant);
-  const moduleData = adaptSectionToModule(header);
+  const moduleData = adaptSectionToModule(header, context);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return <Component module={moduleData as any} />;
 }
 
-export function PresentationGlobalAnnouncementBar({ presentation }: { presentation: Presentation }) {
+export function PresentationGlobalAnnouncementBar({
+  presentation,
+  context,
+}: {
+  presentation: Presentation;
+  context?: PresentationRenderContext | undefined;
+}) {
   const bar = presentation.globals.announcementBar;
   if (!bar || !bar.enabled) return null;
 
   const Component = resolveAnnouncementBarTemplate(bar.variant);
-  const moduleData = adaptSectionToModule(bar);
+  const moduleData = adaptSectionToModule(bar, context);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return <Component module={moduleData as any} />;
 }
 
-export function PresentationGlobalFooter({ presentation }: { presentation: Presentation }) {
+export function PresentationGlobalFooter({
+  presentation,
+  context,
+}: {
+  presentation: Presentation;
+  context?: PresentationRenderContext | undefined;
+}) {
   const footer = presentation.globals.footer;
   if (!footer || !footer.enabled) return null;
 
   const Component = resolveFooterTemplate(footer.variant);
-  const moduleData = adaptSectionToModule(footer);
+  const moduleData = adaptSectionToModule(footer, context);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return <Component module={moduleData as any} />;
@@ -110,24 +136,27 @@ export function PresentationRenderer({
   presentation,
   page,
   includeGlobals = true,
+  context,
 }: PresentationRendererProps) {
   const pageConfig = presentation.pages[page];
   const sections = getEnabledSortedSections(pageConfig.sections);
 
   return (
     <div data-presentation-renderer="true" data-page={page}>
-      {includeGlobals ? <PresentationGlobalAnnouncementBar presentation={presentation} /> : null}
-      {includeGlobals ? <PresentationGlobalHeader presentation={presentation} /> : null}
+      {includeGlobals ? (
+        <PresentationGlobalAnnouncementBar presentation={presentation} context={context} />
+      ) : null}
+      {includeGlobals ? <PresentationGlobalHeader presentation={presentation} context={context} /> : null}
 
       <main>
         {sections.map((section) => (
           <div key={section.id} data-section-id={section.id} data-section-type={section.type}>
-            <SectionRenderer section={section} />
+            <SectionRenderer section={section} context={context} />
           </div>
         ))}
       </main>
 
-      {includeGlobals ? <PresentationGlobalFooter presentation={presentation} /> : null}
+      {includeGlobals ? <PresentationGlobalFooter presentation={presentation} context={context} /> : null}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   resolveProductCardTemplateId,
+  type ProductCardData,
   type ProductCardDisplayOptions,
 } from "@/lib/templates/product-card-catalog";
 
@@ -82,6 +83,11 @@ export interface CatalogLayoutModule {
   type: "catalogLayout";
   variant: CatalogLayoutVariant;
   content: CatalogLayoutContent;
+  /**
+   * Productos resueltos desde `/api/storefront/v1/catalog`.
+   * Runtime-only: no se persiste en presentation.
+   */
+  products?: ProductCardData[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

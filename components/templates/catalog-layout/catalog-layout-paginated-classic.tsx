@@ -3,7 +3,6 @@ import {
   CatalogToolbar,
   EmptyCatalogState,
   FilterSidebar,
-  MOCK_PRODUCTS,
   ProductGrid,
 } from "./catalog-layout-shared";
 
@@ -15,7 +14,7 @@ import {
 export function CatalogLayoutPaginatedClassic({ module }: { module: CatalogLayoutModule }) {
   const { content } = module;
   const { cardVariant, cardDisplayOptions, filters, sort, perPage } = content;
-  const products = MOCK_PRODUCTS.slice(0, perPage ?? 12);
+  const products = (module.products ?? []).slice(0, perPage ?? 12);
 
   return (
     <section className="py-8" data-template="catalog-layout-paginated-classic">

@@ -11,6 +11,7 @@ import type {
   TrustBarModule,
 } from "@/lib/modules";
 import type { StorefrontCatalogProduct, StorefrontCategory } from "@/lib/storefront-api";
+import { buildCategoryCatalogHref } from "@/components/presentation/render-context";
 import { resolveHeroTemplate } from "@/lib/templates/registry";
 
 function formatPrice(product: StorefrontCatalogProduct): string {
@@ -103,7 +104,7 @@ function FeaturedProductsModuleView({
 }
 
 function CategoryLink({ category }: { category: StorefrontCategory }) {
-  const href = category.slug ? `/catalogo?category=${encodeURIComponent(category.slug)}` : "/catalogo";
+  const href = buildCategoryCatalogHref(category);
 
   return (
     <Link className="sf-category-tile" href={href as Route}>

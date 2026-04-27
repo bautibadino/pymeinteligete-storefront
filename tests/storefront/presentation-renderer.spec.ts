@@ -6,6 +6,7 @@ import {
 } from "@/lib/presentation/render-utils";
 import { adaptSectionToModule } from "@/components/presentation/section-adapter";
 import type { Presentation, SectionInstance, SectionType } from "@/lib/types/presentation";
+import type { StorefrontBootstrap, StorefrontCatalogProduct } from "@/lib/storefront-api";
 
 function buildSection<T extends SectionType = "hero">(
   overrides: Partial<SectionInstance<T>> = {},
@@ -131,5 +132,317 @@ describe("presentation renderer logic", () => {
 
     expect(module.content.source).toEqual({ type: "featured" });
     expect(module.content.cardVariant).toBe("classic");
+  });
+
+  it("inyecta productos reales del contexto en productGrid sin recurrir a mocks", () => {
+    const products = [
+      {
+        productId: "prod-real-1",
+        slug: "producto-real",
+        name: "Producto Real",
+        brand: "Marca",
+        imageUrl: "https://cdn.example.com/producto-real.webp",
+        price: { amount: 15000, currency: "ARS", compareAt: 18000 },
+        availability: { available: true, label: "Disponible" },
+        isFeatured: true,
+      },
+    ] as unknown as StorefrontCatalogProduct[];
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "productGrid",
+        variant: "grid-4",
+        content: {
+          source: { type: "featured" },
+          cardVariant: "premium-commerce",
+          limit: 4,
+        },
+      }),
+      { products },
+    ) as {
+      products: Array<{
+        id: string;
+        name: string;
+        href: string;
+        price: { formatted: string };
+      }>;
+    };
+
+    expect(module.products).toHaveLength(1);
+    expect(module.products[0]).toMatchObject({
+      id: "prod-real-1",
+      name: "Producto Real",
+      href: "/producto/producto-real",
+    });
+    expect(module.products[0]?.price.formatted).toContain("$");
+  });
+
+  it("normaliza producto enriquecido real sin perder campos comerciales existentes", () => {
+    const products = [
+      {
+        _id: "mongo-prod-1",
+        ecommerceSlug: "cubierta-premium",
+        sku: "SKU-1",
+        name: "Cubierta Premium",
+        brand: "Hankook",
+        priceWithTax: 461374,
+        discountedPrice: 369099,
+        bestDiscount: { percentage: 20, label: "20% OFF contado" },
+        stock: 7,
+        dispatchType: "IMMEDIATE",
+        category: { name: "Neumáticos", slug: "neumaticos" },
+        installments: { enabled: true, count: 6, amount: 76896, interestFree: true },
+        images: [{ url: "https://cdn.example.com/cubierta.webp", alt: "Cubierta" }],
+        isFeatured: true,
+        isOnSale: true,
+      },
+    ] as unknown as StorefrontCatalogProduct[];
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "productGrid",
+        variant: "grid-4",
+        content: {
+          source: { type: "featured" },
+          cardVariant: "premium-commerce",
+        },
+      }),
+      { products },
+    ) as {
+      products: Array<{
+        id: string;
+        slug: string;
+        href: string;
+        imageUrl?: string;
+        price: { amount: number };
+        installments?: { count: number; formatted: string; interestFree: boolean };
+        cashDiscount?: { percent: number; formatted: string };
+        badges?: Array<{ label: string }>;
+        stock?: { available: boolean; label?: string };
+      }>;
+    };
+
+    expect(module.products).toHaveLength(1);
+    expect(module.products[0]).toMatchObject({
+      id: "mongo-prod-1",
+      slug: "cubierta-premium",
+      href: "/producto/cubierta-premium",
+      imageUrl: "https://cdn.example.com/cubierta.webp",
+      price: { amount: 461374 },
+      installments: { count: 6, interestFree: true },
+      cashDiscount: { percent: 20, formatted: "20% OFF contado" },
+      stock: { available: true, label: "Stock disponible" },
+    });
+    expect(module.products[0]?.badges?.map((badge) => badge.label)).toContain("Despacho inmediato");
+  });
+
+  it("filtra productos sin slug estable para evitar /producto/undefined", () => {
+    const products = [
+      {
+        productId: "prod-sin-slug",
+        name: "Producto sin slug",
+        price: { amount: 1000, currency: "ARS" },
+      },
+    ] as StorefrontCatalogProduct[];
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "productGrid",
+        variant: "grid-4",
+        content: { source: { type: "featured" }, cardVariant: "classic" },
+      }),
+      { products },
+    ) as { products: unknown[] };
+
+    expect(module.products).toEqual([]);
+  });
+
+  it("ignora logoUrl/logoHref legacy y usa branding del bootstrap para header", () => {
+    const bootstrap = {
+      tenant: { tenantSlug: "tenant-demo", status: "active" },
+      branding: {
+        storeName: "Tienda Demo",
+        logoUrl: "https://cdn.example.com/logo-bootstrap.svg",
+      },
+      navigation: { headerLinks: [{ label: "Catálogo", href: "/catalogo" }], footerColumns: [] },
+    } as unknown as StorefrontBootstrap;
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "header",
+        variant: "left-logo-search",
+        content: {
+          logoUrl: "https://legacy.example.com/logo-viejo.svg",
+          logoHref: "https://legacy.example.com",
+          logoAlt: "Alt editable",
+        },
+      }),
+      { bootstrap },
+    ) as { logoUrl?: string; logoHref?: string; logoAlt?: string };
+
+    expect(module.logoUrl).toBe("https://cdn.example.com/logo-bootstrap.svg");
+    expect(module.logoHref).toBe("/");
+    expect(module.logoAlt).toBe("Alt editable");
+  });
+
+  it("ignora logoUrl legacy y usa branding del bootstrap para footer", () => {
+    const bootstrap = {
+      tenant: { tenantSlug: "tenant-demo", status: "active" },
+      branding: {
+        storeName: "Tienda Demo",
+        logoUrl: "https://cdn.example.com/logo-bootstrap.svg",
+      },
+      navigation: { headerLinks: [], footerColumns: [] },
+    } as unknown as StorefrontBootstrap;
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "footer",
+        variant: "minimal",
+        content: {
+          logoUrl: "https://legacy.example.com/logo-viejo.svg",
+        },
+      }),
+      { bootstrap },
+    ) as { content: { logoUrl?: string } };
+
+    expect(module.content.logoUrl).toBe("https://cdn.example.com/logo-bootstrap.svg");
+  });
+
+  it("degrada productGrid a lista vacía profesional cuando no hay productos del backend", () => {
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "productGrid",
+        variant: "grid-4",
+        content: {
+          source: { type: "featured" },
+          cardVariant: "classic",
+        },
+      }),
+      { products: [] },
+    ) as { products: unknown[] };
+
+    expect(module.products).toEqual([]);
+  });
+
+  it("featured sin flag explícito devuelve vacío", () => {
+    const products: StorefrontCatalogProduct[] = [
+      {
+        productId: "prod-sin-flag",
+        slug: "producto-sin-flag",
+        name: "Producto sin flag",
+        price: { amount: 1000, currency: "ARS" },
+      },
+    ];
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "productGrid",
+        variant: "grid-4",
+        content: { source: { type: "featured" }, cardVariant: "classic" },
+      }),
+      { products },
+    ) as { products: unknown[] };
+
+    expect(module.products).toEqual([]);
+  });
+
+  it("featured con flag explícito devuelve el producto", () => {
+    const products = [
+      {
+        productId: "prod-destacado",
+        slug: "producto-destacado",
+        name: "Producto Destacado",
+        price: { amount: 1000, currency: "ARS" },
+        featured: true,
+      },
+    ] as unknown as StorefrontCatalogProduct[];
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "productGrid",
+        variant: "grid-4",
+        content: { source: { type: "featured" }, cardVariant: "classic" },
+      }),
+      { products },
+    ) as { products: Array<{ id: string; slug: string }> };
+
+    expect(module.products).toHaveLength(1);
+    expect(module.products[0]).toMatchObject({ id: "prod-destacado", slug: "producto-destacado" });
+  });
+
+  it("newest sin fecha explícita devuelve vacío", () => {
+    const products: StorefrontCatalogProduct[] = [
+      {
+        productId: "prod-sin-fecha",
+        slug: "producto-sin-fecha",
+        name: "Producto sin fecha",
+        price: { amount: 1000, currency: "ARS" },
+      },
+    ];
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "productGrid",
+        variant: "grid-4",
+        content: { source: { type: "newest" }, cardVariant: "classic" },
+      }),
+      { products },
+    ) as { products: unknown[] };
+
+    expect(module.products).toEqual([]);
+  });
+
+  it("category matchea por category.slug cuando la categoría trae name y slug", () => {
+    const products = [
+      {
+        productId: "prod-neumatico",
+        slug: "cubierta-premium",
+        name: "Cubierta Premium",
+        category: { name: "Cubiertas", slug: "neumaticos" },
+        price: { amount: 1000, currency: "ARS" },
+      },
+    ] as unknown as StorefrontCatalogProduct[];
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "productGrid",
+        variant: "grid-4",
+        content: {
+          source: { type: "category", categorySlug: "neumaticos" },
+          cardVariant: "classic",
+        },
+      }),
+      { products },
+    ) as { products: Array<{ id: string; slug: string }> };
+
+    expect(module.products).toHaveLength(1);
+    expect(module.products[0]).toMatchObject({ id: "prod-neumatico", slug: "cubierta-premium" });
+  });
+
+  it("categoryTile usa categoryId en el query cuando existe", () => {
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "categoryTile",
+        variant: "grid-cards",
+        content: {},
+      }),
+      {
+        categories: [
+          {
+            categoryId: "cat-123",
+            slug: "neumaticos",
+            name: "Neumáticos",
+          },
+        ],
+      },
+    ) as { tiles: Array<{ href: string; label: string }> };
+
+    expect(module.tiles).toEqual([
+      {
+        href: "/catalogo?categoryId=cat-123",
+        label: "Neumáticos",
+      },
+    ]);
   });
 });

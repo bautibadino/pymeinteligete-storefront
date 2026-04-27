@@ -49,13 +49,18 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
   const footerColumns = bootstrap?.navigation?.footerColumns ?? [];
 
   if (presentation) {
+    const presentationContext = { bootstrap, host };
+
     return (
       <main className="presentation-frame" data-storefront-mode="presentation">
         <div data-presentation-renderer="true" data-page="shell">
-          <PresentationGlobalAnnouncementBar presentation={presentation} />
-          <PresentationGlobalHeader presentation={presentation} />
+          <PresentationGlobalAnnouncementBar
+            presentation={presentation}
+            context={presentationContext}
+          />
+          <PresentationGlobalHeader presentation={presentation} context={presentationContext} />
           <div className="presentation-page-content">{children}</div>
-          <PresentationGlobalFooter presentation={presentation} />
+          <PresentationGlobalFooter presentation={presentation} context={presentationContext} />
         </div>
       </main>
     );

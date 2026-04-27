@@ -5,7 +5,7 @@ import { useRef, useState, useCallback } from "react";
 import {
   resolveProductCardTemplate,
 } from "@/lib/templates/product-card-registry";
-import { MOCK_PRODUCTS } from "./shared";
+import { ProductGridEmptyState } from "./shared";
 import type { ProductGridModule } from "@/lib/modules/product-grid";
 
 export function useCarouselScroll() {
@@ -34,9 +34,11 @@ export function useCarouselScroll() {
 export function CarouselGridList({ module }: { module: ProductGridModule }) {
   const { cardVariant, cardDisplayOptions } = module.content;
   const ProductCard = resolveProductCardTemplate(cardVariant);
+  const products = module.products ?? [];
 
-  // En V1 usamos mock data. TODO: reemplazar por datos reales del source.
-  const products = MOCK_PRODUCTS.slice(0, module.content.limit ?? 12);
+  if (products.length === 0) {
+    return <ProductGridEmptyState />;
+  }
 
   return (
     <>
