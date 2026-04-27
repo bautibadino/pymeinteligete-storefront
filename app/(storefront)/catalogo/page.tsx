@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import { loadCatalogExperience, resolveTenantDisplayName } from "@/app/(storefront)/_lib/storefront-shell-data";
+import { Card, CardContent } from "@/components/ui/card";
 import { CatalogGrid } from "@/components/storefront/catalog-grid";
 import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
 import { PreviewBridge } from "@/components/presentation/PreviewBridge";
@@ -91,20 +92,26 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
         title="El catálogo no está habilitado para este estado de tienda."
       />
 
-      <section className="catalog-page-shell">
-        <div className="catalog-page-heading">
-          <span>Catálogo online</span>
-          <h1>{displayName}</h1>
-          <p>
-            Explorá productos disponibles, precios actualizados y condiciones comerciales de la tienda.
-          </p>
-        </div>
+      <Card className="rounded-[28px] border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-none">
+        <CardContent className="flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between md:p-10">
+          <div className="grid gap-2">
+            <span className="text-xs font-black uppercase tracking-[0.14em] text-muted-foreground">Catálogo online</span>
+            <h1 className="text-4xl font-black leading-none tracking-[-0.06em] text-slate-950 md:text-7xl">
+              {displayName}
+            </h1>
+            <p className="max-w-2xl leading-7 text-muted-foreground">
+              Explorá productos disponibles, precios actualizados y condiciones comerciales de la tienda.
+            </p>
+          </div>
 
-        <div className="catalog-page-meta">
-          <strong>{renderedProductsCount}</strong>
-          <span>{renderedProductsCount === 1 ? "producto" : "productos"}</span>
-        </div>
-      </section>
+          <div className="grid min-h-24 min-w-32 place-items-center rounded-3xl border border-slate-200 bg-white p-5 text-center">
+            <strong className="text-3xl leading-none text-slate-950">{renderedProductsCount}</strong>
+            <span className="text-sm font-bold text-muted-foreground">
+              {renderedProductsCount === 1 ? "producto" : "productos"}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
       {activeFilters.length > 0 ? (
         <section className="filter-strip" aria-label="Filtros activos">
