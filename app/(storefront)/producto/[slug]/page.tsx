@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-
 import {
   canBrowseCatalog,
   loadProductExperience,
@@ -59,8 +57,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
   const experience = await loadProductExperience(slug);
-  const cookieStore = await cookies();
-  const hasPreview = cookieStore.has("__preview_token");
+  const hasPreview = Boolean(experience.runtime.context.previewToken);
 
   const usePresentation = shouldUsePresentation(experience.bootstrap?.presentation, "product");
 

@@ -76,16 +76,16 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
   }
 
   return (
-    <main className="min-h-dvh bg-white text-foreground">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
-        <div className="bg-slate-950 px-4 py-2 text-center text-xs font-bold uppercase tracking-wide text-white">
-          <div className="mx-auto flex max-w-7xl items-center justify-center gap-3">
+    <main className="min-h-dvh bg-background text-foreground">
+      <header className="sticky top-0 z-40 border-b border-border bg-paper/95 backdrop-blur-xl">
+        <div className="bg-secondary px-4 py-2 text-center text-xs font-bold uppercase tracking-wide text-secondary-foreground">
+          <div className="mx-auto flex max-w-content items-center justify-center gap-3">
             <Badge variant={resolveStatusBadgeVariant(statusTone)}>{statusMessage}</Badge>
             <span className="truncate">{contactPhone ? `Atención: ${contactPhone}` : description}</span>
           </div>
         </div>
 
-        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 md:grid-cols-[220px_minmax(260px,640px)_120px] md:gap-6">
+        <div className="mx-auto grid max-w-content grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 md:grid-cols-[220px_minmax(260px,640px)_120px] md:gap-6">
           <Link className="flex min-w-0 items-center gap-3" href="/" aria-label={`Inicio de ${displayName}`}>
             <span className="grid h-10 w-24 shrink-0 place-items-center" aria-hidden="true">
               {logoUrl ? (
@@ -94,16 +94,16 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
                 <span className="font-heading text-xl font-bold">{displayName.slice(0, 2).toUpperCase()}</span>
               )}
             </span>
-            <span className="hidden truncate text-sm font-black tracking-tight text-slate-950 sm:inline">
+            <span className="hidden truncate text-sm font-black tracking-tight text-foreground sm:inline">
               {displayName}
             </span>
           </Link>
 
           <form
-            className="order-3 col-span-2 grid grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 md:order-none md:col-span-1"
+            className="order-3 col-span-2 grid grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-border bg-panel px-3 py-1.5 md:order-none md:col-span-1"
             action="/catalogo"
           >
-            <Search className="size-4 text-slate-500" aria-hidden="true" />
+            <Search className="size-4 text-muted" aria-hidden="true" />
             <label className="sr-only" htmlFor="storefront-search-input">
               Buscar productos
             </label>
@@ -114,7 +114,7 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
               placeholder="Buscar neumáticos, filtros, aceites..."
               type="search"
             />
-            <Button className="h-8 rounded-lg px-4" type="submit">
+            <Button className="h-8 rounded-md px-4" type="submit">
               Buscar
             </Button>
           </form>
@@ -130,11 +130,11 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
 
         <Separator />
 
-        <nav className="mx-auto flex min-h-11 max-w-7xl items-center justify-start gap-6 overflow-x-auto px-4 text-sm font-bold text-slate-600 md:justify-center md:gap-9" aria-label="Navegación pública">
+        <nav className="mx-auto flex min-h-11 max-w-content items-center justify-start gap-6 overflow-x-auto px-4 text-sm font-bold text-muted md:justify-center md:gap-9" aria-label="Navegación pública">
           {headerLinks.map((item) => (
             <Link
               key={item.href}
-              className="whitespace-nowrap transition-colors hover:text-slate-950"
+              className="whitespace-nowrap transition-colors hover:text-foreground"
               href={item.href as Route}
               {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             >
@@ -144,7 +144,7 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
         </nav>
 
         {DEBUG_ENABLED ? (
-          <div className="border-t border-dashed border-slate-200 px-4 py-2 text-center text-xs text-slate-500">
+          <div className="border-t border-dashed border-border px-4 py-2 text-center text-xs text-muted">
             <span className="font-mono">{host}</span>
             {contactEmail ? <span className="ml-3">{contactEmail}</span> : null}
           </div>
@@ -152,7 +152,7 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
       </header>
 
       {DEBUG_ENABLED && issues.length > 0 ? (
-        <section className="mx-auto grid max-w-7xl gap-4 px-4 py-5 md:grid-cols-[1fr_1fr]" aria-label="Estado técnico del tenant">
+        <section className="mx-auto grid max-w-content gap-4 px-4 py-5 md:grid-cols-[1fr_1fr]" aria-label="Estado técnico del tenant">
           <div>
             <strong>Integración parcial</strong>
             <p className="mt-1 text-sm text-muted">
@@ -162,7 +162,7 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
           </div>
           <ul className="grid gap-2">
             {issues.map((issue, index) => (
-              <li className="rounded-lg border border-dashed border-slate-300 p-3 text-sm" key={`${issue.surface}-${issue.code ?? "na"}-${index}`}>
+              <li className="rounded-lg border border-dashed border-border p-3 text-sm" key={`${issue.surface}-${issue.code ?? "na"}-${index}`}>
                 <span className="font-mono">{issue.surface}</span>
                 <span className="ml-2">{issue.message}</span>
               </li>
@@ -171,11 +171,11 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
         </section>
       ) : null}
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 md:py-10">{children}</div>
+      <div className="mx-auto grid max-w-content gap-6 px-4 py-8 md:py-10">{children}</div>
 
       {footerColumns.length > 0 ? (
-        <footer className="border-t border-slate-200 bg-slate-50" aria-label="Pie de página">
-          <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 md:grid-cols-2">
+        <footer className="border-t border-border bg-panel" aria-label="Pie de página">
+          <div className="mx-auto grid max-w-content gap-6 px-4 py-8 md:grid-cols-2">
             {footerColumns.map((column) => (
               <div key={column.title} className="grid content-start gap-3">
                 <strong>{column.title}</strong>
