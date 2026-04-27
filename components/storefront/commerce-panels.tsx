@@ -14,6 +14,7 @@ import {
   resolveTenantDisplayName,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { mapCatalogProductToCardData } from "@/components/presentation/render-context";
+import { resolveProductPurchaseState } from "@/lib/storefront/product-purchase-state";
 
 type HomeHeroProps = {
   bootstrap: StorefrontBootstrap | null;
@@ -175,9 +176,8 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
   const mainImage = normalizedProduct?.imageUrl ?? images[0]?.url;
   const brand = normalizedProduct?.brand ?? product.brand ?? product.category ?? "Producto público";
   const stock = normalizedProduct?.stock;
-  const isAvailable = stock === undefined || stock.available;
-  const stockLabel = stock?.label ?? (isAvailable ? "Disponible para comprar" : "Sin stock");
   const productId = normalizedProduct?.id;
+  const { canPurchase, stockLabel } = resolveProductPurchaseState({ productId, stock });
   const checkoutHref = buildCheckoutHref(productId);
   const installments = normalizedProduct?.installments;
   const cashDiscount = normalizedProduct?.cashDiscount;
@@ -274,12 +274,12 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
 
           <div className="pdp-purchase-actions">
             <Link
-              className={`pdp-primary-cta${!isAvailable ? " pdp-primary-cta-disabled" : ""}`}
-              href={(isAvailable ? checkoutHref : "/catalogo") as Route}
-              aria-disabled={!isAvailable}
+              className={`pdp-primary-cta${!canPurchase ? " pdp-primary-cta-disabled" : ""}`}
+              href={(canPurchase ? checkoutHref : "/catalogo") as Route}
+              aria-disabled={!canPurchase}
             >
               <ShoppingCart aria-hidden="true" />
-              {isAvailable ? "Comprar ahora" : "Ver otros productos"}
+              {canPurchase ? "Comprar ahora" : "Ver otros productos"}
             </Link>
             <Link className="pdp-secondary-cta" href="/catalogo">
               Seguir comprando
