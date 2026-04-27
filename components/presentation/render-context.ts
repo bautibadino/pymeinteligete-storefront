@@ -92,7 +92,7 @@ function readProductImages(product: ProductRecord): string | undefined {
 }
 
 function readProductSlug(product: ProductRecord): string | undefined {
-  return readStringFromRecord(product, ["slug", "ecommerceSlug", "handle", "urlSlug"]);
+  return readStringFromRecord(product, ["ecommerceSlug", "slug", "handle", "urlSlug"]);
 }
 
 function readProductId(product: ProductRecord): string | undefined {
@@ -179,16 +179,17 @@ function hasExplicitFeaturedFlag(product: ProductRecord): boolean {
 }
 
 function readPriceAmount(product: ProductRecord): number | undefined {
+  const enrichedPrice =
+    readNumber(product.priceWithTax) ??
+    readNumber(product.discountedPrice) ??
+    readNumber(product.finalPrice);
+  if (enrichedPrice !== undefined) return enrichedPrice;
+
   if (isRecord(product.price)) {
     return readNumber(product.price.amount) ?? readNumber(product.price.value);
   }
 
-  return (
-    readNumber(product.priceWithTax) ??
-    readNumber(product.discountedPrice) ??
-    readNumber(product.finalPrice) ??
-    readNumber(product.price)
-  );
+  return readNumber(product.price);
 }
 
 function readCompareAtPrice(product: ProductRecord): number | undefined {
@@ -408,9 +409,9 @@ export function mapCatalogProductsToCardData(
   limit = 12,
 ): ProductCardData[] {
   return (products ?? [])
-    .slice(0, limit)
     .map(mapCatalogProductToCardData)
-    .filter((product): product is ProductCardData => product !== null);
+    .filter((product): product is ProductCardData => product !== null)
+    .slice(0, limit);
 }
 
 export function buildCategoryCatalogHref(category: StorefrontCategory): string {

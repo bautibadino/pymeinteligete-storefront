@@ -160,21 +160,19 @@ export function ProductCardPremiumCommerce({
         ) : null}
 
         {/* CTA */}
-        {isAvailable ? (
-          showAddToCart ? (
-            <Button
-              size="sm"
-              className="mt-auto w-full"
-              aria-label={`Agregar ${name} al carrito`}
-            >
-              <ShoppingCart className="mr-2 size-4" aria-hidden="true" />
-              Agregar al carrito
-            </Button>
-          ) : (
-            <Button asChild size="sm" variant="outline" className="mt-auto w-full">
-              <Link href={href as Route}>Ver producto</Link>
-            </Button>
-          )
+        {showAddToCart && isAvailable ? (
+          <Button
+            size="sm"
+            className="mt-auto w-full"
+            aria-label={`Agregar ${name} al carrito`}
+          >
+            <ShoppingCart className="mr-2 size-4" aria-hidden="true" />
+            Agregar al carrito
+          </Button>
+        ) : !showAddToCart ? (
+          <Button asChild size="sm" variant="outline" className="mt-auto w-full">
+            <Link href={href as Route}>Ver producto</Link>
+          </Button>
         ) : (
           <Button size="sm" variant="outline" className="mt-auto w-full" disabled>
             No disponible

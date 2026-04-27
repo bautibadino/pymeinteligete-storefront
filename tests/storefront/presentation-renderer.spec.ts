@@ -236,6 +236,44 @@ describe("presentation renderer logic", () => {
     expect(module.products[0]?.badges?.map((badge) => badge.label)).toContain("Despacho inmediato");
   });
 
+  it("prioriza ecommerceSlug y priceWithTax cuando conviven con campos legacy", () => {
+    const products = [
+      {
+        productId: "prod-conflictivo",
+        slug: "slug-legacy-no-publico",
+        ecommerceSlug: "slug-publico-ecommerce",
+        name: "Producto con slug público",
+        price: { amount: 100, currency: "ARS" },
+        priceWithTax: 150,
+        isFeatured: true,
+      },
+    ] as unknown as StorefrontCatalogProduct[];
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "productGrid",
+        variant: "grid-4",
+        content: {
+          source: { type: "featured" },
+          cardVariant: "premium-commerce",
+        },
+      }),
+      { products },
+    ) as {
+      products: Array<{
+        slug: string;
+        href: string;
+        price: { amount: number };
+      }>;
+    };
+
+    expect(module.products[0]).toMatchObject({
+      slug: "slug-publico-ecommerce",
+      href: "/producto/slug-publico-ecommerce",
+      price: { amount: 150 },
+    });
+  });
+
   it("catalogLayout muestra productos reales aunque no estén marcados como featured", () => {
     const products = [
       {
