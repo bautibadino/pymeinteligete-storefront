@@ -1,8 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import type { Route } from "next";
+import { TimerReset } from "lucide-react";
 
 import type { AnnouncementBarModule } from "@/lib/modules/announcement-bar";
+import { cn } from "@/lib/utils/cn";
+
+import { AnnouncementBarFrame, resolveAnnouncementBarPalette } from "@/components/templates/announcement-bar/announcement-bar-frame";
 
 type TimeLeft = {
   days: number;
@@ -35,7 +41,8 @@ function pad(n: number) {
 export function AnnouncementBarCountdown({ module }: { module: AnnouncementBarModule }) {
   if (module.variant !== "countdown") return null;
 
-  const { message, endsAt, completedMessage } = module;
+  const { message, label, endsAt, completedMessage, cta, appearance } = module;
+  const palette = resolveAnnouncementBarPalette(appearance);
 
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(() => calcTimeLeft(endsAt));
 
@@ -49,14 +56,15 @@ export function AnnouncementBarCountdown({ module }: { module: AnnouncementBarMo
   if (timeLeft === null) {
     if (!completedMessage) return null;
     return (
-      <div
-        role="banner"
-        aria-label="Promoción finalizada"
-        data-template="announcement-bar-countdown-completed"
-        className="flex min-h-9 items-center justify-center bg-accent px-4 py-2 text-sm font-medium text-background"
+      <AnnouncementBarFrame
+        appearance={appearance}
+        role="region"
+        ariaLabel="Promoción finalizada"
+        dataTemplate="announcement-bar-countdown-completed"
+        contentClassName="justify-center"
       >
-        {completedMessage}
-      </div>
+        <span className="text-sm font-semibold tracking-[0.02em]">{completedMessage}</span>
+      </AnnouncementBarFrame>
     );
   }
 
@@ -70,25 +78,63 @@ export function AnnouncementBarCountdown({ module }: { module: AnnouncementBarMo
   const visibleSegments = timeLeft.days > 0 ? segments : segments.slice(1);
 
   return (
-    <div
+    <AnnouncementBarFrame
+      appearance={appearance}
       role="timer"
-      aria-label={`Cuenta regresiva: ${message}`}
-      data-template="announcement-bar-countdown"
-      className="flex min-h-9 flex-wrap items-center justify-center gap-3 bg-accent px-4 py-2 text-sm font-medium text-background"
+      ariaLabel={`Cuenta regresiva: ${message}`}
+      dataTemplate="announcement-bar-countdown"
+      contentClassName="flex-wrap justify-center gap-3 sm:justify-between"
     >
-      <span>{message}</span>
-      <span aria-hidden="true" className="opacity-60">·</span>
-      <span className="flex items-baseline gap-2">
-        {visibleSegments.map(({ label, value }, idx) => (
-          <span key={label} className="flex items-baseline gap-1">
-            <span className="font-heading text-base font-bold tabular-nums">{value}</span>
-            <span className="text-xs opacity-75">{label}</span>
-            {idx < visibleSegments.length - 1 ? (
-              <span className="opacity-60">:</span>
-            ) : null}
+      <div className="flex min-w-0 flex-wrap items-center justify-center gap-3 sm:justify-start">
+        {label ? (
+          <span
+            className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em]"
+            style={palette.chip}
+          >
+            <TimerReset className="size-3" aria-hidden="true" />
+            {label}
           </span>
-        ))}
-      </span>
-    </div>
+        ) : null}
+
+        <span className="text-center text-sm font-semibold tracking-[0.01em] sm:text-left">{message}</span>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
+        <span className="flex items-baseline gap-1.5 rounded-full border px-3 py-1.5" style={palette.chipSoft}>
+          {visibleSegments.map(({ label: segmentLabel, value }, idx) => (
+            <span key={segmentLabel} className="flex items-baseline gap-1">
+              <span className="font-heading text-base font-bold tabular-nums">{value}</span>
+              <span className="text-[10px] uppercase tracking-[0.18em]" style={palette.mutedText}>
+                {segmentLabel}
+              </span>
+              {idx < visibleSegments.length - 1 ? (
+                <span className="px-0.5 text-xs" style={palette.separator}>
+                  :
+                </span>
+              ) : null}
+            </span>
+          ))}
+        </span>
+
+        {cta ? (
+          <Link
+            href={cta.href as Route}
+            className={cn(
+              "inline-flex min-h-9 items-center justify-center rounded-full border px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] transition-transform duration-200 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
+              cta.variant === "link" ? "underline-offset-4 hover:underline" : undefined,
+            )}
+            style={
+              cta.variant === "secondary"
+                ? palette.ctaSecondary
+                : cta.variant === "link"
+                  ? palette.ctaLink
+                  : palette.ctaPrimary
+            }
+          >
+            {cta.label}
+          </Link>
+        ) : null}
+      </div>
+    </AnnouncementBarFrame>
   );
 }

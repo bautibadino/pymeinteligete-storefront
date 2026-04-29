@@ -1,3 +1,5 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -5,6 +7,7 @@ import {
   shouldUsePresentation,
 } from "@/lib/presentation/render-utils";
 import { adaptSectionToModule } from "@/components/presentation/section-adapter";
+import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
 import { buildProductPresentationContext } from "@/app/(storefront)/producto/_lib/presentation-context";
 import type { Presentation, SectionInstance, SectionType } from "@/lib/types/presentation";
 import type {
@@ -114,6 +117,71 @@ describe("presentation renderer logic", () => {
     expect(shouldUsePresentation(presentation, "home")).toBe(true);
     expect(shouldUsePresentation(presentation, "catalog")).toBe(false);
     expect(shouldUsePresentation(presentation, "product")).toBe(false);
+  });
+
+  it("mantiene el announcement bar antes del header en presentation mode", () => {
+    const presentation = buildPresentation({
+      globals: {
+        announcementBar: buildSection({
+          type: "announcementBar",
+          variant: "static",
+          enabled: true,
+          content: { message: "Promo principal" },
+        }),
+        header: buildSection({ type: "header", variant: "minimal", enabled: true }),
+        footer: buildSection({ type: "footer", variant: "minimal", enabled: true }),
+      },
+      pages: {
+        home: {
+          sections: [buildSection({ id: "hero-1", type: "hero", variant: "split", order: 0 })],
+        },
+        catalog: { sections: [] },
+        product: { sections: [] },
+      },
+    });
+
+    const html = renderToStaticMarkup(
+      createElement(PresentationRenderer, { presentation, page: "home" }),
+    );
+
+    expect(html.indexOf('data-template="announcement-bar-static"')).toBeGreaterThan(-1);
+    expect(html.indexOf('data-template="header-minimal"')).toBeGreaterThan(-1);
+    expect(html.indexOf('data-template="announcement-bar-static"')).toBeLessThan(
+      html.indexOf('data-template="header-minimal"'),
+    );
+  });
+
+  it("normaliza announcementBar a static cuando llega una variante desconocida", () => {
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "announcementBar",
+        variant: "legacy-unknown",
+        content: {
+          message: "Fallback seguro",
+          appearance: {
+            backgroundColor: "#111827",
+            textColor: "#f8fafc",
+          },
+        },
+      }),
+    ) as {
+      variant: string;
+      message: string;
+      appearance?: { backgroundColor?: string; textColor?: string };
+    };
+
+    expect(module.variant).toBe("static");
+    expect(module.message).toBe("Fallback seguro");
+    expect(module.appearance).toEqual({
+      backgroundColor: "#111827",
+      textColor: "#f8fafc",
+      surface: undefined,
+      accentColor: undefined,
+      borderColor: undefined,
+      gradientFrom: undefined,
+      gradientVia: undefined,
+      gradientTo: undefined,
+    });
   });
 
   it("adapta catalogLayout normalizando filtros, sort y cardVariant", () => {

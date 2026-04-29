@@ -34,6 +34,7 @@ const VAR_MAP: Record<keyof ThemeTokens, CssVarName> = {
   radiusPill: "--radius-pill",
   fontHeading: "--font-heading",
   fontBody: "--font-body",
+  fontAccent: "--font-accent",
   fontMono: "--font-mono",
   shadow: "--shadow",
   contentWidth: "--content-width",
@@ -93,6 +94,8 @@ function resolvePresetValue(preset: TenantTheme, token: keyof ThemeTokens): stri
       return preset.typography.heading;
     case "fontBody":
       return preset.typography.body;
+    case "fontAccent":
+      return preset.typography.accent;
     case "fontMono":
       return preset.typography.mono;
     case "shadow":
@@ -125,6 +128,11 @@ export function applyPresentationTheme(themeConfig: ThemeConfig): Record<string,
   }
 
   if (themeConfig.overrides) {
+    const hasAccentOverride =
+      typeof themeConfig.overrides.fontAccent === "string" && themeConfig.overrides.fontAccent.trim();
+    const bodyOverride =
+      typeof themeConfig.overrides.fontBody === "string" ? themeConfig.overrides.fontBody.trim() : "";
+
     for (const [token, value] of Object.entries(themeConfig.overrides)) {
       if (typeof value === "string" && value.trim()) {
         const varName = VAR_MAP[token as keyof ThemeTokens];
@@ -132,6 +140,10 @@ export function applyPresentationTheme(themeConfig: ThemeConfig): Record<string,
           style[varName] = value.trim();
         }
       }
+    }
+
+    if (!hasAccentOverride && bodyOverride) {
+      style["--font-accent"] = bodyOverride;
     }
   }
 

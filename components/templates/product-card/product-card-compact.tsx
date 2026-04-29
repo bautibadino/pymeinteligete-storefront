@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { ArrowRight } from "lucide-react";
 
+import { themeTypographyStyles } from "@/lib/theme";
 import type {
   ProductCardData,
   ProductCardDisplayOptions,
@@ -54,7 +55,11 @@ export function ProductCardCompact({
               aria-hidden="true"
               className="absolute inset-0 flex items-center justify-center bg-black/40"
             >
-              <span className="rounded-full bg-panel px-2 py-0.5 text-[10px] font-semibold text-muted">
+              <span
+                className={themeTypographyStyles.label(
+                  "rounded-full bg-panel px-2 py-0.5 text-[10px] text-muted",
+                )}
+              >
                 Sin stock
               </span>
             </div>
@@ -64,13 +69,17 @@ export function ProductCardCompact({
 
       <div className="flex flex-col gap-1 p-2">
         {showBrand && brand ? (
-          <span className="text-[10px] font-medium uppercase tracking-wider text-muted">
+          <span className={themeTypographyStyles.brand("text-[10px] text-muted")}>
             {brand}
           </span>
         ) : null}
 
         <Link href={href as Route}>
-          <h3 className="line-clamp-2 text-xs font-medium leading-snug text-foreground transition-colors hover:text-primary">
+          <h3
+            className={themeTypographyStyles.cardTitle(
+              "line-clamp-2 text-xs leading-snug text-foreground transition-colors hover:text-primary",
+            )}
+          >
             {name}
           </h3>
         </Link>

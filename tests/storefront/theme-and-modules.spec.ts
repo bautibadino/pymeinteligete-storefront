@@ -89,12 +89,17 @@ describe("tenant theme", () => {
           },
           typography: {
             heading: '"Fraunces", serif',
+            accent: '"Instrument Sans", sans-serif',
           },
         }),
         branding: {
           storeName: "Tenant Test",
           colors: { primary: "#111827", accent: "#2563eb" },
-          typography: { heading: '"Brand Heading"', body: '"Brand Body"' },
+          typography: {
+            heading: '"Brand Heading"',
+            body: '"Brand Body"',
+            accent: '"Brand Accent"',
+          },
         },
         theme: {
           preset: "minimalClean",
@@ -108,6 +113,7 @@ describe("tenant theme", () => {
     expect(theme.colors.primary).toBe("#ff5500");
     expect(theme.colors.accent).toBe("#00aa99");
     expect(theme.typography.heading).toBe('"Fraunces", serif');
+    expect(theme.typography.accent).toBe('"Instrument Sans", sans-serif');
     expect(theme.typography.body).toBe(
       '"Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif',
     );
@@ -126,6 +132,7 @@ describe("tenant theme", () => {
             moduleAccent: "#abcdef",
             moduleAccentSoft: "rgba(171, 205, 239, 0.18)",
             fontHeading: "Brand",
+            fontBody: '"Brand Body"',
             radiusMd: "6px",
             shadow: "none",
             contentWidth: "1040px",
@@ -143,6 +150,8 @@ describe("tenant theme", () => {
     expect(vars["--module-accent"]).toBe("#abcdef");
     expect(vars["--module-accent-soft"]).toBe("rgba(171, 205, 239, 0.18)");
     expect(vars["--font-heading"]).toBe("Brand");
+    expect(vars["--font-body"]).toBe('"Brand Body"');
+    expect(vars["--font-accent"]).toBe('"Brand Body"');
     expect(vars["--radius-md"]).toBe("6px");
     expect(vars["--shadow"]).toBe("none");
     expect(vars["--content-width"]).toBe("1040px");
@@ -169,6 +178,28 @@ describe("tenant theme", () => {
     expect(vars["--module-accent"]).toBe("#445566");
     expect(vars["--font-heading"]).toBe('"Brand Heading"');
     expect(vars["--font-body"]).toBe('"Brand Body"');
+    expect(vars["--font-accent"]).toBe('"Brand Body"');
+  });
+
+  it("respeta accent typography explicita desde branding legacy", () => {
+    const theme = resolveEffectiveTenantTheme(
+      buildBootstrap({
+        branding: {
+          storeName: "Tenant Test",
+          colors: { primary: "#112233" },
+          typography: {
+            heading: '"Brand Heading"',
+            body: '"Brand Body"',
+            accent: '"Brand Accent"',
+          },
+        },
+      }),
+    );
+    const vars = themeToCssVars(theme);
+
+    expect(vars["--font-heading"]).toBe('"Brand Heading"');
+    expect(vars["--font-body"]).toBe('"Brand Body"');
+    expect(vars["--font-accent"]).toBe('"Brand Accent"');
   });
 
   it("cae a industrialWarm si el preset legacy es desconocido", () => {

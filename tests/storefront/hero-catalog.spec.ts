@@ -65,7 +65,7 @@ describe("HERO_CONTENT_SCHEMAS['commerce']", () => {
         { icon: "shield", label: "Garantía oficial" },
         { icon: "credit-card", label: "Todos los medios de pago" },
       ],
-      primaryCta: { label: "Ver catálogo", href: "/catalog" },
+      primaryCta: { label: "Ver catálogo", href: "/catalogo" },
       secondaryCta: { label: "Contactar", href: "/contacto" },
       searchPlaceholder: "Buscá tu producto...",
       enableSearch: true,

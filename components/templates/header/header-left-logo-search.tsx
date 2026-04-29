@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { Route } from "next";
 import { Search, ShoppingCart, User } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { HeaderModule } from "@/lib/modules/header";
 
 /**
@@ -31,7 +33,7 @@ export function HeaderLeftLogoSearch({ module }: { module: HeaderModule }) {
   return (
     <header
       aria-label="Encabezado del sitio"
-      className="w-full border-b border-border bg-paper"
+      className="relative z-20 isolate w-full border-b border-border bg-paper"
       data-template="header-left-logo-search"
       data-module-id={id}
     >
@@ -72,17 +74,32 @@ export function HeaderLeftLogoSearch({ module }: { module: HeaderModule }) {
 
           {/* Search bar — ocupa el espacio central */}
           {showSearch ? (
-            <form action="/catalogo" className="flex flex-1 items-center">
-              <label className="flex w-full items-center gap-3 rounded-md border border-border bg-panel px-4 py-2.5 text-sm text-muted shadow-sm transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
-                <Search className="size-4 shrink-0" aria-hidden="true" />
-                <span className="sr-only">{searchPlaceholder}</span>
-                <input
+            <form
+              action="/catalogo"
+              role="search"
+              className="pointer-events-auto relative z-10 flex flex-1 items-center"
+            >
+              <label className="sr-only" htmlFor={`${id}-search`}>
+                {searchPlaceholder}
+              </label>
+              <div className="flex w-full items-center gap-2 rounded-md border border-border bg-panel px-3 py-2 shadow-sm transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                <Search className="size-4 shrink-0 text-muted" aria-hidden="true" />
+                <Input
+                  id={`${id}-search`}
                   name="search"
                   type="search"
                   placeholder={searchPlaceholder}
-                  className="min-w-0 flex-1 bg-transparent text-foreground placeholder:text-muted focus:outline-none"
+                  enterKeyHint="search"
+                  className="pointer-events-auto h-9 min-w-0 flex-1 border-0 bg-transparent px-0 py-0 text-foreground shadow-none ring-offset-transparent placeholder:text-muted focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
-              </label>
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="shrink-0 pointer-events-auto"
+                >
+                  Buscar
+                </Button>
+              </div>
             </form>
           ) : (
             <div className="flex-1" />

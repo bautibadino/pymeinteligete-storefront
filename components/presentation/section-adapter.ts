@@ -1,3 +1,4 @@
+import { normalizeAnnouncementBarModule } from "@/lib/modules/announcement-bar";
 import { normalizeCatalogLayoutContent } from "@/lib/modules/catalog-layout";
 import { normalizeProductGridContent } from "@/lib/modules/product-grid";
 import type { SectionInstance } from "@/lib/types/presentation";
@@ -197,12 +198,7 @@ export function adaptSectionToModule(
     }
 
     case "announcementBar":
-      return {
-        ...base,
-        enabled: section.enabled,
-        order: section.order,
-        ...content,
-      };
+      return normalizeAnnouncementBarModule(section as SectionInstance<"announcementBar">);
 
     default:
       return { ...base, ...content };

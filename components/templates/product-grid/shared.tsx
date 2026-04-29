@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { PackageSearch } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { themeTypographyStyles } from "@/lib/theme";
 import type { ProductGridModule } from "@/lib/modules/product-grid";
 import { resolveProductCardTemplate } from "@/lib/templates/product-card-registry";
 
@@ -43,7 +44,7 @@ export function ProductGridEmptyState({ title = "Todavía no hay productos publi
       <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">
         <PackageSearch className="size-7" aria-hidden="true" />
       </div>
-      <h3 className="font-heading text-lg font-semibold text-foreground">{title}</h3>
+      <h3 className={themeTypographyStyles.cardTitle("text-lg text-foreground")}>{title}</h3>
       <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted">
         La sección está configurada, pero el backend no devolvió productos para este tenant o filtro.
       </p>

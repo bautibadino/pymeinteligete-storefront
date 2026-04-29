@@ -142,15 +142,25 @@ export function PresentationRenderer({
   const sections = getEnabledSortedSections(pageConfig.sections);
 
   return (
-    <div data-presentation-renderer="true" data-page={page}>
+    <div
+      className="presentation-renderer"
+      data-presentation-renderer="true"
+      data-page={page}
+      data-presentation-scope={includeGlobals ? "document" : "page"}
+    >
       {includeGlobals ? (
         <PresentationGlobalAnnouncementBar presentation={presentation} context={context} />
       ) : null}
       {includeGlobals ? <PresentationGlobalHeader presentation={presentation} context={context} /> : null}
 
-      <main>
+      <main className="presentation-renderer-content">
         {sections.map((section) => (
-          <div key={section.id} data-section-id={section.id} data-section-type={section.type}>
+          <div
+            key={section.id}
+            className="presentation-renderer-section"
+            data-section-id={section.id}
+            data-section-type={section.type}
+          >
             <SectionRenderer section={section} context={context} />
           </div>
         ))}

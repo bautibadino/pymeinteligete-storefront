@@ -96,6 +96,7 @@ describe("defaultAnnouncementBarContent", () => {
     expect(content.variant).toBe("static");
     expect(typeof content.message).toBe("string");
     expect(content.message.length).toBeGreaterThan(0);
+    expect(content.appearance?.surface).toBe("gradient");
   });
 
   it("devuelve contenido con al menos un mensaje para scroll", () => {
@@ -103,6 +104,7 @@ describe("defaultAnnouncementBarContent", () => {
     expect(content.variant).toBe("scroll");
     expect(Array.isArray(content.messages)).toBe(true);
     expect(content.messages.length).toBeGreaterThan(0);
+    expect(content.pauseOnHover).toBe(true);
   });
 
   it("devuelve contenido con message y endsAt para countdown", () => {
@@ -111,6 +113,7 @@ describe("defaultAnnouncementBarContent", () => {
     expect(typeof content.message).toBe("string");
     expect(typeof content.endsAt).toBe("string");
     expect(new Date(content.endsAt).getTime()).toBeGreaterThan(Date.now());
+    expect(content.cta?.href).toBe("/catalogo");
   });
 
   it("devuelve contenido con al menos un badge para badges", () => {
@@ -118,6 +121,7 @@ describe("defaultAnnouncementBarContent", () => {
     expect(content.variant).toBe("badges");
     expect(Array.isArray(content.items)).toBe(true);
     expect(content.items.length).toBeGreaterThan(0);
+    expect(content.heading).toBeDefined();
     for (const item of content.items) {
       expect(typeof item.icon).toBe("string");
       expect(typeof item.label).toBe("string");
@@ -128,7 +132,16 @@ describe("defaultAnnouncementBarContent", () => {
 describe("contentSchema — validación Zod por variante", () => {
   it("valida un contenido estático correcto", () => {
     const schema = ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS.static.contentSchema;
-    const result = schema.safeParse({ variant: "static", message: "Envío gratis" });
+    const result = schema.safeParse({
+      variant: "static",
+      message: "Envío gratis",
+      rotatingMessages: ["6 cuotas", "envío nacional"],
+      appearance: {
+        surface: "gradient",
+        gradientFrom: "#111827",
+        gradientTo: "#1d4ed8",
+      },
+    });
     expect(result.success).toBe(true);
   });
 
@@ -144,6 +157,11 @@ describe("contentSchema — validación Zod por variante", () => {
       variant: "scroll",
       messages: ["6 cuotas sin interés", "20% OFF contado"],
       speed: "fast",
+      pauseOnHover: true,
+      appearance: {
+        backgroundColor: "#111827",
+        textColor: "#f8fafc",
+      },
     });
     expect(result.success).toBe(true);
   });
@@ -158,8 +176,13 @@ describe("contentSchema — validación Zod por variante", () => {
     const schema = ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS.countdown.contentSchema;
     const result = schema.safeParse({
       variant: "countdown",
+      label: "Flash sale",
       message: "¡Oferta expira pronto!",
       endsAt: new Date(Date.now() + 3600_000).toISOString(),
+      cta: {
+        label: "Comprar",
+        href: "/catalogo",
+      },
     });
     expect(result.success).toBe(true);
   });
@@ -168,8 +191,9 @@ describe("contentSchema — validación Zod por variante", () => {
     const schema = ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS.badges.contentSchema;
     const result = schema.safeParse({
       variant: "badges",
+      heading: "Beneficios",
       items: [
-        { icon: "truck", label: "Envío gratis" },
+        { icon: "truck", label: "Envío gratis", description: "a todo el país" },
         { icon: "shield", label: "Garantía oficial" },
       ],
     });

@@ -30,6 +30,7 @@ export type TenantTheme = {
   typography: {
     heading: string;
     body: string;
+    accent: string;
     mono: string;
   };
   radii: {
@@ -80,6 +81,7 @@ const THEME_COLOR_KEYS = [
 const THEME_TYPOGRAPHY_KEYS = [
   "heading",
   "body",
+  "accent",
   "mono",
 ] as const satisfies readonly (keyof TenantTheme["typography"])[];
 
@@ -132,6 +134,7 @@ const PRESENTATION_TYPOGRAPHY_TOKEN_MAP = {
   heading: "heading",
   fontBody: "body",
   body: "body",
+  fontAccent: "accent",
   fontMono: "mono",
   mono: "mono",
 } as const satisfies Record<string, keyof TenantTheme["typography"]>;
@@ -176,6 +179,7 @@ export const THEME_PRESETS: Record<ThemePreset, TenantTheme> = {
     typography: {
       heading: '"Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif',
       body: '"Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif',
+      accent: '"Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif',
       mono: '"SFMono-Regular", "SF Mono", "Roboto Mono", monospace',
     },
     radii: {
@@ -215,6 +219,7 @@ export const THEME_PRESETS: Record<ThemePreset, TenantTheme> = {
     typography: {
       heading: '"Optima", "Avenir Next", "Segoe UI", sans-serif',
       body: '"Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif',
+      accent: '"Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif',
       mono: '"SFMono-Regular", "SF Mono", "Roboto Mono", monospace',
     },
     radii: {
@@ -254,6 +259,7 @@ export const THEME_PRESETS: Record<ThemePreset, TenantTheme> = {
     typography: {
       heading: '"Didot", "Bodoni 72", "Iowan Old Style", serif',
       body: '"Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif',
+      accent: '"Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif',
       mono: '"SFMono-Regular", "SF Mono", "Roboto Mono", monospace',
     },
     radii: {
@@ -400,6 +406,7 @@ function readBrandingThemeConfig(bootstrap: StorefrontBootstrap | null): Brandin
   const accent = readString(bootstrap?.branding?.colors?.accent);
   const heading = readString(bootstrap?.branding?.typography?.heading);
   const body = readString(bootstrap?.branding?.typography?.body);
+  const accentTypography = readString(bootstrap?.branding?.typography?.accent);
 
   return {
     ...((primary || accent)
@@ -410,11 +417,12 @@ function readBrandingThemeConfig(bootstrap: StorefrontBootstrap | null): Brandin
           },
         }
       : {}),
-    ...((heading || body)
+    ...((heading || body || accentTypography)
       ? {
           typography: {
             ...(heading ? { heading } : {}),
             ...(body ? { body } : {}),
+            ...(accentTypography ? { accent: accentTypography } : {}),
           },
         }
       : {}),
@@ -422,6 +430,15 @@ function readBrandingThemeConfig(bootstrap: StorefrontBootstrap | null): Brandin
 }
 
 function mergeThemeConfig(base: TenantTheme, config: ThemeConfig): TenantTheme {
+  const typography = {
+    ...base.typography,
+    ...config.typography,
+  };
+
+  if (!config.typography?.accent && config.typography?.body) {
+    typography.accent = config.typography.body;
+  }
+
   return {
     ...base,
     name: config.name ?? base.name,
@@ -429,10 +446,7 @@ function mergeThemeConfig(base: TenantTheme, config: ThemeConfig): TenantTheme {
       ...base.colors,
       ...config.colors,
     },
-    typography: {
-      ...base.typography,
-      ...config.typography,
-    },
+    typography,
     radii: {
       ...base.radii,
       ...config.radii,

@@ -4,6 +4,7 @@ import { ShoppingCart, Truck, Clock } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { themeTypographyStyles } from "@/lib/theme";
 import type {
   ProductCardData,
   ProductCardDisplayOptions,
@@ -117,14 +118,18 @@ export function ProductCardPremiumCommerce({
       <div className="flex flex-1 flex-col gap-2 p-3">
         {/* Marca */}
         {showBrand && brand ? (
-          <span className="text-[10px] font-medium uppercase tracking-wider text-muted">
+          <span className={themeTypographyStyles.brand("text-[10px] text-muted")}>
             {brand}
           </span>
         ) : null}
 
         {/* Nombre */}
         <Link href={href as Route}>
-          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors hover:text-primary">
+          <h3
+            className={themeTypographyStyles.cardTitle(
+              "line-clamp-2 text-sm leading-snug text-foreground transition-colors hover:text-primary",
+            )}
+          >
             {name}
           </h3>
         </Link>
@@ -138,7 +143,11 @@ export function ProductCardPremiumCommerce({
           ) : null}
 
           {showCashDiscount && cashDiscount ? (
-            <span className="rounded-sm bg-primary-soft px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+            <span
+              className={themeTypographyStyles.label(
+                "rounded-sm bg-primary-soft px-1.5 py-0.5 text-[10px] text-primary",
+              )}
+            >
               {cashDiscount.percent}% OFF contado
             </span>
           ) : null}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 
 import { Button } from "@/components/ui/button";
+import { themeTypographyStyles } from "@/lib/theme";
 import type { RichTextBuilderModule } from "@/lib/modules/rich-text";
 import { RichTextBody } from "./rich-text-body";
 
@@ -23,7 +24,11 @@ export function RichTextTwoColumn({ module }: { module: RichTextBuilderModule })
     >
       <div className="mx-auto max-w-5xl px-4">
         {eyebrow ? (
-          <span className="mb-4 inline-flex items-center rounded-pill bg-primary-soft px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-primary">
+          <span
+            className={themeTypographyStyles.eyebrow(
+              "mb-4 inline-flex items-center rounded-pill bg-primary-soft px-3 py-1 text-xs text-primary",
+            )}
+          >
             {eyebrow}
           </span>
         ) : null}

@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { themeTypographyStyles } from "@/lib/theme";
 import type { HeroModule } from "@/lib/modules";
 
 /**
@@ -27,7 +28,7 @@ export function HeroEditorial({ module }: { module: HeroModule }) {
 
       <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
         {eyebrow ? (
-          <span className="text-xs font-medium uppercase tracking-[0.28em] text-primary">
+          <span className={themeTypographyStyles.kicker("text-xs text-primary")}>
             {eyebrow}
           </span>
         ) : null}

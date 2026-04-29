@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ShoppingCart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { themeTypographyStyles } from "@/lib/theme";
 import type {
   ProductCardData,
   ProductCardDisplayOptions,
@@ -64,13 +65,17 @@ export function ProductCardClassic({
 
       <div className="flex flex-1 flex-col gap-2 p-4">
         {showBrand && brand ? (
-          <span className="text-xs font-medium uppercase tracking-wider text-muted">
+          <span className={themeTypographyStyles.brand("text-xs text-muted")}>
             {brand}
           </span>
         ) : null}
 
         <Link href={href as Route} className="flex-1">
-          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors hover:text-primary">
+          <h3
+            className={themeTypographyStyles.cardTitle(
+              "line-clamp-2 text-sm leading-snug text-foreground transition-colors hover:text-primary",
+            )}
+          >
             {name}
           </h3>
         </Link>

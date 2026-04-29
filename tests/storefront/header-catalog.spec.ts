@@ -1,5 +1,8 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { HeaderLeftLogoSearch } from "@/components/templates/header/header-left-logo-search";
 import {
   DEFAULT_HEADER_TEMPLATE_ID,
   HEADER_CONTENT_SCHEMAS,
@@ -25,6 +28,12 @@ function buildHeaderModule(overrides: Partial<HeaderModule> = {}): HeaderModule 
     showCart: true,
     ...overrides,
   };
+}
+
+function renderHtml(module: HeaderModule): string {
+  return renderToStaticMarkup(
+    createElement(HeaderLeftLogoSearch, { module }),
+  ).replaceAll("&amp;", "&");
 }
 
 // ---------------------------------------------------------------------------
@@ -164,7 +173,7 @@ describe("HEADER_CONTENT_SCHEMAS — validación Zod", () => {
       showAccount: false,
       navLinks: [
         { label: "Inicio", href: "/" },
-        { label: "Catálogo", href: "/catalog", children: [{ label: "Sub", href: "/sub" }] },
+        { label: "Catálogo", href: "/catalogo", children: [{ label: "Sub", href: "/sub" }] },
       ],
       topBarLinks: [{ label: "Contacto", href: "/contacto" }],
     };
@@ -208,5 +217,35 @@ describe("HeaderModule — estructura del tipo", () => {
     // Forzamos un valor inválido para simular dato corrupto del backend
     const corrupted = { ...m, variant: "no-existe" } as unknown as HeaderModule;
     expect(resolveHeaderTemplateId(corrupted.variant)).toBe(DEFAULT_HEADER_TEMPLATE_ID);
+  });
+});
+
+describe("HeaderLeftLogoSearch", () => {
+  it("renderiza un buscador real con submit explícito hacia /catalogo", () => {
+    const html = renderHtml(
+      buildHeaderModule({
+        variant: "left-logo-search",
+        searchPlaceholder: "Buscar cubiertas",
+      }),
+    );
+
+    expect(html).toContain('action="/catalogo"');
+    expect(html).toContain('role="search"');
+    expect(html).toContain('type="search"');
+    expect(html).toContain('name="search"');
+    expect(html).toContain('type="submit"');
+    expect(html).toContain(">Buscar<");
+  });
+
+  it("eleva la capa del header y del form para no perder interacción ante overlays vecinos", () => {
+    const html = renderHtml(
+      buildHeaderModule({
+        variant: "left-logo-search",
+      }),
+    );
+
+    expect(html).toContain("relative z-20 isolate w-full");
+    expect(html).toContain("pointer-events-auto relative z-10 flex flex-1 items-center");
+    expect(html).toContain("pointer-events-auto");
   });
 });

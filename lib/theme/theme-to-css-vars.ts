@@ -28,6 +28,7 @@ export function themeToCssVars(theme: TenantTheme): TenantThemeCssVars {
     "--action-contrast": theme.colors.primaryContrast,
     "--font-heading": theme.typography.heading,
     "--font-body": theme.typography.body,
+    "--font-accent": theme.typography.accent,
     "--font-mono": theme.typography.mono,
     "--radius-md": theme.radii.medium,
     "--radius-lg": theme.radii.large,

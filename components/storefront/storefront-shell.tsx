@@ -61,16 +61,11 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
     const presentationContext = { bootstrap, host };
 
     return (
-      <main className="presentation-frame" data-storefront-mode="presentation">
-        <div data-presentation-renderer="true" data-page="shell">
-          <PresentationGlobalAnnouncementBar
-            presentation={presentation}
-            context={presentationContext}
-          />
-          <PresentationGlobalHeader presentation={presentation} context={presentationContext} />
-          <div className="presentation-page-content">{children}</div>
-          <PresentationGlobalFooter presentation={presentation} context={presentationContext} />
-        </div>
+      <main className="presentation-shell" data-storefront-mode="presentation">
+        <PresentationGlobalAnnouncementBar presentation={presentation} context={presentationContext} />
+        <PresentationGlobalHeader presentation={presentation} context={presentationContext} />
+        <div className="presentation-shell-content">{children}</div>
+        <PresentationGlobalFooter presentation={presentation} context={presentationContext} />
       </main>
     );
   }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 
+import { themeTypographyStyles } from "@/lib/theme";
 import type {
   ProductCardData,
   ProductCardDisplayOptions,
@@ -55,13 +56,17 @@ export function ProductCardEditorial({
 
       <div className="flex flex-col gap-1 pt-3">
         {showBrand && brand ? (
-          <span className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted">
+          <span className={themeTypographyStyles.brand("text-[11px] text-muted")}>
             {brand}
           </span>
         ) : null}
 
         <Link href={href as Route}>
-          <h3 className="font-heading text-base font-semibold leading-snug text-foreground transition-colors hover:text-primary">
+          <h3
+            className={themeTypographyStyles.cardTitle(
+              "text-base leading-snug text-foreground transition-colors hover:text-primary",
+            )}
+          >
             {name}
           </h3>
         </Link>

@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { themeTypographyStyles } from "@/lib/theme";
 import type { HeroModule } from "@/lib/modules";
 
 /**
@@ -48,7 +49,11 @@ export function HeroWorkshop({ module }: { module: HeroModule }) {
         <div className="relative flex min-h-[480px] flex-col justify-end p-8 md:min-h-[560px] md:p-12 lg:p-16">
           <div className="flex max-w-2xl flex-col gap-4 text-white">
             {eyebrow ? (
-              <span className="inline-flex w-fit items-center rounded-pill bg-primary px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-primary-foreground">
+              <span
+                className={themeTypographyStyles.eyebrow(
+                  "inline-flex w-fit items-center rounded-pill bg-primary px-3 py-1 text-xs text-primary-foreground",
+                )}
+              >
                 {eyebrow}
               </span>
             ) : null}

@@ -106,50 +106,40 @@ img {
   padding: 26px 0 40px;
 }
 
-.presentation-frame {
+.presentation-shell {
+  display: flex;
   min-height: 100dvh;
   width: 100%;
-  padding: clamp(14px, 2.4vw, 34px);
+  flex-direction: column;
 }
 
-.presentation-frame > [data-presentation-renderer="true"] {
-  width: min(100%, var(--content-width));
-  margin: 0 auto;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--line) 84%, transparent);
-  border-radius: clamp(22px, 3vw, 40px);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--panel-strong) 94%, transparent), color-mix(in srgb, var(--panel) 90%, transparent)),
-    var(--paper);
-  box-shadow: var(--shadow);
-}
-
-.presentation-frame main {
+.presentation-shell-content {
   display: grid;
-  gap: clamp(14px, 2vw, 28px);
+  flex: 1;
+  align-content: start;
+  gap: clamp(20px, 3vw, 36px);
+  width: 100%;
+  padding-block: clamp(18px, 3vw, 40px);
 }
 
-.presentation-page-content {
-  min-height: 40vh;
+.presentation-shell-content > :not([data-presentation-renderer="true"]) {
+  width: min(calc(100% - 28px), var(--content-width));
+  margin: 0 auto;
 }
 
-.presentation-frame [data-template^="hero-"],
-.presentation-frame [data-template^="trust-bar-"],
-.presentation-frame [data-template^="product-grid-"],
-.presentation-frame [data-template^="category-tile-"],
-.presentation-frame [data-template^="promo-band-"],
-.presentation-frame [data-template^="testimonials-"],
-.presentation-frame [data-template^="faq-"],
-.presentation-frame [data-template^="rich-text-"] {
-  margin-inline: clamp(12px, 2vw, 28px);
+.presentation-shell-content > [data-presentation-renderer="true"] {
+  width: 100%;
 }
 
-.presentation-frame [data-template^="hero-"] {
-  margin-top: clamp(12px, 2vw, 28px);
+.presentation-renderer-content {
+  display: grid;
+  gap: clamp(18px, 2vw, 30px);
 }
 
-.presentation-frame [data-template^="footer-"] {
-  margin-top: clamp(10px, 2vw, 26px);
+.presentation-renderer[data-presentation-scope="document"] .presentation-renderer-section,
+.presentation-shell-content > [data-presentation-renderer="true"] .presentation-renderer-section {
+  width: min(calc(100% - 28px), var(--content-width));
+  margin: 0 auto;
 }
 
 .storefront-shell {
@@ -1326,6 +1316,12 @@ img {
   .storefront-frame {
     width: min(calc(100% - 18px), var(--content-width));
     padding-top: 16px;
+  }
+
+  .presentation-shell-content > :not([data-presentation-renderer="true"]),
+  .presentation-renderer[data-presentation-scope="document"] .presentation-renderer-section,
+  .presentation-shell-content > [data-presentation-renderer="true"] .presentation-renderer-section {
+    width: min(calc(100% - 18px), var(--content-width));
   }
 
   .storefront-topbar,

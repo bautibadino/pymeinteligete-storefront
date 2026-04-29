@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 
 import { Button } from "@/components/ui/button";
+import { themeTypographyStyles } from "@/lib/theme";
 import type { RichTextBuilderModule } from "@/lib/modules/rich-text";
 import { RichTextBody } from "./rich-text-body";
 
@@ -26,7 +27,11 @@ export function RichTextImageRightTextLeft({ module }: { module: RichTextBuilder
           {/* Texto — orden DOM primero, visual izquierda en desktop */}
           <div className="flex flex-col gap-4">
             {eyebrow ? (
-              <span className="inline-flex w-fit items-center rounded-pill bg-primary-soft px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-primary">
+              <span
+                className={themeTypographyStyles.eyebrow(
+                  "inline-flex w-fit items-center rounded-pill bg-primary-soft px-3 py-1 text-xs text-primary",
+                )}
+              >
                 {eyebrow}
               </span>
             ) : null}

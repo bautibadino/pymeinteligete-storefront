@@ -60,19 +60,39 @@ export type AnnouncementBarTemplateDescriptor = {
   contentSchema: z.ZodTypeAny;
 };
 
+const announcementBarAppearanceSchema = z.object({
+  surface: z.enum(["solid", "gradient"]).optional(),
+  backgroundColor: z.string().min(1).optional(),
+  textColor: z.string().min(1).optional(),
+  accentColor: z.string().min(1).optional(),
+  borderColor: z.string().min(1).optional(),
+  gradientFrom: z.string().min(1).optional(),
+  gradientVia: z.string().min(1).optional(),
+  gradientTo: z.string().min(1).optional(),
+});
+
 export const ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS: Record<
   AnnouncementBarTemplateId,
   AnnouncementBarTemplateDescriptor
 > = {
   static: {
     id: "static",
-    label: "Estático",
-    description: "Mensaje fijo con CTA opcional. Ideal para promos permanentes.",
-    bestFor: ["envío gratis", "promoción vigente", "aviso importante"],
+    label: "Editorial fijo",
+    description:
+      "Mensaje principal con CTA y acentos rotativos opcionales. Ideal para promos siempre visibles arriba de todo.",
+    bestFor: ["envío gratis", "promoción vigente", "aviso principal", "lanzamientos"],
     thumbnailUrl: "/template-thumbnails/announcement-bar-static.svg",
     contentSchema: z.object({
       variant: z.literal("static"),
       message: z.string().min(1, "El mensaje es obligatorio"),
+      eyebrow: z.string().min(1).optional(),
+      detail: z.string().min(1).optional(),
+      rotatingMessages: z.array(z.string().min(1)).max(6).optional(),
+      motion: z
+        .object({
+          rotationIntervalMs: z.number().int().positive().max(20000).optional(),
+        })
+        .optional(),
       cta: z
         .object({
           label: z.string().min(1),
@@ -80,22 +100,27 @@ export const ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS: Record<
           variant: z.enum(["primary", "secondary", "link"]).optional(),
         })
         .optional(),
+      appearance: announcementBarAppearanceSchema.optional(),
     }),
   },
 
   scroll: {
     id: "scroll",
-    label: "Desplazamiento",
+    label: "Ticker horizontal",
     description:
-      "Marquee automático con múltiples mensajes. Paridad BYM — ideal para varias promos.",
-    bestFor: ["múltiples promos", "cuotas + descuento + envíos", "tiendas activas"],
+      "Marquee continuo con tratamiento más premium, pausado al hover y preparado para superficie fija o degradada.",
+    bestFor: ["múltiples promos", "cuotas + descuento + envíos", "top bar dinámica"],
     thumbnailUrl: "/template-thumbnails/announcement-bar-scroll.svg",
     contentSchema: z.object({
       variant: z.literal("scroll"),
+      eyebrow: z.string().min(1).optional(),
       messages: z
         .array(z.string().min(1))
         .min(1, "Se requiere al menos un mensaje"),
+      separator: z.string().min(1).max(3).optional(),
       speed: z.enum(["slow", "normal", "fast"]).optional(),
+      pauseOnHover: z.boolean().optional(),
+      appearance: announcementBarAppearanceSchema.optional(),
     }),
   },
 
@@ -103,35 +128,48 @@ export const ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS: Record<
     id: "countdown",
     label: "Countdown",
     description:
-      "Cuenta regresiva hasta una fecha límite. Genera urgencia de compra.",
+      "Cuenta regresiva con etiqueta de urgencia, CTA opcional y soporte de surface más expresiva.",
     bestFor: ["oferta por tiempo limitado", "flash sale", "promoción con vencimiento"],
     thumbnailUrl: "/template-thumbnails/announcement-bar-countdown.svg",
     contentSchema: z.object({
       variant: z.literal("countdown"),
+      label: z.string().min(1).optional(),
       message: z.string().min(1, "El mensaje es obligatorio"),
       endsAt: z.string().min(1, "La fecha de fin es obligatoria"),
       completedMessage: z.string().optional(),
+      cta: z
+        .object({
+          label: z.string().min(1),
+          href: z.string().min(1),
+          variant: z.enum(["primary", "secondary", "link"]).optional(),
+        })
+        .optional(),
+      appearance: announcementBarAppearanceSchema.optional(),
     }),
   },
 
   badges: {
     id: "badges",
-    label: "Badges",
+    label: "Trust chips",
     description:
-      "3–5 íconos con texto corto (envío / pago / garantía). Transmite confianza de un vistazo.",
-    bestFor: ["confianza", "beneficios clave", "envío/garantía/cuotas"],
+      "Chips de confianza con íconos y soporte opcional para microcopy. Pensado para beneficios clave bien arriba.",
+    bestFor: ["confianza", "beneficios clave", "envío/garantía/cuotas", "diferenciales"],
     thumbnailUrl: "/template-thumbnails/announcement-bar-badges.svg",
     contentSchema: z.object({
       variant: z.literal("badges"),
+      heading: z.string().min(1).optional(),
+      detail: z.string().min(1).optional(),
       items: z
         .array(
           z.object({
             icon: z.string().min(1),
             label: z.string().min(1),
+            description: z.string().min(1).optional(),
           }),
         )
         .min(1, "Se requiere al menos un badge")
         .max(5, "Máximo 5 badges"),
+      appearance: announcementBarAppearanceSchema.optional(),
     }),
   },
 };
@@ -152,7 +190,29 @@ type DefaultContentMap = {
 const DEFAULT_CONTENT: DefaultContentMap = {
   static: {
     variant: "static",
-    message: "¡Bienvenidos! Consultá nuestras promociones.",
+    eyebrow: "Colección destacada",
+    message: "Comprá hoy con condiciones pensadas para mover stock rápido.",
+    detail: "beneficios activos",
+    rotatingMessages: [
+      "6 cuotas sin interés",
+      "envíos a todo el país",
+      "retiro en sucursal",
+    ],
+    motion: {
+      rotationIntervalMs: 3200,
+    },
+    appearance: {
+      surface: "gradient",
+      gradientFrom: "#111827",
+      gradientVia: "#1d4ed8",
+      gradientTo: "#0f172a",
+      textColor: "#f8fafc",
+    },
+    cta: {
+      label: "Ver promos",
+      href: "/catalogo",
+      variant: "primary",
+    },
   },
   scroll: {
     variant: "scroll",
@@ -162,20 +222,52 @@ const DEFAULT_CONTENT: DefaultContentMap = {
       "Envíos a todo el país",
     ],
     speed: "normal",
+    eyebrow: "Actualizado hoy",
+    separator: "•",
+    pauseOnHover: true,
+    appearance: {
+      surface: "gradient",
+      gradientFrom: "#1f2937",
+      gradientVia: "#334155",
+      gradientTo: "#0f172a",
+      textColor: "#f8fafc",
+    },
   },
   countdown: {
     variant: "countdown",
-    message: "¡Oferta por tiempo limitado!",
+    label: "Flash sale",
+    message: "Precios especiales hasta agotar stock.",
     endsAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
     completedMessage: "La oferta ha finalizado.",
+    cta: {
+      label: "Comprar ahora",
+      href: "/catalogo",
+      variant: "primary",
+    },
+    appearance: {
+      surface: "gradient",
+      gradientFrom: "#431407",
+      gradientVia: "#9a3412",
+      gradientTo: "#1f2937",
+      textColor: "#fff7ed",
+    },
   },
   badges: {
     variant: "badges",
+    heading: "Compra con respaldo",
+    detail: "Beneficios vigentes para cada pedido",
     items: [
-      { icon: "truck", label: "Envío a todo el país" },
-      { icon: "shield", label: "Garantía oficial" },
-      { icon: "credit-card", label: "6 cuotas sin interés" },
+      { icon: "truck", label: "Envío a todo el país", description: "coordinado por sucursal" },
+      { icon: "shield", label: "Garantía oficial", description: "marcas homologadas" },
+      { icon: "credit-card", label: "6 cuotas sin interés", description: "según promoción" },
     ],
+    appearance: {
+      surface: "solid",
+      backgroundColor: "#f8fafc",
+      textColor: "#0f172a",
+      borderColor: "#cbd5e1",
+      accentColor: "rgba(15, 23, 42, 0.06)",
+    },
   },
 };
 

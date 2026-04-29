@@ -29,6 +29,7 @@ export interface ThemeTokens {
   radiusPill: string;
   fontHeading: string;
   fontBody: string;
+  fontAccent: string;
   fontMono: string;
   shadow: string;
   contentWidth: string;

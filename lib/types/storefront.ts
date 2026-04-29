@@ -66,6 +66,7 @@ export interface StorefrontBrandingColors {
 export interface StorefrontBrandingTypography {
   heading?: string;
   body?: string;
+  accent?: string;
 }
 
 export interface StorefrontBranding {
