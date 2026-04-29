@@ -8,17 +8,5 @@ export async function generateMetadata() {
 }
 
 export default function EnviosYEntregasPage() {
-  return (
-    <InstitutionalPageShell pathname="/envios-y-entregas" title="Envíos y entregas">
-      <div className="fallback-content">
-        <h3>Envíos y entregas</h3>
-        <p>
-          TODO: las políticas de envío, zonas de cobertura, tiempos y costos deben venir del backend.
-        </p>
-        <p>
-          Este fallback se muestra hasta que el contrato de contenido institucional esté disponible.
-        </p>
-      </div>
-    </InstitutionalPageShell>
-  );
+  return <InstitutionalPageShell pathname="/envios-y-entregas" title="Envíos y entregas" />;
 }

@@ -1,19 +1,23 @@
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 
+import type {
+  ContactEntry,
+  InstitutionalPageData,
+} from "@/app/(storefront)/_lib/institutional-page-data";
 import {
-  loadBootstrapExperience,
-  resolveTenantDisplayName,
-} from "@/app/(storefront)/_lib/storefront-shell-data";
+  humanizePaymentMethod,
+  loadInstitutionalPageData,
+} from "@/app/(storefront)/_lib/institutional-page-data";
 import { PageIntro } from "@/components/storefront/page-sections";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
-import type { Metadata } from "next";
 
 type InstitutionalPageShellProps = {
   pathname: string;
   title: string;
   description?: string;
-  children: ReactNode;
+  children?: ReactNode;
 };
 
 export async function generateInstitutionalMetadata(
@@ -28,47 +32,224 @@ export async function generateInstitutionalMetadata(
   });
 }
 
+function renderLinkList(links: Array<{ href: string; label: string }>) {
+  if (links.length === 0) {
+    return <p>No hay enlaces públicos adicionales publicados en el footer de esta tienda.</p>;
+  }
+
+  return (
+    <ul className="timeline-list">
+      {links.map((link) => (
+        <li key={`${link.href}:${link.label}`}>
+          <a href={link.href}>{link.label}</a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function renderContactEntries(entries: ContactEntry[]) {
+  if (entries.length === 0) {
+    return <p>La tienda todavía no publicó canales de contacto directos en el bootstrap actual.</p>;
+  }
+
+  return (
+    <ul className="timeline-list">
+      {entries.map((entry) => (
+        <li key={`${entry.label}:${entry.value}`}>
+          <strong>{entry.label}:</strong>{" "}
+          {entry.href ? <a href={entry.href}>{entry.value}</a> : entry.value}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function renderInstitutionalFallback(
+  pathname: string,
+  data: InstitutionalPageData,
+) {
+  const relatedLinks = data.footerLinks.filter((link) => link.href !== pathname).slice(0, 6);
+  const paymentMethods = data.visiblePaymentMethods.map(humanizePaymentMethod);
+  const pageExcerpt = data.matchingPage?.excerpt;
+
+  const sections: Array<{ title: string; body: ReactNode }> = [
+    {
+      title: "Resumen público",
+      body: pageExcerpt ? (
+        <p>{pageExcerpt}</p>
+      ) : (
+        <p>
+          {data.displayName} publica esta sección para centralizar información útil del tenant usando
+          el bootstrap real disponible hoy.
+        </p>
+      ),
+    },
+  ];
+
+  switch (pathname) {
+    case "/contacto":
+      sections.push({
+        title: "Canales disponibles",
+        body: renderContactEntries(data.contactEntries),
+      });
+      break;
+    case "/medios-de-pago":
+      sections.push({
+        title: "Métodos visibles",
+        body:
+          paymentMethods.length > 0 ? (
+            <ul className="timeline-list">
+              {paymentMethods.map((method) => (
+                <li key={method}>{method}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>La tienda todavía no expone métodos visibles en el bootstrap actual.</p>
+          ),
+      });
+      break;
+    case "/envios-y-entregas":
+    case "/garantia":
+    case "/mayoristas":
+    case "/trabajos":
+      sections.push({
+        title: "Cómo continuar",
+        body: (
+          <>
+            <p>
+              Esta superficie usa información pública del tenant. Para confirmar cobertura, garantías,
+              condiciones comerciales o postulaciones, seguí los canales ya publicados por la tienda.
+            </p>
+            {renderContactEntries(data.contactEntries)}
+          </>
+        ),
+      });
+      break;
+    case "/privacidad":
+    case "/terminos":
+      sections.push({
+        title: "Identidad del sitio",
+        body: (
+          <ul className="timeline-list">
+            <li>
+              <strong>Tienda:</strong> {data.displayName}
+            </li>
+            <li>
+              <strong>Host:</strong> {data.host}
+            </li>
+            <li>
+              <strong>Estado:</strong> {data.bootstrap?.tenant.status ?? "sin resolver"}
+            </li>
+          </ul>
+        ),
+      });
+      break;
+    case "/sucursales":
+      {
+        const publishedAddresses = data.contactEntries.filter((entry) => entry.label === "Dirección");
+        const hasPublishedAddress = publishedAddresses.length > 0;
+
+        sections.push({
+          title: hasPublishedAddress ? "Punto de atención publicado" : "Canales de atención publicados",
+          body: renderContactEntries(hasPublishedAddress ? publishedAddresses : data.contactEntries),
+        });
+      }
+      break;
+    case "/preguntas-frecuentes":
+      sections.push({
+        title: "Preguntas frecuentes rápidas",
+        body: (
+          <ul className="timeline-list">
+            <li>
+              <strong>¿La tienda está operativa?</strong> {data.bootstrap?.tenant.status ?? "sin resolver"}.
+            </li>
+            <li>
+              <strong>¿Qué medios de pago se muestran?</strong>{" "}
+              {paymentMethods.length > 0 ? paymentMethods.join(", ") : "Todavía no publicados"}.
+            </li>
+            <li>
+              <strong>¿Cómo contacto al tenant?</strong>{" "}
+              {data.contactEntries.length > 0
+                ? "En los canales publicados en esta misma página."
+                : "Sin canales públicos aún."}
+            </li>
+          </ul>
+        ),
+      });
+      if (data.contactEntries.length > 0) {
+        sections.push({
+          title: "Canales publicados",
+          body: renderContactEntries(data.contactEntries),
+        });
+      }
+      break;
+    default:
+      sections.push({
+        title: "Canales útiles",
+        body: renderContactEntries(data.contactEntries),
+      });
+      break;
+  }
+
+  sections.push({
+    title: "Enlaces relacionados",
+    body: renderLinkList(relatedLinks),
+  });
+
+  return (
+    <div className="fallback-content">
+      {sections.map((section) => (
+        <article key={section.title} className="empty-state-card">
+          <h3>{section.title}</h3>
+          {section.body}
+        </article>
+      ))}
+    </div>
+  );
+}
+
 export async function InstitutionalPageShell({
   pathname,
   title,
   description,
   children,
 }: InstitutionalPageShellProps) {
-  const experience = await loadBootstrapExperience();
-  const host = experience.runtime.context.host;
-  const displayName = resolveTenantDisplayName(experience.bootstrap, host);
+  const data = await loadInstitutionalPageData(pathname);
 
   return (
     <>
       <PageIntro
         eyebrow="Información institucional"
-        title={`${title} · ${displayName}`}
+        title={`${title} · ${data.displayName}`}
         description={
           description ??
-          "Esta página muestra información institucional del tenant. El contenido final puede provenir del backend cuando el contrato de contenido esté disponible."
+          "Esta superficie usa el bootstrap público del tenant para mostrar información útil y verificable sin depender de placeholders hardcodeados."
         }
         aside={
           <div className="stat-stack">
             <div className="stat-box">
               <span>Host</span>
-              <strong className="mono">{host}</strong>
+              <strong className="mono">{data.host}</strong>
             </div>
             <div className="stat-box">
               <span>Estado tienda</span>
-              <strong>{experience.bootstrap?.tenant.status ?? "sin resolver"}</strong>
+              <strong>{data.bootstrap?.tenant.status ?? "sin resolver"}</strong>
             </div>
           </div>
         }
       />
 
       <SurfaceStateCard
-        shopStatus={experience.bootstrap?.tenant.status ?? null}
+        shopStatus={data.bootstrap?.tenant.status ?? null}
         surface="home"
         title="La tienda todavía no está abierta al tráfico público normal."
-        description="El bootstrap existe como contrato base, pero el `shopStatus` actual no habilita contenido institucional completo."
+        description="El storefront respeta el `shopStatus` del tenant también para sus superficies institucionales."
       />
 
-      <section className="institutional-content">{children}</section>
+      <section className="institutional-content">
+        {children ?? renderInstitutionalFallback(pathname, data)}
+      </section>
     </>
   );
 }

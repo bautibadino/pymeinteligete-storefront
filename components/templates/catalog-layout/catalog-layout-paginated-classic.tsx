@@ -1,5 +1,6 @@
 import type { CatalogLayoutModule } from "@/lib/modules/catalog-layout";
 import {
+  CatalogPagination,
   CatalogToolbar,
   EmptyCatalogState,
   FilterSidebar,
@@ -39,37 +40,7 @@ export function CatalogLayoutPaginatedClassic({ module }: { module: CatalogLayou
                   cardDisplayOptions={cardDisplayOptions}
                   columns={3}
                 />
-                <nav
-                  aria-label="Paginación"
-                  className="flex items-center justify-center gap-2 pt-4"
-                >
-                  <button
-                    disabled
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-line bg-panel text-sm text-muted disabled:opacity-50"
-                    aria-label="Página anterior"
-                  >
-                    ‹
-                  </button>
-                  <button
-                    aria-current="page"
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground"
-                  >
-                    1
-                  </button>
-                  <button className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-line bg-panel text-sm text-foreground hover:bg-panel-strong">
-                    2
-                  </button>
-                  <button className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-line bg-panel text-sm text-foreground hover:bg-panel-strong">
-                    3
-                  </button>
-                  <span className="text-sm text-muted">…</span>
-                  <button
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-line bg-panel text-sm text-foreground hover:bg-panel-strong"
-                    aria-label="Página siguiente"
-                  >
-                    ›
-                  </button>
-                </nav>
+                <CatalogPagination pageSize={perPage} />
               </>
             ) : (
               <EmptyCatalogState />

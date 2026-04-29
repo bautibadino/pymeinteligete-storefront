@@ -1,12 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   getEnabledSortedSections,
   shouldUsePresentation,
 } from "@/lib/presentation/render-utils";
 import { adaptSectionToModule } from "@/components/presentation/section-adapter";
+import { buildProductPresentationContext } from "@/app/(storefront)/producto/_lib/presentation-context";
 import type { Presentation, SectionInstance, SectionType } from "@/lib/types/presentation";
-import type { StorefrontBootstrap, StorefrontCatalogProduct } from "@/lib/storefront-api";
+import type {
+  StorefrontBootstrap,
+  StorefrontCatalogProduct,
+  StorefrontProductDetail,
+} from "@/lib/storefront-api";
 
 function buildSection<T extends SectionType = "hero">(
   overrides: Partial<SectionInstance<T>> = {},
@@ -40,6 +45,31 @@ function buildPresentation(overrides: Partial<Presentation> = {}): Presentation 
     ...overrides,
   };
 }
+
+function buildProductDetail(overrides: Partial<StorefrontProductDetail> = {}): StorefrontProductDetail {
+  return {
+    productId: "prod-detail-1",
+    slug: "cubierta-premium",
+    name: "Cubierta Premium",
+    description: "Cubierta radial de alto rendimiento.",
+    brand: "Hankook",
+    category: "neumaticos",
+    images: ["https://cdn.example.com/cubierta-premium.webp"],
+    price: {
+      amount: 461374,
+      currency: "ARS",
+      compareAt: 500000,
+    },
+    availability: {
+      available: true,
+      label: "Stock disponible",
+    },
+    ...overrides,
+  };
+}
+beforeEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("presentation renderer logic", () => {
   it("renderiza secciones ordenadas por el campo order", () => {
@@ -501,7 +531,7 @@ describe("presentation renderer logic", () => {
     expect(module.products[0]).toMatchObject({ id: "prod-neumatico", slug: "cubierta-premium" });
   });
 
-  it("categoryTile usa categoryId en el query cuando existe", () => {
+  it("categoryTile prioriza la ruta pública por slug cuando existe", () => {
     const module = adaptSectionToModule(
       buildSection({
         type: "categoryTile",
@@ -521,9 +551,98 @@ describe("presentation renderer logic", () => {
 
     expect(module.tiles).toEqual([
       {
-        href: "/catalogo?categoryId=cat-123",
+        href: "/catalogo/neumaticos",
         label: "Neumáticos",
       },
     ]);
+  });
+
+  it("adapta productDetail con producto actual y relacionados del contexto runtime", () => {
+    const product = buildProductDetail();
+    const relatedProducts = [
+      {
+        productId: "prod-rel-1",
+        slug: "cubierta-related",
+        name: "Cubierta Related",
+        category: { slug: "neumaticos", name: "Neumáticos" },
+        price: { amount: 390000, currency: "ARS" },
+        availability: { available: true, label: "Disponible" },
+        imageUrl: "https://cdn.example.com/cubierta-related.webp",
+        featured: true,
+      },
+    ] as unknown as StorefrontCatalogProduct[];
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "productDetail",
+        variant: "gallery-specs",
+        content: {
+          showRelated: true,
+          relatedSource: "category",
+          relatedLimit: 4,
+        },
+      }),
+      { product, products: relatedProducts },
+    ) as {
+      product?: {
+        id: string;
+        slug: string;
+        name: string;
+        href: string;
+        price: { amount: number; formatted: string };
+        images: Array<{ url: string }>;
+      };
+      relatedProducts?: Array<{ id: string; slug: string }>;
+    };
+
+    expect(module.product).toMatchObject({
+      id: "prod-detail-1",
+      slug: "cubierta-premium",
+      name: "Cubierta Premium",
+      href: "/producto/cubierta-premium",
+      price: { amount: 461374 },
+      images: [{ url: "https://cdn.example.com/cubierta-premium.webp" }],
+    });
+    expect(module.product?.price.formatted).toContain("$");
+    expect(module.relatedProducts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "prod-rel-1",
+          slug: "cubierta-related",
+        }),
+      ]),
+    );
+  });
+
+  it("arma contexto real de producto para PresentationRenderer", () => {
+    const product = buildProductDetail();
+    const relatedProducts = [
+      {
+        productId: "prod-rel-1",
+        slug: "cubierta-related",
+        name: "Cubierta Related",
+        category: { slug: "neumaticos", name: "Neumáticos" },
+        price: { amount: 390000, currency: "ARS" },
+        availability: { available: true, label: "Disponible" },
+        imageUrl: "https://cdn.example.com/cubierta-related.webp",
+        featured: true,
+      },
+    ] as unknown as StorefrontCatalogProduct[];
+    const context = buildProductPresentationContext({
+      bootstrap: { tenant: { status: "active" } } as StorefrontBootstrap,
+      product,
+      relatedProducts,
+      runtime: {
+        context: {
+          host: "acme.example.com",
+        },
+      },
+    });
+
+    expect(context).toMatchObject({
+      host: "acme.example.com",
+      product,
+      products: relatedProducts,
+    });
   });
 });

@@ -38,6 +38,7 @@ type CatalogExperience = BootstrapExperience & {
 
 type ProductExperience = BootstrapExperience & {
   product: StorefrontProductDetail | null;
+  relatedProducts: StorefrontCatalog["products"];
 };
 
 type CheckoutExperience = BootstrapExperience & {
@@ -204,20 +205,59 @@ export async function loadProductExperience(slug: string): Promise<ProductExperi
     return {
       ...base,
       product: null,
+      relatedProducts: [],
     };
   }
 
   try {
     const product = await getProduct(base.runtime.context, slug);
+    let relatedProducts: StorefrontCatalog["products"] = [];
+
+    if (product.category) {
+      try {
+        const categories = await getCategories(base.runtime.context);
+        const normalizedCategory = product.category.trim().toLowerCase().replace(/\s+/g, "-");
+        const matchingCategory = categories.find((category) => {
+          const normalizedSlug = category.slug.trim().toLowerCase();
+          const normalizedName = category.name.trim().toLowerCase().replace(/\s+/g, "-");
+
+          return normalizedSlug === normalizedCategory || normalizedName === normalizedCategory;
+        });
+
+        if (matchingCategory) {
+          const catalog = await getCatalog(base.runtime.context, {
+            categoryId: matchingCategory.categoryId,
+            pageSize: 13,
+          });
+          relatedProducts = catalog.products.filter((candidate) => candidate.slug !== product.slug);
+        }
+      } catch {
+        relatedProducts = [];
+      }
+    }
+
+    if (relatedProducts.length === 0 && product.brand) {
+      try {
+        const catalog = await getCatalog(base.runtime.context, {
+          brand: product.brand,
+          pageSize: 13,
+        });
+        relatedProducts = catalog.products.filter((candidate) => candidate.slug !== product.slug);
+      } catch {
+        relatedProducts = [];
+      }
+    }
 
     return {
       ...base,
       product,
+      relatedProducts,
     };
   } catch (error) {
     return {
       ...base,
       product: null,
+      relatedProducts: [],
       issues: [
         ...base.issues,
         normalizeApiError(error, "product", "No se pudo recuperar el detalle del producto."),

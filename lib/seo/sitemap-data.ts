@@ -16,6 +16,8 @@ export type TenantSitemapData = {
   issues: string[];
 };
 
+const SITEMAP_CATALOG_PAGE_SIZE = 500;
+
 async function safeFetch<T>(
   fetcher: () => Promise<T>,
   fallback: T,
@@ -31,6 +33,51 @@ async function safeFetch<T>(
 
     return { data: fallback, issue: `${issueLabel}:${message}` };
   }
+}
+
+async function fetchAllCatalogProducts(
+  input: Parameters<typeof getCatalog>[0],
+): Promise<{ products: StorefrontCatalogProduct[]; issues: string[] }> {
+  const issues: string[] = [];
+  const productsBySlug = new Map<string, StorefrontCatalogProduct>();
+  let page = 1;
+  let totalPages = 1;
+
+  while (page <= totalPages) {
+    const { data: catalog, issue } = await safeFetch(
+      () => getCatalog(input, { page, pageSize: SITEMAP_CATALOG_PAGE_SIZE }),
+      {
+        products: [],
+        pagination: { page, pageSize: SITEMAP_CATALOG_PAGE_SIZE, total: 0, totalPages: 0 },
+      },
+      `catalog:page=${page}`,
+    );
+
+    if (issue) {
+      issues.push(issue);
+      break;
+    }
+
+    for (const product of catalog.products ?? []) {
+      if (typeof product.slug === "string" && product.slug.trim().length > 0) {
+        productsBySlug.set(product.slug, product);
+      }
+    }
+
+    const nextTotalPages = catalog.pagination?.totalPages ?? 0;
+    totalPages = nextTotalPages > 0 ? nextTotalPages : page;
+
+    if ((catalog.products?.length ?? 0) === 0 || page >= totalPages) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  return {
+    products: [...productsBySlug.values()],
+    issues,
+  };
 }
 
 export const getTenantSitemapData = cache(async (): Promise<TenantSitemapData> => {
@@ -66,29 +113,21 @@ export const getTenantSitemapData = cache(async (): Promise<TenantSitemapData> =
     };
   }
 
-  const [{ data: categories, issue: categoriesIssue }, { data: catalog, issue: catalogIssue }] =
+  const [{ data: categories, issue: categoriesIssue }, catalogResult] =
     await Promise.all([
       safeFetch(() => getCategories(runtime.context), [], "categories"),
-      safeFetch(() => getCatalog(runtime.context, { pageSize: 500 }), { products: [], pagination: { page: 1, pageSize: 500, total: 0, totalPages: 0 } }, "catalog"),
+      fetchAllCatalogProducts(runtime.context),
     ]);
 
   if (categoriesIssue) {
     issues.push(categoriesIssue);
   }
 
-  if (catalogIssue) {
-    issues.push(catalogIssue);
-  }
-
-  // Solo incluir productos con slug definido (requerido para URL canónica)
-  const products = (catalog?.products ?? []).filter(
-    (product): product is StorefrontCatalogProduct & { slug: string } =>
-      typeof product.slug === "string" && product.slug.trim().length > 0,
-  );
+  issues.push(...catalogResult.issues);
 
   return {
     categories,
-    products,
+    products: catalogResult.products,
     issues,
   };
 });

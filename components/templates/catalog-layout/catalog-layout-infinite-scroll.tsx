@@ -1,5 +1,6 @@
 import type { CatalogLayoutModule } from "@/lib/modules/catalog-layout";
 import {
+  CatalogInfiniteNavigation,
   CatalogToolbar,
   EmptyCatalogState,
   FilterBar,
@@ -35,9 +36,7 @@ export function CatalogLayoutInfiniteScroll({ module }: { module: CatalogLayoutM
               cardDisplayOptions={cardDisplayOptions}
               columns={3}
             />
-            <div className="flex items-center justify-center py-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-line border-t-primary" />
-            </div>
+            <CatalogInfiniteNavigation pageSize={perPage} renderedCount={products.length} />
           </>
         ) : (
           <EmptyCatalogState />

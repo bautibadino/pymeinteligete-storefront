@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { canAccessCheckout } from "@/app/(storefront)/_lib/storefront-shell-data";
+import type { ManualPaymentSuccessSource } from "@/lib/checkout/manual-payment";
 import { resolveCheckoutStrategy } from "@/lib/checkout/strategy";
 import {
   buildFieldErrors,
@@ -33,7 +34,7 @@ export type CheckoutActionState = {
 export type ManualPaymentActionState = {
   status: "idle" | "success" | "error";
   message?: string;
-};
+} & Partial<ManualPaymentSuccessSource>;
 
 export const initialCheckoutActionState: CheckoutActionState = {
   status: "idle",
@@ -244,11 +245,19 @@ export async function submitManualPaymentAction(
   const runtime = await getStorefrontRuntimeSnapshot();
 
   try {
-    await postManualPayment(runtime.context, token, { methodId });
+    const manualPayment = await postManualPayment(runtime.context, token, { methodId });
 
     return {
       status: "success",
-      message: "Pago manual iniciado. Seguí las instrucciones que te enviaremos para completar la transferencia.",
+      message: "Seguí estas instrucciones para completar el pago manual de la orden.",
+      paymentAttemptId: manualPayment.paymentAttemptId,
+      orderId: manualPayment.orderId,
+      orderToken: manualPayment.orderToken,
+      amount: manualPayment.amount,
+      methodDisplayName: manualPayment.methodDisplayName,
+      ...(manualPayment.instructions ? { instructions: manualPayment.instructions } : {}),
+      ...(manualPayment.bankAccounts ? { bankAccounts: manualPayment.bankAccounts } : {}),
+      ...(manualPayment.contactInfo ? { contactInfo: manualPayment.contactInfo } : {}),
     };
   } catch (error) {
     if (error instanceof StorefrontApiError) {

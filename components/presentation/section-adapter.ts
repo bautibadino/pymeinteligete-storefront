@@ -4,8 +4,10 @@ import type { SectionInstance } from "@/lib/types/presentation";
 import {
   mapCategoriesToTiles,
   mapCatalogProductsToCardData,
+  mapProductDetailToData,
   mapPaymentMethodsToTrustItems,
   resolveStoreName,
+  selectRelatedProductsForDetail,
   selectProductsForGrid,
   type PresentationRenderContext,
 } from "@/components/presentation/render-context";
@@ -137,8 +139,26 @@ export function adaptSectionToModule(
 
     case "promoBand":
     case "richText":
-    case "productDetail":
       return { ...base, content };
+
+    case "productDetail": {
+      const relatedLimit =
+        typeof content.relatedLimit === "number" && Number.isFinite(content.relatedLimit)
+          ? content.relatedLimit
+          : 4;
+
+      return {
+        ...base,
+        content,
+        product: mapProductDetailToData(context?.product),
+        relatedProducts: selectRelatedProductsForDetail(
+          context?.product,
+          context?.products,
+          content.relatedSource as "category" | "brand" | "collection" | undefined,
+          relatedLimit,
+        ),
+      };
+    }
 
     case "header":
       return {

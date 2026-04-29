@@ -42,7 +42,7 @@ export function ProductDetailGallerySpecs({ module }: { module: ProductDetailMod
               </li>
               <li aria-hidden="true">/</li>
               <li>
-                <Link href={"/catalog" as Route} className="hover:text-foreground">
+                <Link href={"/catalogo" as Route} className="hover:text-foreground">
                   Catálogo
                 </Link>
               </li>

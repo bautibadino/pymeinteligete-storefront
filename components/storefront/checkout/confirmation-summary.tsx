@@ -25,6 +25,17 @@ function formatTotal(total: number | null | undefined): string {
   }).format(total);
 }
 
+function formatCreatedAt(createdAt: string | null | undefined): string {
+  if (!createdAt) {
+    return "Sin fecha informada";
+  }
+
+  return new Intl.DateTimeFormat("es-AR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(createdAt));
+}
+
 export function ConfirmationSummary({
   order,
   issue,
@@ -48,11 +59,16 @@ export function ConfirmationSummary({
   return (
     <section className="confirmation-summary">
       <div className="confirmation-hero">
-        <span className="eyebrow">Orden oficial creada</span>
-        <h3>La orden ya existe en PyMEInteligente.</h3>
+        <span className="eyebrow">{order.isPaid ? "Pago registrado" : "Orden registrada"}</span>
+        <h3>
+          {order.isPaid
+            ? "Tu pago ya figura acreditado para esta orden."
+            : "La orden quedó creada y ya podés seguir el estado desde esta confirmación."}
+        </h3>
         <p>
-          Esta confirmación consulta el estado actual del pedido usando el token firmado devuelto por
-          `postCheckout()`.
+          {order.isPaid
+            ? "Esta vista refleja el estado actual informado por PyMEInteligente para tu pedido."
+            : "Si todavía falta acreditar el pago, desde acá vas a ver el método disponible y las instrucciones reales devueltas por el backend."}
         </p>
       </div>
 
@@ -73,6 +89,14 @@ export function ConfirmationSummary({
           <span>Pago</span>
           <strong>{resolvePaymentStatusLabel(order)}</strong>
         </article>
+        <article className="confirmation-card">
+          <span>Creada</span>
+          <strong>{formatCreatedAt(order.createdAt)}</strong>
+        </article>
+        <article className="confirmation-card">
+          <span>Contacto</span>
+          <strong>{order.customer.email}</strong>
+        </article>
       </div>
 
       <div className="confirmation-detail">
@@ -83,10 +107,10 @@ export function ConfirmationSummary({
         <div className="checkout-section">
           <div className="checkout-section-header">
             <span className="eyebrow">Pago manual</span>
-            <h3>Completar el pago desde aquí</h3>
+            <h3>Completar el pago con un método disponible</h3>
             <p>
-              La orden todavía no está marcada como pagada. Si el tenant lo permite, podés registrar un
-              pago manual con uno de los métodos visibles.
+              La orden todavía no figura como pagada. Elegí un método habilitado y, si el backend devuelve
+              instrucciones, las vas a ver acá mismo para completar la operación.
             </p>
           </div>
           <ManualPaymentForm
