@@ -8,15 +8,5 @@ export async function generateMetadata() {
 }
 
 export default function PreguntasFrecuentesPage() {
-  return (
-    <InstitutionalPageShell pathname="/preguntas-frecuentes" title="Preguntas frecuentes">
-      <div className="fallback-content">
-        <h3>Preguntas frecuentes</h3>
-        <p>TODO: las preguntas frecuentes y sus respuestas deben venir del backend como módulo.</p>
-        <p>
-          Este fallback se muestra hasta que el contrato de contenido institucional esté disponible.
-        </p>
-      </div>
-    </InstitutionalPageShell>
-  );
+  return <InstitutionalPageShell pathname="/preguntas-frecuentes" title="Preguntas frecuentes" />;
 }
