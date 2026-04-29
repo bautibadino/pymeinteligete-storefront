@@ -8,12 +8,21 @@ import { getCategories, type StorefrontCategory } from "@/lib/storefront-api";
 
 type SearchParamsRecord = Record<string, string | string[] | undefined>;
 
+type CatalogRouteResolution = {
+  categories: StorefrontCategory[];
+  pathname: string;
+  query: ReturnType<typeof parseCatalogSearchParams>["query"];
+  selectedCategory: ReturnType<typeof parseCatalogSearchParams>["selectedCategory"];
+  categoryLookupFailed: boolean;
+};
+
 type CatalogRouteData = {
   categories: StorefrontCategory[];
   experience: Awaited<ReturnType<typeof loadCatalogExperience>>;
   pathname: string;
   query: ReturnType<typeof parseCatalogSearchParams>["query"];
   selectedCategory: ReturnType<typeof parseCatalogSearchParams>["selectedCategory"];
+  categoryLookupFailed: boolean;
 };
 
 function shouldResolveCategories(
@@ -30,6 +39,7 @@ function shouldResolveCategories(
 async function fetchCatalogCategories(): Promise<{
   base: Awaited<ReturnType<typeof loadBootstrapExperience>>;
   categories: StorefrontCategory[];
+  categoryLookupFailed: boolean;
 }> {
   const base = await loadBootstrapExperience();
 
@@ -37,6 +47,7 @@ async function fetchCatalogCategories(): Promise<{
     return {
       base,
       categories: [],
+      categoryLookupFailed: false,
     };
   }
 
@@ -46,45 +57,54 @@ async function fetchCatalogCategories(): Promise<{
     return {
       base,
       categories,
+      categoryLookupFailed: false,
     };
   } catch {
     return {
       base,
       categories: [],
+      categoryLookupFailed: true,
     };
   }
+}
+
+function buildCategoryFallbackPath(routeCategorySlug: string | undefined): string {
+  return routeCategorySlug ? `/catalogo/${encodeURIComponent(routeCategorySlug)}` : "/catalogo";
+}
+
+export async function resolveCatalogRoute(
+  searchParams: SearchParamsRecord,
+  routeCategorySlug?: string,
+): Promise<CatalogRouteResolution> {
+  const categoryResult = await fetchCatalogCategories();
+  const resolved = parseCatalogSearchParams(searchParams, categoryResult.categories, routeCategorySlug);
+  const categoryLookupFailed = shouldResolveCategories(searchParams, routeCategorySlug) && categoryResult.categoryLookupFailed;
+
+  return {
+    categories: categoryResult.categories,
+    pathname:
+      categoryLookupFailed && routeCategorySlug
+        ? buildCategoryFallbackPath(routeCategorySlug)
+        : resolved.pathname,
+    query: resolved.query,
+    selectedCategory: resolved.selectedCategory,
+    categoryLookupFailed,
+  };
 }
 
 export async function loadCatalogRouteData(
   searchParams: SearchParamsRecord,
   routeCategorySlug?: string,
 ): Promise<CatalogRouteData> {
-  if (!shouldResolveCategories(searchParams, routeCategorySlug)) {
-    const initialResolution = parseCatalogSearchParams(searchParams);
-    const [experience, categoryResult] = await Promise.all([
-      loadCatalogExperience(initialResolution.query),
-      fetchCatalogCategories(),
-    ]);
-    const resolved = parseCatalogSearchParams(searchParams, categoryResult.categories, routeCategorySlug);
-
-    return {
-      categories: categoryResult.categories,
-      experience,
-      pathname: resolved.pathname,
-      query: resolved.query,
-      selectedCategory: resolved.selectedCategory,
-    };
-  }
-
-  const { categories } = await fetchCatalogCategories();
-  const resolved = parseCatalogSearchParams(searchParams, categories, routeCategorySlug);
+  const resolved = await resolveCatalogRoute(searchParams, routeCategorySlug);
   const experience = await loadCatalogExperience(resolved.query);
 
   return {
-    categories,
+    categories: resolved.categories,
     experience,
     pathname: resolved.pathname,
     query: resolved.query,
     selectedCategory: resolved.selectedCategory,
+    categoryLookupFailed: resolved.categoryLookupFailed,
   };
 }

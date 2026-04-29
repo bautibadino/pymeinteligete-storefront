@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { loadCatalogRouteData } from "@/app/(storefront)/catalogo/_lib/catalog-data";
+import { loadCatalogRouteData, resolveCatalogRoute } from "@/app/(storefront)/catalogo/_lib/catalog-data";
 import { CatalogPageContent } from "@/components/storefront/catalog-page";
 import { buildTenantMetadata, getTenantSeoRequestContext, resolveTenantSeoSnapshotByRequest } from "@/lib/seo";
-import { parseCatalogSearchParams } from "@/lib/presentation/catalog-routing";
-import { getCategories } from "@/lib/storefront-api";
 
 type CatalogCategoryPageProps = {
   params: Promise<{ slug: string }>;
@@ -18,18 +16,9 @@ async function resolveCategoryMetadata(
 ) {
   const requestContext = await getTenantSeoRequestContext();
   const snapshot = await resolveTenantSeoSnapshotByRequest(requestContext);
+  const resolution = await resolveCatalogRoute(searchParams, slug);
 
-  try {
-    const categories = await getCategories(requestContext.resolvedHost);
-    const resolution = parseCatalogSearchParams(searchParams, categories, slug);
-
-    return { snapshot, resolution };
-  } catch {
-    return {
-      snapshot,
-      resolution: parseCatalogSearchParams(searchParams, [], slug),
-    };
-  }
+  return { snapshot, resolution };
 }
 
 export async function generateMetadata({
@@ -45,7 +34,7 @@ export async function generateMetadata({
   return buildTenantMetadata(snapshot, {
     pathname: resolution.pathname,
     title,
-    noIndex: !resolution.selectedCategory,
+    noIndex: !resolution.selectedCategory && !resolution.categoryLookupFailed,
   });
 }
 
@@ -56,7 +45,7 @@ export default async function CatalogCategoryPage({
   const [{ slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const routeData = await loadCatalogRouteData(resolvedSearchParams, slug);
 
-  if (!routeData.selectedCategory) {
+  if (!routeData.selectedCategory && !routeData.categoryLookupFailed) {
     notFound();
   }
 
