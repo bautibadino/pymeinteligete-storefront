@@ -30,12 +30,16 @@ export function buildContactEntries(contact?: StorefrontContact): ContactEntry[]
     return [];
   }
 
+  const normalizedPhoneHref = contact.phone
+    ? contact.phone.trim().replace(/(?!^\+)\D/g, "")
+    : null;
+
   return [
     contact.email
       ? { label: "Email", value: contact.email, href: `mailto:${contact.email}` }
       : null,
     contact.phone
-      ? { label: "Teléfono", value: contact.phone, href: `tel:${contact.phone}` }
+      ? { label: "Teléfono", value: contact.phone, href: `tel:${normalizedPhoneHref}` }
       : null,
     contact.whatsapp
       ? {

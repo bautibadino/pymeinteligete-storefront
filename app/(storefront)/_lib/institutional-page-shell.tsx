@@ -146,12 +146,15 @@ function renderInstitutionalFallback(
       });
       break;
     case "/sucursales":
-      sections.push({
-        title: "Punto de atención publicado",
-        body: renderContactEntries(
-          data.contactEntries.filter((entry) => entry.label === "Dirección"),
-        ),
-      });
+      {
+        const publishedAddresses = data.contactEntries.filter((entry) => entry.label === "Dirección");
+        const hasPublishedAddress = publishedAddresses.length > 0;
+
+        sections.push({
+          title: hasPublishedAddress ? "Punto de atención publicado" : "Canales de atención publicados",
+          body: renderContactEntries(hasPublishedAddress ? publishedAddresses : data.contactEntries),
+        });
+      }
       break;
     case "/preguntas-frecuentes":
       sections.push({
@@ -167,11 +170,19 @@ function renderInstitutionalFallback(
             </li>
             <li>
               <strong>¿Cómo contacto al tenant?</strong>{" "}
-              {data.contactEntries.length > 0 ? "Desde los canales publicados abajo." : "Sin canales públicos aún."}
+              {data.contactEntries.length > 0
+                ? "En los canales publicados en esta misma página."
+                : "Sin canales públicos aún."}
             </li>
           </ul>
         ),
       });
+      if (data.contactEntries.length > 0) {
+        sections.push({
+          title: "Canales publicados",
+          body: renderContactEntries(data.contactEntries),
+        });
+      }
       break;
     default:
       sections.push({

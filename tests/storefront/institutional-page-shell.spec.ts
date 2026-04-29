@@ -25,7 +25,7 @@ describe("institutional page shell helpers", () => {
       {
         label: "Teléfono",
         value: "+54 351 555 0101",
-        href: "tel:+54 351 555 0101",
+        href: "tel:+543515550101",
       },
       {
         label: "WhatsApp",
