@@ -14,7 +14,16 @@ Variable esperada:
 - `x-storefront-version`
 - `x-request-id`
 
-## Rutas publicas esperadas
+## Rutas publicas storefront
+
+- `GET /`
+- `GET /catalogo`
+- `GET /catalogo/:slug`
+- `GET /producto/:slug`
+- `GET /checkout`
+- `GET /orden/:token`
+
+## Endpoints API esperados
 
 - `GET /api/storefront/v1/bootstrap`
 - `GET /api/storefront/v1/catalog`
@@ -35,4 +44,3 @@ La autenticacion cambia segun el caso:
 - lectura publica: host
 - recursos puntuales: token firmado
 - admin ERP: sesion/JWT del backend principal
-
