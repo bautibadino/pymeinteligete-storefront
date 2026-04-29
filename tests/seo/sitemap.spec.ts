@@ -50,8 +50,8 @@ describe("buildTenantSitemap", () => {
     ]);
     const urls = result.map((entry) => entry.url);
 
-    expect(urls).toContain("https://acme.example.com/catalogo?category=autos");
-    expect(urls).not.toContain("https://acme.example.com/catalogo?category=");
+    expect(urls).toContain("https://acme.example.com/catalogo/autos");
+    expect(urls).not.toContain("https://acme.example.com/catalogo/");
   });
 
   it("incluye productos con slug", () => {

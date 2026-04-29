@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { buildCanonicalUrl } from "@/lib/seo/canonical";
+import { buildCategoryCatalogHref } from "@/lib/presentation/catalog-routing";
 import type { TenantSeoSnapshot } from "@/lib/seo/types";
 import type { StorefrontCategory, StorefrontCatalogProduct } from "@/lib/storefront-api";
 
@@ -32,7 +33,7 @@ function buildCategorySitemapEntries(
       typeof category.slug === "string" && category.slug.trim().length > 0,
     )
     .map((category) => ({
-      url: buildCanonicalUrl(baseUrl, `/catalogo?category=${encodeURIComponent(category.slug)}`),
+      url: buildCanonicalUrl(baseUrl, buildCategoryCatalogHref(category)),
       changeFrequency: "weekly",
       priority: 0.6,
     }));

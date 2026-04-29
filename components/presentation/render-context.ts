@@ -9,6 +9,7 @@ import type {
   ProductCardData,
   ProductCardInstallments,
 } from "@/lib/templates/product-card-catalog";
+import { buildCategoryCatalogHref as buildCategoryCatalogHrefInternal } from "@/lib/presentation/catalog-routing";
 import type { ProductGridSource } from "@/lib/modules/product-grid";
 import type { CategoryTileItem } from "@/lib/modules/category-tile";
 import type { TrustBarContent } from "@/lib/modules/trust-bar";
@@ -414,16 +415,16 @@ export function mapCatalogProductsToCardData(
     .slice(0, limit);
 }
 
-export function buildCategoryCatalogHref(category: StorefrontCategory): string {
-  return category.categoryId ? `/catalogo?categoryId=${encodeURIComponent(category.categoryId)}` : "/catalogo";
-}
-
 export function mapCategoriesToTiles(categories: StorefrontCategory[] | undefined): CategoryTileItem[] {
   return (categories ?? []).map((category) => ({
     label: category.name,
-    href: buildCategoryCatalogHref(category),
+    href: buildCategoryCatalogHrefInternal(category),
     ...(category.imageUrl ? { imageUrl: category.imageUrl } : {}),
   }));
+}
+
+export function buildCategoryCatalogHref(category: StorefrontCategory): string {
+  return buildCategoryCatalogHrefInternal(category);
 }
 
 export function mapPaymentMethodsToTrustItems(

@@ -501,7 +501,7 @@ describe("presentation renderer logic", () => {
     expect(module.products[0]).toMatchObject({ id: "prod-neumatico", slug: "cubierta-premium" });
   });
 
-  it("categoryTile usa categoryId en el query cuando existe", () => {
+  it("categoryTile prioriza la ruta pública por slug cuando existe", () => {
     const module = adaptSectionToModule(
       buildSection({
         type: "categoryTile",
@@ -521,7 +521,7 @@ describe("presentation renderer logic", () => {
 
     expect(module.tiles).toEqual([
       {
-        href: "/catalogo?categoryId=cat-123",
+        href: "/catalogo/neumaticos",
         label: "Neumáticos",
       },
     ]);

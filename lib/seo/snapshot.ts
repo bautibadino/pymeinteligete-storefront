@@ -11,20 +11,21 @@ import { getStringValue, pickFirstString } from "@/lib/seo/utils";
 function resolveTenantTitle(bootstrap: StorefrontBootstrap | null, host: string): string {
   return (
     pickFirstString(
-      getStringValue(bootstrap?.seo, "title"),
-      getStringValue(bootstrap?.branding, "name"),
+      getStringValue(bootstrap?.seo, "defaultTitle"),
+      getStringValue(bootstrap?.branding, "storeName"),
       getStringValue(bootstrap?.tenant, "displayName"),
+      getStringValue(bootstrap?.tenant, "tenantSlug"),
       host,
     ) ?? host
   );
 }
 
 function resolveTenantDescription(bootstrap: StorefrontBootstrap | null): string | null {
-  return pickFirstString(getStringValue(bootstrap?.seo, "description"));
+  return pickFirstString(getStringValue(bootstrap?.seo, "defaultDescription"));
 }
 
 function resolveTenantOgImageUrl(bootstrap: StorefrontBootstrap | null): string | null {
-  return pickFirstString(getStringValue(bootstrap?.seo, "ogImageUrl"));
+  return pickFirstString(getStringValue(bootstrap?.seo, "ogImage"));
 }
 
 function resolveTenantFaviconUrl(bootstrap: StorefrontBootstrap | null): string | null {
