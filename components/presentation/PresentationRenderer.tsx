@@ -87,8 +87,17 @@ export function PresentationGlobalHeader({
   const Component = resolveHeaderTemplate(header.variant);
   const moduleData = adaptSectionToModule(header, context);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return <Component module={moduleData as any} />;
+  return (
+    <div
+      className="presentation-renderer-global"
+      data-section-id={header.id}
+      data-section-type={header.type}
+      data-section-scope="global"
+    >
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      <Component module={moduleData as any} />
+    </div>
+  );
 }
 
 export function PresentationGlobalAnnouncementBar({
@@ -104,8 +113,17 @@ export function PresentationGlobalAnnouncementBar({
   const Component = resolveAnnouncementBarTemplate(bar.variant);
   const moduleData = adaptSectionToModule(bar, context);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return <Component module={moduleData as any} />;
+  return (
+    <div
+      className="presentation-renderer-global"
+      data-section-id={bar.id}
+      data-section-type={bar.type}
+      data-section-scope="global"
+    >
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      <Component module={moduleData as any} />
+    </div>
+  );
 }
 
 export function PresentationGlobalFooter({
@@ -121,8 +139,17 @@ export function PresentationGlobalFooter({
   const Component = resolveFooterTemplate(footer.variant);
   const moduleData = adaptSectionToModule(footer, context);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return <Component module={moduleData as any} />;
+  return (
+    <div
+      className="presentation-renderer-global"
+      data-section-id={footer.id}
+      data-section-type={footer.type}
+      data-section-scope="global"
+    >
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      <Component module={moduleData as any} />
+    </div>
+  );
 }
 
 /**

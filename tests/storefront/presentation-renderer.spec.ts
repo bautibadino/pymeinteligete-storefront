@@ -151,6 +151,38 @@ describe("presentation renderer logic", () => {
     );
   });
 
+  it("expone globals como secciones seleccionables para la preview del editor", () => {
+    const presentation = buildPresentation({
+      globals: {
+        announcementBar: buildSection({
+          id: "ann-global-1",
+          type: "announcementBar",
+          variant: "scroll",
+          enabled: true,
+          content: { messages: ["Uno", "Dos"] },
+        }),
+        header: buildSection({ id: "hdr-global-1", type: "header", variant: "minimal", enabled: true }),
+        footer: buildSection({ id: "ftr-global-1", type: "footer", variant: "minimal", enabled: true }),
+      },
+      pages: {
+        home: {
+          sections: [buildSection({ id: "hero-1", type: "hero", variant: "split", order: 0 })],
+        },
+        catalog: { sections: [] },
+        product: { sections: [] },
+      },
+    });
+
+    const html = renderToStaticMarkup(
+      createElement(PresentationRenderer, { presentation, page: "home" }),
+    );
+
+    expect(html).toContain('data-section-id="ann-global-1"');
+    expect(html).toContain('data-section-scope="global"');
+    expect(html).toContain('data-section-id="hdr-global-1"');
+    expect(html).toContain('data-section-id="ftr-global-1"');
+  });
+
   it("normaliza announcementBar a static cuando llega una variante desconocida", () => {
     const module = adaptSectionToModule(
       buildSection({
