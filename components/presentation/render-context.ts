@@ -3,12 +3,14 @@ import type {
   StorefrontCatalogProduct,
   StorefrontCategory,
   StorefrontPaymentMethod,
+  StorefrontProductDetail,
 } from "@/lib/storefront-api";
 import type {
   ProductCardBadge,
   ProductCardData,
   ProductCardInstallments,
 } from "@/lib/templates/product-card-catalog";
+import type { ProductDetailData } from "@/lib/modules/product-detail";
 import { buildCategoryCatalogHref as buildCategoryCatalogHrefInternal } from "@/lib/presentation/catalog-routing";
 import type { ProductGridSource } from "@/lib/modules/product-grid";
 import type { CategoryTileItem } from "@/lib/modules/category-tile";
@@ -17,6 +19,7 @@ import type { TrustBarContent } from "@/lib/modules/trust-bar";
 export type PresentationRenderContext = {
   bootstrap?: StorefrontBootstrap | null;
   host?: string;
+  product?: StorefrontProductDetail | null;
   products?: StorefrontCatalogProduct[];
   categories?: StorefrontCategory[];
   paymentMethods?: StorefrontPaymentMethod[];
@@ -341,6 +344,41 @@ export function mapCatalogProductToCardData(product: StorefrontCatalogProduct): 
   };
 }
 
+export function mapProductDetailToData(
+  product: StorefrontProductDetail | null | undefined,
+): ProductDetailData | undefined {
+  if (!product) {
+    return undefined;
+  }
+
+  const record = product as ProductRecord;
+  const id = product.productId || readProductId(record) || product.slug;
+  const amount = readPriceAmount(record);
+  const currency = readCurrency(record);
+  const compareAt = readCompareAtPrice(record);
+  const imageUrls = Array.isArray(product.images) ? product.images.filter((image): image is string => Boolean(readString(image))) : [];
+  const stock = resolveProductStock(record);
+
+  return {
+    id,
+    name: product.name,
+    slug: product.slug,
+    ...(product.brand ? { brand: product.brand } : {}),
+    ...(product.description ? { description: product.description } : {}),
+    images: imageUrls.map((url) => ({ url })),
+    price: {
+      amount: amount ?? 0,
+      currency,
+      formatted: formatMoney(amount, currency),
+    },
+    ...(typeof compareAt === "number"
+      ? { compareAtPrice: { amount: compareAt, formatted: formatMoney(compareAt, currency) } }
+      : {}),
+    ...(stock ? { stock } : {}),
+    href: `/producto/${encodeURIComponent(product.slug)}`,
+  };
+}
+
 function matchesCategory(product: StorefrontCatalogProduct, categorySlug: string): boolean {
   const record = product as ProductRecord;
   const category = readProductCategoryMatchValue(record)?.toLowerCase();
@@ -413,6 +451,47 @@ export function mapCatalogProductsToCardData(
     .map(mapCatalogProductToCardData)
     .filter((product): product is ProductCardData => product !== null)
     .slice(0, limit);
+}
+
+function matchesBrand(product: StorefrontCatalogProduct, brand: string): boolean {
+  const productBrand = readProductBrand(product as ProductRecord)?.toLowerCase();
+  return Boolean(productBrand && productBrand === brand.toLowerCase());
+}
+
+export function selectRelatedProductsForDetail(
+  product: StorefrontProductDetail | null | undefined,
+  products: StorefrontCatalogProduct[] | undefined,
+  relatedSource: "category" | "brand" | "collection" | undefined,
+  limit = 4,
+): ProductCardData[] {
+  if (!product || !products || products.length === 0 || !relatedSource) {
+    return [];
+  }
+
+  const currentSlug = product.slug;
+  const currentId = product.productId;
+  const sourceProducts = products.filter(
+    (candidate) => candidate.slug !== currentSlug && candidate.productId !== currentId,
+  );
+
+  let selected = sourceProducts;
+
+  if (relatedSource === "category" && product.category) {
+    selected = sourceProducts.filter((candidate) => matchesCategory(candidate, product.category!));
+  }
+
+  if (relatedSource === "brand" && product.brand) {
+    selected = sourceProducts.filter((candidate) => matchesBrand(candidate, product.brand!));
+  }
+
+  if (relatedSource === "collection") {
+    selected = [];
+  }
+
+  return selected
+    .slice(0, limit)
+    .map(mapCatalogProductToCardData)
+    .filter((candidate): candidate is ProductCardData => candidate !== null);
 }
 
 export function mapCategoriesToTiles(categories: StorefrontCategory[] | undefined): CategoryTileItem[] {

@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { Metadata } from "next";
 import {
   canBrowseCatalog,
@@ -8,6 +9,7 @@ import { PresentationRenderer } from "@/components/presentation/PresentationRend
 import { PreviewBridge } from "@/components/presentation/PreviewBridge";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
 import { mapCatalogProductToCardData } from "@/components/presentation/render-context";
+import { buildProductPresentationContext } from "@/app/(storefront)/producto/_lib/presentation-context";
 import { shouldUsePresentation } from "@/lib/presentation/render-utils";
 import {
   buildTenantMetadata,
@@ -63,19 +65,20 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   if (usePresentation) {
     return (
-      <>
+      <Fragment>
         {hasPreview ? <PreviewBridge /> : null}
         <PresentationRenderer
           presentation={experience.bootstrap!.presentation!}
           page="product"
           includeGlobals={false}
+          context={buildProductPresentationContext(experience)}
         />
-      </>
+      </Fragment>
     );
   }
 
   return (
-    <>
+    <Fragment>
       <SurfaceStateCard
         shopStatus={experience.bootstrap?.tenant.status ?? null}
         surface="product"
@@ -85,6 +88,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <ProductDetailPanel product={experience.product} />
 
       {hasPreview ? <PreviewBridge /> : null}
-    </>
+    </Fragment>
   );
 }
