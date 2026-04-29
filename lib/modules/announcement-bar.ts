@@ -100,13 +100,30 @@ function readString(value: unknown): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+function readTextLikeValue(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    return readString(value);
+  }
+
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  return (
+    readString(value.text) ??
+    readString(value.label) ??
+    readString(value.title) ??
+    readString(value.message)
+  );
+}
+
 function readStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) {
     return undefined;
   }
 
   const items = value
-    .map((item) => readString(item))
+    .map((item) => readTextLikeValue(item))
     .filter((item): item is string => Boolean(item));
 
   return items.length > 0 ? items : undefined;
@@ -220,16 +237,16 @@ function normalizeBadgeItems(value: unknown): AnnouncementBarBadgeItem[] {
       }
 
       const icon = readString(item.icon);
-      const label = readString(item.label);
-      if (!icon || !label) {
+      const label = readString(item.label) ?? readString(item.title) ?? readString(item.text);
+      if (!label) {
         return null;
       }
 
       return {
-        icon,
+        icon: icon ?? "badge-check",
         label,
         ...withDefinedProperties({
-          description: readString(item.description),
+          description: readString(item.description) ?? readString(item.subtitle),
         }),
       } satisfies AnnouncementBarBadgeItem;
     })

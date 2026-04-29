@@ -65,6 +65,34 @@ describe("normalizeAnnouncementBarModule", () => {
     expect(module.separator).toBe("·");
   });
 
+  it("acepta mensajes legacy como object-list en scroll y static", () => {
+    const scrollModule = normalizeAnnouncementBarModule(
+      buildAnnouncementSection({
+        variant: "scroll",
+        content: {
+          messages: [{ text: "Promo 1" }, { text: "Promo 2" }],
+        },
+      }),
+    );
+
+    const staticModule = normalizeAnnouncementBarModule(
+      buildAnnouncementSection({
+        variant: "static",
+        content: {
+          message: "Promo vigente",
+          rotatingMessages: [{ text: "6 cuotas" }, { text: "envío 24 hs" }],
+        },
+      }),
+    );
+
+    if (scrollModule.variant !== "scroll" || staticModule.variant !== "static") {
+      throw new Error("Se esperaba normalización estable para variantes scroll y static");
+    }
+
+    expect(scrollModule.messages).toEqual(["Promo 1", "Promo 2"]);
+    expect(staticModule.rotatingMessages).toEqual(["6 cuotas", "envío 24 hs"]);
+  });
+
   it("acepta microcopy adicional en badges", () => {
     const module = normalizeAnnouncementBarModule(
       buildAnnouncementSection({
@@ -92,6 +120,32 @@ describe("normalizeAnnouncementBarModule", () => {
       icon: "shield",
       label: "Garantía oficial",
       description: "marcas homologadas",
+    });
+  });
+
+  it("acepta badges legacy con title/subtitle y default icon", () => {
+    const module = normalizeAnnouncementBarModule(
+      buildAnnouncementSection({
+        variant: "badges",
+        content: {
+          items: [
+            {
+              title: "Compra protegida",
+              subtitle: "soporte postventa",
+            },
+          ],
+        },
+      }),
+    );
+
+    if (module.variant !== "badges") {
+      throw new Error("Se esperaba variant badges");
+    }
+
+    expect(module.items[0]).toEqual({
+      icon: "badge-check",
+      label: "Compra protegida",
+      description: "soporte postventa",
     });
   });
 });

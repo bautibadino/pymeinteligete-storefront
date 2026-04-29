@@ -1,4 +1,5 @@
 import type { AnnouncementBarModule } from "@/lib/modules/announcement-bar";
+import { themeTypographyStyles } from "@/lib/theme/typography";
 import { cn } from "@/lib/utils/cn";
 
 import { AnnouncementBarFrame, resolveAnnouncementBarPalette } from "@/components/templates/announcement-bar/announcement-bar-frame";
@@ -41,7 +42,7 @@ export function AnnouncementBarScroll({ module }: { module: AnnouncementBarModul
     >
       {eyebrow ? (
         <span
-          className="hidden shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] lg:inline-flex"
+          className={themeTypographyStyles.kicker("hidden shrink-0 rounded-full border px-2.5 py-1 text-[10px] lg:inline-flex")}
           style={palette.chip}
         >
           {eyebrow}
@@ -74,7 +75,7 @@ export function AnnouncementBarScroll({ module }: { module: AnnouncementBarModul
           {[...messages, ...messages].map((msg, idx) => (
             <span key={idx} className="flex items-center px-2.5 py-0.5">
               <span
-                className="inline-flex items-center gap-3 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] sm:text-[11px]"
+                className={themeTypographyStyles.label("inline-flex items-center gap-3 rounded-full border px-3 py-1.5 text-xs tracking-[0.16em] sm:text-[11px]")}
                 style={palette.chipSoft}
               >
                 {msg}

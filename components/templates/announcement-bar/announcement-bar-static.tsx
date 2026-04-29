@@ -4,6 +4,7 @@ import type { Route } from "next";
 
 import type { AnnouncementBarModule } from "@/lib/modules/announcement-bar";
 import { cn } from "@/lib/utils/cn";
+import { themeTypographyStyles } from "@/lib/theme/typography";
 
 import { AnnouncementBarFrame, resolveAnnouncementBarPalette } from "@/components/templates/announcement-bar/announcement-bar-frame";
 import { AnnouncementBarRotatingChip } from "@/components/templates/announcement-bar/announcement-bar-rotating-chip";
@@ -45,10 +46,10 @@ export function AnnouncementBarStatic({ module }: { module: AnnouncementBarModul
       ) : null}
 
       <div className="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-x-3 gap-y-2 text-center sm:justify-start sm:text-left">
-        <span className="text-sm font-semibold tracking-[0.01em] sm:text-[0.95rem]">{message}</span>
+        <span className={themeTypographyStyles.label("text-sm tracking-[0.01em] normal-case sm:text-[0.95rem]")}>{message}</span>
         {detail ? (
           <span
-            className="hidden text-xs font-medium tracking-[0.12em] uppercase md:inline"
+            className={themeTypographyStyles.label("hidden text-xs tracking-[0.12em] md:inline")}
             style={palette.mutedText}
           >
             {detail}

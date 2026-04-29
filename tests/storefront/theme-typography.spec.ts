@@ -5,6 +5,8 @@ import {
   themeTypographySlotClass,
   themeTypographyStyles,
 } from "@/lib/theme";
+import { badgeVariants } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 
 describe("theme typography", () => {
   it("proyecta fontAccent en presentation theme y hereda body cuando falta", () => {
@@ -31,5 +33,10 @@ describe("theme typography", () => {
     expect(themeTypographySlotClass("accent")).toContain("--font-accent");
     expect(themeTypographyStyles.brand()).toContain("uppercase");
     expect(themeTypographyStyles.cardTitle()).toContain("font-semibold");
+  });
+
+  it("usa accent typography en surfaces compartidas del chrome", () => {
+    expect(buttonVariants()).toContain("--font-accent");
+    expect(badgeVariants()).toContain("--font-accent");
   });
 });

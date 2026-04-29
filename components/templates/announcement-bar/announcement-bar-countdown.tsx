@@ -6,6 +6,7 @@ import type { Route } from "next";
 import { TimerReset } from "lucide-react";
 
 import type { AnnouncementBarModule } from "@/lib/modules/announcement-bar";
+import { themeTypographyStyles } from "@/lib/theme/typography";
 import { cn } from "@/lib/utils/cn";
 
 import { AnnouncementBarFrame, resolveAnnouncementBarPalette } from "@/components/templates/announcement-bar/announcement-bar-frame";
@@ -63,7 +64,7 @@ export function AnnouncementBarCountdown({ module }: { module: AnnouncementBarMo
         dataTemplate="announcement-bar-countdown-completed"
         contentClassName="justify-center"
       >
-        <span className="text-sm font-semibold tracking-[0.02em]">{completedMessage}</span>
+        <span className={themeTypographyStyles.label("text-sm tracking-[0.02em] normal-case")}>{completedMessage}</span>
       </AnnouncementBarFrame>
     );
   }
@@ -88,7 +89,7 @@ export function AnnouncementBarCountdown({ module }: { module: AnnouncementBarMo
       <div className="flex min-w-0 flex-wrap items-center justify-center gap-3 sm:justify-start">
         {label ? (
           <span
-            className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em]"
+            className={themeTypographyStyles.kicker("inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px]")}
             style={palette.chip}
           >
             <TimerReset className="size-3" aria-hidden="true" />
@@ -96,7 +97,7 @@ export function AnnouncementBarCountdown({ module }: { module: AnnouncementBarMo
           </span>
         ) : null}
 
-        <span className="text-center text-sm font-semibold tracking-[0.01em] sm:text-left">{message}</span>
+        <span className={themeTypographyStyles.label("text-center text-sm tracking-[0.01em] normal-case sm:text-left")}>{message}</span>
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
@@ -104,7 +105,7 @@ export function AnnouncementBarCountdown({ module }: { module: AnnouncementBarMo
           {visibleSegments.map(({ label: segmentLabel, value }, idx) => (
             <span key={segmentLabel} className="flex items-baseline gap-1">
               <span className="font-heading text-base font-bold tabular-nums">{value}</span>
-              <span className="text-[10px] uppercase tracking-[0.18em]" style={palette.mutedText}>
+              <span className={themeTypographyStyles.label("text-[10px] tracking-[0.18em]")} style={palette.mutedText}>
                 {segmentLabel}
               </span>
               {idx < visibleSegments.length - 1 ? (

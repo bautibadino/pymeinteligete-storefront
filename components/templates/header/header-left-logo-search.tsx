@@ -5,6 +5,7 @@ import { Search, ShoppingCart, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { HeaderModule } from "@/lib/modules/header";
+import { themeTypographyStyles } from "@/lib/theme/typography";
 
 /**
  * Header Left Logo Search — logo a la izquierda, campo de búsqueda
@@ -66,7 +67,7 @@ export function HeaderLeftLogoSearch({ module }: { module: HeaderModule }) {
                 className="h-10 w-auto object-contain"
               />
             ) : (
-              <span className="font-heading text-xl font-bold text-foreground">
+              <span className={themeTypographyStyles.brand("text-xl font-bold text-foreground")}>
                 {logoAlt}
               </span>
             )}
@@ -90,7 +91,7 @@ export function HeaderLeftLogoSearch({ module }: { module: HeaderModule }) {
                   type="search"
                   placeholder={searchPlaceholder}
                   enterKeyHint="search"
-                  className="pointer-events-auto h-9 min-w-0 flex-1 border-0 bg-transparent px-0 py-0 text-foreground shadow-none ring-offset-transparent placeholder:text-muted focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className={themeTypographyStyles.label("pointer-events-auto h-9 min-w-0 flex-1 border-0 bg-transparent px-0 py-0 text-foreground shadow-none ring-offset-transparent placeholder:text-muted focus-visible:ring-0 focus-visible:ring-offset-0 normal-case tracking-[0.02em]")}
                 />
                 <Button
                   type="submit"
@@ -142,7 +143,7 @@ export function HeaderLeftLogoSearch({ module }: { module: HeaderModule }) {
                 <li key={link.href}>
                   <Link
                     href={link.href as Route}
-                    className="rounded-md px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:bg-panel hover:text-foreground"
+                    className={themeTypographyStyles.label("rounded-md px-3 py-1.5 text-sm text-muted transition-colors hover:bg-panel hover:text-foreground")}
                   >
                     {link.label}
                   </Link>
