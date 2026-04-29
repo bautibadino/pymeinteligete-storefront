@@ -7,6 +7,7 @@ export type TenantSeoRequestContext = {
   requestHost: string;
   resolvedHost: string;
   requestOrigin: URL;
+  tenantSlug?: string;
 };
 
 export type TenantSeoSnapshot = {

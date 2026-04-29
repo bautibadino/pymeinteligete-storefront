@@ -1,11 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { STOREFRONT_HEADERS } from "@/lib/contracts/storefront-v1";
 import {
   STOREFRONT_LEGACY_PREVIEW_HEADER,
   STOREFRONT_PREVIEW_COOKIE,
   STOREFRONT_PREVIEW_HEADER,
   STOREFRONT_PREVIEW_QUERY_PARAM,
+  STOREFRONT_PREVIEW_TENANT_QUERY_PARAM,
   normalizeStorefrontPreviewToken,
+  normalizeStorefrontTenantSlug,
 } from "@/lib/preview/storefront-preview";
 
 /**
@@ -18,6 +21,9 @@ export function middleware(request: NextRequest) {
   const queryPreviewToken = normalizeStorefrontPreviewToken(
     request.nextUrl.searchParams.get(STOREFRONT_PREVIEW_QUERY_PARAM),
   );
+  const queryTenantSlug = normalizeStorefrontTenantSlug(
+    request.nextUrl.searchParams.get(STOREFRONT_PREVIEW_TENANT_QUERY_PARAM),
+  );
   const cookiePreviewToken = normalizeStorefrontPreviewToken(
     request.cookies.get(STOREFRONT_PREVIEW_COOKIE)?.value,
   );
@@ -27,6 +33,10 @@ export function middleware(request: NextRequest) {
   if (previewToken) {
     requestHeaders.set(STOREFRONT_PREVIEW_HEADER, previewToken);
     requestHeaders.set(STOREFRONT_LEGACY_PREVIEW_HEADER, previewToken);
+  }
+
+  if (queryTenantSlug) {
+    requestHeaders.set(STOREFRONT_HEADERS.tenantSlug, queryTenantSlug);
   }
 
   const response = NextResponse.next({

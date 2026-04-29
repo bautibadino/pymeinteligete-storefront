@@ -36,7 +36,7 @@ export async function resolveTenantSeoSnapshotByRequest(
   requestContext: TenantSeoRequestContext,
 ): Promise<TenantSeoSnapshot> {
   const [{ bootstrap, issues }, env] = await Promise.all([
-    getBootstrapForSeo(requestContext.resolvedHost),
+    getBootstrapForSeo(requestContext),
     Promise.resolve(getServerEnvSnapshot()),
   ]);
   const canonicalBaseUrl = resolveCanonicalBaseUrl(bootstrap, requestContext);

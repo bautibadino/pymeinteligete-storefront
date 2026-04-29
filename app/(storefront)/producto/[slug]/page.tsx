@@ -35,7 +35,15 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   try {
-    const product = await getProduct(requestContext.resolvedHost, slug);
+    const storefrontInput = requestContext.tenantSlug
+      ? {
+          host: requestContext.resolvedHost,
+          requestId: `seo-${requestContext.tenantSlug}-product`,
+          storefrontVersion: "seo",
+          tenantSlug: requestContext.tenantSlug,
+        }
+      : requestContext.resolvedHost;
+    const product = await getProduct(storefrontInput, slug);
     const productCard = mapCatalogProductToCardData(product);
 
     return buildTenantMetadata(snapshot, {

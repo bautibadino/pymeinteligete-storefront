@@ -13,9 +13,18 @@ async function resolveCatalogMetadataPath(
   searchParams: Record<string, string | string[] | undefined>,
 ): Promise<ReturnType<typeof parseCatalogSearchParams>> {
   const requestContext = await getTenantSeoRequestContext();
+  const storefrontInput =
+    requestContext.tenantSlug
+      ? {
+          host: requestContext.resolvedHost,
+          requestId: `seo-${requestContext.tenantSlug}-categories`,
+          storefrontVersion: "seo",
+          tenantSlug: requestContext.tenantSlug,
+        }
+      : requestContext.resolvedHost;
 
   try {
-    const categories = await getCategories(requestContext.resolvedHost);
+    const categories = await getCategories(storefrontInput);
 
     return parseCatalogSearchParams(searchParams, categories);
   } catch {

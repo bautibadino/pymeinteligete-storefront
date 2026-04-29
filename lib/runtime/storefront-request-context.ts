@@ -2,10 +2,12 @@ import { headers } from "next/headers";
 
 import { STOREFRONT_TECHNICAL_NAME, STOREFRONT_VERSION } from "@/lib/config/storefront";
 import { getServerEnvSnapshot } from "@/lib/env/server-env";
+import { STOREFRONT_HEADERS } from "@/lib/contracts/storefront-v1";
 import {
   STOREFRONT_LEGACY_PREVIEW_HEADER,
   STOREFRONT_PREVIEW_HEADER,
   normalizeStorefrontPreviewToken,
+  normalizeStorefrontTenantSlug,
   readStorefrontPreviewTokenFromCookieHeader,
 } from "@/lib/preview/storefront-preview";
 import { createRequestId } from "@/lib/runtime/request-id";
@@ -32,6 +34,7 @@ export async function getStorefrontRuntimeSnapshot(): Promise<StorefrontRuntimeS
     normalizeStorefrontPreviewToken(headerStore.get(STOREFRONT_PREVIEW_HEADER)) ??
     normalizeStorefrontPreviewToken(headerStore.get(STOREFRONT_LEGACY_PREVIEW_HEADER)) ??
     readStorefrontPreviewTokenFromCookieHeader(headerStore.get("cookie"));
+  const tenantSlug = normalizeStorefrontTenantSlug(headerStore.get(STOREFRONT_HEADERS.tenantSlug));
 
   const context: StorefrontRequestContext = {
     host: resolveRequestHostFromHeaders(headerStore),
@@ -39,6 +42,7 @@ export async function getStorefrontRuntimeSnapshot(): Promise<StorefrontRuntimeS
     storefrontVersion:
       env.storefrontVersionOverride ??
       `${STOREFRONT_TECHNICAL_NAME}@${STOREFRONT_VERSION}`,
+    ...(tenantSlug ? { tenantSlug } : {}),
     ...(previewToken ? { previewToken } : {}),
   };
 

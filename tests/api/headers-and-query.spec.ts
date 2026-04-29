@@ -9,8 +9,10 @@ import {
   STOREFRONT_LEGACY_PREVIEW_HEADER,
   STOREFRONT_PREVIEW_COOKIE,
   STOREFRONT_PREVIEW_HEADER,
+  STOREFRONT_PREVIEW_TENANT_QUERY_PARAM,
   buildStorefrontPreviewCookieHeader,
   normalizeStorefrontPreviewToken,
+  normalizeStorefrontTenantSlug,
   readStorefrontPreviewTokenFromCookieHeader,
 } from "@/lib/preview/storefront-preview";
 
@@ -74,5 +76,12 @@ describe("storefront preview token", () => {
   it("usa x-preview-token como header primario y conserva el legacy", () => {
     expect(STOREFRONT_PREVIEW_HEADER).toBe("x-preview-token");
     expect(STOREFRONT_LEGACY_PREVIEW_HEADER).toBe("x-storefront-preview-token");
+  });
+
+  it("normaliza tenantSlug de preview y preserva el query param esperado", () => {
+    expect(STOREFRONT_PREVIEW_TENANT_QUERY_PARAM).toBe("tenantSlug");
+    expect(normalizeStorefrontTenantSlug("  BYM-demo  ")).toBe("bym-demo");
+    expect(normalizeStorefrontTenantSlug("bad/value")).toBeNull();
+    expect(normalizeStorefrontTenantSlug("")).toBeNull();
   });
 });
