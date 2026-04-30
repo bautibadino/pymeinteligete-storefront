@@ -7,31 +7,22 @@ import { cn } from "@/lib/utils/cn";
 
 import { AnnouncementBarFrame } from "@/components/templates/announcement-bar/announcement-bar-frame";
 
-const SPEED_INTERVAL_MS: Record<"slow" | "normal" | "fast", number> = {
-  slow: 4500,
-  normal: 3200,
-  fast: 2200,
-};
-
 /**
- * AnnouncementBarScroll — marquee horizontal con múltiples mensajes.
- *
- * Usa el keyframe `@keyframes ab-marquee` de `app/globals.css`.
- * Los mensajes se duplican para el loop continuo sin corte visual.
+ * AnnouncementBarRotating — Mensajes cambiando uno por uno
+ * 
+ * Un solo mensaje centrado que cambia cada X segundos.
+ * SIN chips. SIN pills. Solo texto plano centrado.
  */
-export function AnnouncementBarScroll({ module }: { module: AnnouncementBarModule }) {
-  if (module.variant !== "scroll") return null;
+export function AnnouncementBarRotating({ module }: { module: AnnouncementBarModule }) {
+  if (module.variant !== "rotating") return null;
 
-  const {
-    messages,
-    speed = "normal",
-    pauseOnHover = true,
-    appearance,
-  } = module;
+  const { messages, speed = "normal", motion, appearance } = module;
+  const intervalMs =
+    motion?.rotationIntervalMs ??
+    (speed === "fast" ? 2000 : speed === "slow" ? 5000 : 3500);
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
-
-  if (messages.length === 0) return null;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -43,45 +34,39 @@ export function AnnouncementBarScroll({ module }: { module: AnnouncementBarModul
 
   useEffect(() => {
     if (messages.length <= 1 || reducedMotion) return undefined;
-
     const timer = window.setInterval(() => {
       setActiveIndex((current) => (current + 1) % Math.max(messages.length, 1));
-    }, SPEED_INTERVAL_MS[speed]);
-
+    }, intervalMs);
     return () => window.clearInterval(timer);
-  }, [messages.length, pauseOnHover, reducedMotion, speed]);
+  }, [intervalMs, messages.length, reducedMotion]);
+
+  if (messages.length === 0) return null;
 
   return (
     <AnnouncementBarFrame
       appearance={appearance}
       role="region"
-      ariaLabel="Anuncios en desplazamiento"
-      dataTemplate="announcement-bar-scroll"
+      ariaLabel="Anuncios rotativos"
+      dataTemplate="announcement-bar-rotating"
       contentClassName="justify-center text-center"
     >
       <div className="relative mx-auto h-6 w-full max-w-3xl overflow-hidden">
         {messages.map((msg, idx) => (
           <span
-            key={`${msg}-${idx}`}
+            key={idx}
             className={cn(
               "absolute inset-0 flex w-full items-center justify-center px-4 text-center text-sm font-medium leading-tight transition-all duration-500 ease-out sm:text-[0.95rem]",
               reducedMotion ? undefined : "motion-safe:animate-in motion-safe:fade-in",
             )}
             style={{
-              transform: `translateX(${(idx - activeIndex) * 100}%)`,
+              transform: `translateY(${(idx - activeIndex) * 100}%)`,
               opacity: idx === activeIndex ? 1 : 0,
             }}
           >
-            <span>{msg}</span>
+            {msg}
           </span>
         ))}
       </div>
-
-      <ul className="sr-only">
-        {messages.map((msg, idx) => (
-          <li key={idx}>{msg}</li>
-        ))}
-      </ul>
     </AnnouncementBarFrame>
   );
 }

@@ -8,13 +8,13 @@
     <circle cx="15" cy="14" r="1.5"/>
   </g>
   <text x="52" y="43" font-family="system-ui,sans-serif" font-size="9" fill="#1f1a17" font-weight="500">Envío gratis</text>
-  <line x1="106" y1="30" x2="106" y2="50" stroke="#e8dfd3" stroke-width="1"/>
+  <text x="106" y="43" font-family="system-ui,sans-serif" font-size="9" fill="#d0c0ae" font-weight="500">•</text>
   <g transform="translate(116,32)" stroke="#8c4319" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9 1L2 4v6c0 4 4 7 7 8 3-1 7-4 7-8V4L9 1z"/>
     <polyline points="6,9 8,11 12,7"/>
   </g>
   <text x="138" y="43" font-family="system-ui,sans-serif" font-size="9" fill="#1f1a17" font-weight="500">Garantía oficial</text>
-  <line x1="212" y1="30" x2="212" y2="50" stroke="#e8dfd3" stroke-width="1"/>
+  <text x="212" y="43" font-family="system-ui,sans-serif" font-size="9" fill="#d0c0ae" font-weight="500">•</text>
   <g transform="translate(220,32)" stroke="#8c4319" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <rect x="1" y="3" width="16" height="12" rx="2"/>
     <line x1="1" y1="8" x2="17" y2="8"/>

@@ -21,6 +21,7 @@ export type AnnouncementBarTemplateId = AnnouncementBarVariant;
 
 export const ANNOUNCEMENT_BAR_TEMPLATE_IDS: readonly AnnouncementBarTemplateId[] = [
   "static",
+  "rotating",
   "scroll",
   "countdown",
   "badges",
@@ -77,22 +78,14 @@ export const ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS: Record<
 > = {
   static: {
     id: "static",
-    label: "Editorial fijo",
+    label: "Mensaje fijo",
     description:
-      "Mensaje principal con CTA y acentos rotativos opcionales. Ideal para promos siempre visibles arriba de todo.",
+      "Una sola línea centrada con CTA opcional. Ideal para comunicar una promo o aviso principal sin ruido visual.",
     bestFor: ["envío gratis", "promoción vigente", "aviso principal", "lanzamientos"],
     thumbnailUrl: "/template-thumbnails/announcement-bar-static.svg",
     contentSchema: z.object({
       variant: z.literal("static"),
       message: z.string().min(1, "El mensaje es obligatorio"),
-      eyebrow: z.string().min(1).optional(),
-      detail: z.string().min(1).optional(),
-      rotatingMessages: z.array(z.string().min(1)).max(6).optional(),
-      motion: z
-        .object({
-          rotationIntervalMs: z.number().int().positive().max(20000).optional(),
-        })
-        .optional(),
       cta: z
         .object({
           label: z.string().min(1),
@@ -104,16 +97,38 @@ export const ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS: Record<
     }),
   },
 
+  rotating: {
+    id: "rotating",
+    label: "Rotating",
+    description:
+      "Mensajes que rotan de a uno, centrados y sin chips. Sirve cuando necesitás varias promos en el mismo espacio.",
+    bestFor: ["múltiples promos", "mensajes secuenciales", "novedades", "top bar dinámica"],
+    thumbnailUrl: "/template-thumbnails/announcement-bar-rotating.svg",
+    contentSchema: z.object({
+      variant: z.literal("rotating"),
+      messages: z
+        .array(z.string().min(1))
+        .min(1, "Se requiere al menos un mensaje")
+        .max(6, "Máximo 6 mensajes"),
+      speed: z.enum(["slow", "normal", "fast"]).optional(),
+      motion: z
+        .object({
+          rotationIntervalMs: z.number().int().positive().max(20000).optional(),
+        })
+        .optional(),
+      appearance: announcementBarAppearanceSchema.optional(),
+    }),
+  },
+
   scroll: {
     id: "scroll",
     label: "Ticker horizontal",
     description:
-      "Marquee continuo con tratamiento más premium, pausado al hover y preparado para superficie fija o degradada.",
+      "Marquee continuo con mensajes en línea y separador plano. Mantiene el movimiento sin recurrir a pills o chips.",
     bestFor: ["múltiples promos", "cuotas + descuento + envíos", "top bar dinámica"],
     thumbnailUrl: "/template-thumbnails/announcement-bar-scroll.svg",
     contentSchema: z.object({
       variant: z.literal("scroll"),
-      eyebrow: z.string().min(1).optional(),
       messages: z
         .array(z.string().min(1))
         .min(1, "Se requiere al menos un mensaje"),
@@ -128,14 +143,13 @@ export const ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS: Record<
     id: "countdown",
     label: "Countdown",
     description:
-      "Cuenta regresiva con etiqueta de urgencia, CTA opcional y soporte de surface más expresiva.",
+      "Cuenta regresiva en línea, centrada y limpia, con CTA sutil para desktop.",
     bestFor: ["oferta por tiempo limitado", "flash sale", "promoción con vencimiento"],
     thumbnailUrl: "/template-thumbnails/announcement-bar-countdown.svg",
     contentSchema: z.object({
       variant: z.literal("countdown"),
-      label: z.string().min(1).optional(),
       message: z.string().min(1, "El mensaje es obligatorio"),
-      endsAt: z.string().min(1, "La fecha de fin es obligatoria"),
+      endsAt: z.string().datetime("La fecha de fin debe estar en formato ISO"),
       completedMessage: z.string().optional(),
       cta: z
         .object({
@@ -150,21 +164,18 @@ export const ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS: Record<
 
   badges: {
     id: "badges",
-    label: "Trust chips",
+    label: "Inline badges",
     description:
-      "Chips de confianza con íconos y soporte opcional para microcopy. Pensado para beneficios clave bien arriba.",
+      "Fila centrada de ícono más etiqueta, sin cápsulas ni bordes por item. Pensado para beneficios clave bien arriba.",
     bestFor: ["confianza", "beneficios clave", "envío/garantía/cuotas", "diferenciales"],
     thumbnailUrl: "/template-thumbnails/announcement-bar-badges.svg",
     contentSchema: z.object({
       variant: z.literal("badges"),
-      heading: z.string().min(1).optional(),
-      detail: z.string().min(1).optional(),
       items: z
         .array(
           z.object({
             icon: z.string().min(1),
             label: z.string().min(1),
-            description: z.string().min(1).optional(),
           }),
         )
         .min(1, "Se requiere al menos un badge")
@@ -178,6 +189,7 @@ export const ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS: Record<
 
 type ContentByVariant = {
   static: Extract<AnnouncementBarModule, { variant: "static" }>;
+  rotating: Extract<AnnouncementBarModule, { variant: "rotating" }>;
   scroll: Extract<AnnouncementBarModule, { variant: "scroll" }>;
   countdown: Extract<AnnouncementBarModule, { variant: "countdown" }>;
   badges: Extract<AnnouncementBarModule, { variant: "badges" }>;
@@ -190,17 +202,7 @@ type DefaultContentMap = {
 const DEFAULT_CONTENT: DefaultContentMap = {
   static: {
     variant: "static",
-    eyebrow: "Colección destacada",
-    message: "Comprá hoy con condiciones pensadas para mover stock rápido.",
-    detail: "beneficios activos",
-    rotatingMessages: [
-      "6 cuotas sin interés",
-      "envíos a todo el país",
-      "retiro en sucursal",
-    ],
-    motion: {
-      rotationIntervalMs: 3200,
-    },
+    message: "Comprá hoy con envío a todo el país y promociones activas.",
     appearance: {
       surface: "gradient",
       gradientFrom: "#111827",
@@ -214,6 +216,25 @@ const DEFAULT_CONTENT: DefaultContentMap = {
       variant: "primary",
     },
   },
+  rotating: {
+    variant: "rotating",
+    messages: [
+      "6 cuotas sin interés en productos seleccionados",
+      "Envíos a todo el país con seguimiento online",
+      "Retirá hoy mismo por sucursal",
+    ],
+    speed: "normal",
+    motion: {
+      rotationIntervalMs: 3200,
+    },
+    appearance: {
+      surface: "gradient",
+      gradientFrom: "#111827",
+      gradientVia: "#1d4ed8",
+      gradientTo: "#0f172a",
+      textColor: "#f8fafc",
+    },
+  },
   scroll: {
     variant: "scroll",
     messages: [
@@ -222,7 +243,6 @@ const DEFAULT_CONTENT: DefaultContentMap = {
       "Envíos a todo el país",
     ],
     speed: "normal",
-    eyebrow: "Actualizado hoy",
     separator: "•",
     pauseOnHover: true,
     appearance: {
@@ -235,7 +255,6 @@ const DEFAULT_CONTENT: DefaultContentMap = {
   },
   countdown: {
     variant: "countdown",
-    label: "Flash sale",
     message: "Precios especiales hasta agotar stock.",
     endsAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
     completedMessage: "La oferta ha finalizado.",
@@ -254,12 +273,10 @@ const DEFAULT_CONTENT: DefaultContentMap = {
   },
   badges: {
     variant: "badges",
-    heading: "Compra con respaldo",
-    detail: "Beneficios vigentes para cada pedido",
     items: [
-      { icon: "truck", label: "Envío a todo el país", description: "coordinado por sucursal" },
-      { icon: "shield", label: "Garantía oficial", description: "marcas homologadas" },
-      { icon: "credit-card", label: "6 cuotas sin interés", description: "según promoción" },
+      { icon: "truck", label: "Envío a todo el país" },
+      { icon: "shield", label: "Garantía oficial" },
+      { icon: "credit-card", label: "6 cuotas sin interés" },
     ],
     appearance: {
       surface: "solid",

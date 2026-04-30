@@ -83,6 +83,7 @@ import { resolveCatalogLayoutTemplateId, type CatalogLayoutTemplateId } from "@/
 // AnnouncementBar
 import { AnnouncementBarBadges } from "@/components/templates/announcement-bar/announcement-bar-badges";
 import { AnnouncementBarCountdown } from "@/components/templates/announcement-bar/announcement-bar-countdown";
+import { AnnouncementBarRotating } from "@/components/templates/announcement-bar/announcement-bar-rotating";
 import { AnnouncementBarScroll } from "@/components/templates/announcement-bar/announcement-bar-scroll";
 import { AnnouncementBarStatic } from "@/components/templates/announcement-bar/announcement-bar-static";
 import type { AnnouncementBarModule } from "@/lib/modules/announcement-bar";
@@ -304,6 +305,7 @@ export type AnnouncementBarTemplateComponent = ComponentType<{ module: Announcem
 
 export const ANNOUNCEMENT_BAR_TEMPLATES: Record<AnnouncementBarTemplateId, AnnouncementBarTemplateComponent> = {
   static: AnnouncementBarStatic,
+  rotating: AnnouncementBarRotating,
   scroll: AnnouncementBarScroll,
   countdown: AnnouncementBarCountdown,
   badges: AnnouncementBarBadges,

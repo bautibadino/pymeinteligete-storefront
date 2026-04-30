@@ -151,6 +151,27 @@ describe("presentation renderer logic", () => {
     );
   });
 
+  it("renderiza el template rotating cuando la global usa esa variante", () => {
+    const presentation = buildPresentation({
+      globals: {
+        announcementBar: buildSection({
+          type: "announcementBar",
+          variant: "rotating",
+          enabled: true,
+          content: { messages: ["Promo 1", "Promo 2"] },
+        }),
+        header: buildSection({ type: "header", variant: "minimal", enabled: true }),
+        footer: buildSection({ type: "footer", variant: "minimal", enabled: true }),
+      },
+    });
+
+    const html = renderToStaticMarkup(
+      createElement(PresentationRenderer, { presentation, page: "home" }),
+    );
+
+    expect(html).toContain('data-template="announcement-bar-rotating"');
+  });
+
   it("expone globals como secciones seleccionables para la preview del editor", () => {
     const presentation = buildPresentation({
       globals: {

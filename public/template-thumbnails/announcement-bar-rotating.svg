@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="80" viewBox="0 0 320 80" fill="none">
+  <rect width="320" height="80" rx="10" fill="#f4efe7"/>
+  <rect y="28" width="320" height="24" fill="#8c4319"/>
+  <path d="M33 37c2-4 6-6 11-6 7 0 12 5 12 12s-5 12-12 12c-5 0-9-2-11-6" stroke="#fffaf2" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M31 35v6h6" stroke="#fffaf2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="160" y="44" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#fffaf2" font-weight="600">6 cuotas sin interés</text>
+  <text x="12" y="70" font-family="system-ui,sans-serif" font-size="9" fill="#6f6259" font-weight="600">ROTATING</text>
+</svg>

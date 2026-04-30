@@ -1,31 +1,19 @@
-import { Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { Route } from "next";
 
 import type { AnnouncementBarModule } from "@/lib/modules/announcement-bar";
 import { cn } from "@/lib/utils/cn";
-import { themeTypographyStyles } from "@/lib/theme/typography";
 
 import { AnnouncementBarFrame, resolveAnnouncementBarPalette } from "@/components/templates/announcement-bar/announcement-bar-frame";
-import { AnnouncementBarRotatingChip } from "@/components/templates/announcement-bar/announcement-bar-rotating-chip";
 
 /**
- * AnnouncementBarStatic — mensaje fijo con CTA opcional y acentos rotativos.
+ * AnnouncementBarStatic — mensaje fijo, centrado y sin elementos laterales.
  */
 export function AnnouncementBarStatic({ module }: { module: AnnouncementBarModule }) {
   if (module.variant !== "static") return null;
 
-  const {
-    message,
-    eyebrow,
-    detail,
-    rotatingMessages = [],
-    motion,
-    cta,
-    appearance,
-  } = module;
+  const { message, cta, appearance } = module;
   const palette = resolveAnnouncementBarPalette(appearance);
-  const rotationIntervalMs = motion?.rotationIntervalMs ?? 3200;
 
   return (
     <AnnouncementBarFrame
@@ -33,43 +21,17 @@ export function AnnouncementBarStatic({ module }: { module: AnnouncementBarModul
       role="region"
       ariaLabel="Anuncio destacado"
       dataTemplate="announcement-bar-static"
-      contentClassName="gap-3 sm:gap-4"
+      contentClassName="justify-center gap-3 text-center sm:pr-28"
     >
-      {eyebrow ? (
-        <span
-          className="hidden shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] sm:inline-flex"
-          style={palette.chip}
-        >
-          <Sparkles className="size-3" aria-hidden="true" />
-          {eyebrow}
-        </span>
-      ) : null}
-
-      <div className="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-x-3 gap-y-2 text-center sm:justify-start sm:text-left">
-        <span className={themeTypographyStyles.label("text-sm tracking-[0.01em] normal-case sm:text-[0.95rem]")}>{message}</span>
-        {detail ? (
-          <span
-            className={themeTypographyStyles.label("hidden text-xs tracking-[0.12em] md:inline")}
-            style={palette.mutedText}
-          >
-            {detail}
-          </span>
-        ) : null}
-      </div>
-
-      {rotatingMessages.length > 0 ? (
-        <AnnouncementBarRotatingChip
-          intervalMs={rotationIntervalMs}
-          items={rotatingMessages}
-          style={palette.chipSoft}
-        />
-      ) : null}
+      <span className="max-w-3xl text-sm font-medium leading-tight sm:text-[0.95rem]">
+        {message}
+      </span>
 
       {cta ? (
         <Link
           href={cta.href as Route}
           className={cn(
-            "inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border px-3.5 py-1.5 text-xs font-semibold tracking-[0.14em] uppercase transition-transform duration-200 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
+            "inline-flex min-h-9 shrink-0 items-center justify-center px-2 py-1 text-xs font-semibold underline-offset-4 transition-opacity duration-200 hover:underline hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent sm:absolute sm:right-5 sm:top-1/2 sm:-translate-y-1/2",
             cta.variant === "link" ? "underline-offset-4 hover:underline" : undefined,
           )}
           style={

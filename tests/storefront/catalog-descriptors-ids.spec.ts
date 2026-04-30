@@ -16,7 +16,7 @@ import { TESTIMONIALS_TEMPLATE_IDS } from "@/lib/templates/testimonials-catalog"
 import { TRUST_BAR_TEMPLATE_IDS } from "@/lib/templates/trust-bar-catalog";
 
 const ERP_CATALOG_DESCRIPTOR_IDS = {
-  announcementBar: ["static", "scroll", "badges", "countdown"],
+  announcementBar: ["static", "rotating", "scroll", "badges", "countdown"],
   header: ["centered-logo", "left-logo-search", "sticky-compact", "minimal"],
   footer: ["four-columns", "minimal", "with-newsletter", "corporate"],
   hero: ["split", "workshop", "editorial", "commerce"],

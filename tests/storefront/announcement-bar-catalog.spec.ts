@@ -10,8 +10,8 @@ import {
 } from "@/lib/templates/announcement-bar-catalog";
 
 describe("Announcement bar catalog — template IDs", () => {
-  it("expone exactamente 4 variantes en el orden correcto", () => {
-    expect(ANNOUNCEMENT_BAR_TEMPLATE_IDS).toEqual(["static", "scroll", "countdown", "badges"]);
+  it("expone exactamente 5 variantes en el orden correcto", () => {
+    expect(ANNOUNCEMENT_BAR_TEMPLATE_IDS).toEqual(["static", "rotating", "scroll", "countdown", "badges"]);
   });
 
   it("el default es 'static'", () => {
@@ -68,6 +68,7 @@ describe("isAnnouncementBarTemplateId", () => {
 describe("resolveAnnouncementBarTemplateId", () => {
   it("devuelve el mismo id para inputs válidos", () => {
     expect(resolveAnnouncementBarTemplateId("static")).toBe("static");
+    expect(resolveAnnouncementBarTemplateId("rotating")).toBe("rotating");
     expect(resolveAnnouncementBarTemplateId("scroll")).toBe("scroll");
     expect(resolveAnnouncementBarTemplateId("countdown")).toBe("countdown");
     expect(resolveAnnouncementBarTemplateId("badges")).toBe("badges");
@@ -99,6 +100,14 @@ describe("defaultAnnouncementBarContent", () => {
     expect(content.appearance?.surface).toBe("gradient");
   });
 
+  it("devuelve contenido con mensajes para rotating", () => {
+    const content = defaultAnnouncementBarContent("rotating");
+    expect(content.variant).toBe("rotating");
+    expect(Array.isArray(content.messages)).toBe(true);
+    expect(content.messages.length).toBeGreaterThan(0);
+    expect(content.motion?.rotationIntervalMs).toBeGreaterThan(0);
+  });
+
   it("devuelve contenido con al menos un mensaje para scroll", () => {
     const content = defaultAnnouncementBarContent("scroll");
     expect(content.variant).toBe("scroll");
@@ -121,7 +130,6 @@ describe("defaultAnnouncementBarContent", () => {
     expect(content.variant).toBe("badges");
     expect(Array.isArray(content.items)).toBe(true);
     expect(content.items.length).toBeGreaterThan(0);
-    expect(content.heading).toBeDefined();
     for (const item of content.items) {
       expect(typeof item.icon).toBe("string");
       expect(typeof item.label).toBe("string");
@@ -135,7 +143,6 @@ describe("contentSchema — validación Zod por variante", () => {
     const result = schema.safeParse({
       variant: "static",
       message: "Envío gratis",
-      rotatingMessages: ["6 cuotas", "envío nacional"],
       appearance: {
         surface: "gradient",
         gradientFrom: "#111827",
@@ -148,6 +155,25 @@ describe("contentSchema — validación Zod por variante", () => {
   it("rechaza contenido estático sin message", () => {
     const schema = ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS.static.contentSchema;
     const result = schema.safeParse({ variant: "static" });
+    expect(result.success).toBe(false);
+  });
+
+  it("valida un contenido rotating correcto", () => {
+    const schema = ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS.rotating.contentSchema;
+    const result = schema.safeParse({
+      variant: "rotating",
+      messages: ["6 cuotas sin interés", "Envíos a todo el país"],
+      speed: "fast",
+      motion: {
+        rotationIntervalMs: 2400,
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rechaza rotating con messages vacío", () => {
+    const schema = ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS.rotating.contentSchema;
+    const result = schema.safeParse({ variant: "rotating", messages: [] });
     expect(result.success).toBe(false);
   });
 
@@ -176,7 +202,6 @@ describe("contentSchema — validación Zod por variante", () => {
     const schema = ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS.countdown.contentSchema;
     const result = schema.safeParse({
       variant: "countdown",
-      label: "Flash sale",
       message: "¡Oferta expira pronto!",
       endsAt: new Date(Date.now() + 3600_000).toISOString(),
       cta: {
@@ -191,9 +216,8 @@ describe("contentSchema — validación Zod por variante", () => {
     const schema = ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS.badges.contentSchema;
     const result = schema.safeParse({
       variant: "badges",
-      heading: "Beneficios",
       items: [
-        { icon: "truck", label: "Envío gratis", description: "a todo el país" },
+        { icon: "truck", label: "Envío gratis" },
         { icon: "shield", label: "Garantía oficial" },
       ],
     });

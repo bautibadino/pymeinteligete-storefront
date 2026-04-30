@@ -18,14 +18,12 @@ function buildAnnouncementSection(
 }
 
 describe("normalizeAnnouncementBarModule", () => {
-  it("normaliza la apariencia y la rotación del variant static", () => {
+  it("normaliza la apariencia del variant static y degrada rotatingMessages legacy a mensaje plano", () => {
     const module = normalizeAnnouncementBarModule(
       buildAnnouncementSection({
         variant: "static",
         content: {
-          message: "Promo vigente",
           rotatingMessages: ["6 cuotas", "envío 24 hs"],
-          motion: { rotationIntervalMs: 2800 },
           appearance: {
             gradientFrom: "#111827",
             gradientTo: "#1d4ed8",
@@ -40,9 +38,30 @@ describe("normalizeAnnouncementBarModule", () => {
     }
 
     expect(module.variant).toBe("static");
-    expect(module.rotatingMessages).toEqual(["6 cuotas", "envío 24 hs"]);
-    expect(module.motion?.rotationIntervalMs).toBe(2800);
+    expect(module.message).toBe("6 cuotas");
+    expect("rotatingMessages" in module).toBe(false);
     expect(module.appearance?.surface).toBe("gradient");
+  });
+
+  it("normaliza la nueva variante rotating", () => {
+    const module = normalizeAnnouncementBarModule(
+      buildAnnouncementSection({
+        variant: "rotating",
+        content: {
+          messages: ["Promo 1", "Promo 2"],
+          speed: "fast",
+          motion: { rotationIntervalMs: 2400 },
+        },
+      }),
+    );
+
+    if (module.variant !== "rotating") {
+      throw new Error("Se esperaba variant rotating");
+    }
+
+    expect(module.messages).toEqual(["Promo 1", "Promo 2"]);
+    expect(module.speed).toBe("fast");
+    expect(module.motion?.rotationIntervalMs).toBe(2400);
   });
 
   it("normaliza hover y separator para scroll", () => {
@@ -65,7 +84,7 @@ describe("normalizeAnnouncementBarModule", () => {
     expect(module.separator).toBe("·");
   });
 
-  it("acepta mensajes legacy como object-list en scroll y static", () => {
+  it("acepta mensajes legacy como object-list en scroll, static y rotating", () => {
     const scrollModule = normalizeAnnouncementBarModule(
       buildAnnouncementSection({
         variant: "scroll",
@@ -79,26 +98,38 @@ describe("normalizeAnnouncementBarModule", () => {
       buildAnnouncementSection({
         variant: "static",
         content: {
-          message: "Promo vigente",
           rotatingMessages: [{ text: "6 cuotas" }, { text: "envío 24 hs" }],
         },
       }),
     );
 
-    if (scrollModule.variant !== "scroll" || staticModule.variant !== "static") {
-      throw new Error("Se esperaba normalización estable para variantes scroll y static");
+    const rotatingModule = normalizeAnnouncementBarModule(
+      buildAnnouncementSection({
+        variant: "rotating",
+        content: {
+          messages: [{ text: "Promo 1" }, { text: "Promo 2" }],
+        },
+      }),
+    );
+
+    if (
+      scrollModule.variant !== "scroll" ||
+      staticModule.variant !== "static" ||
+      rotatingModule.variant !== "rotating"
+    ) {
+      throw new Error("Se esperaba normalización estable para variantes scroll, static y rotating");
     }
 
     expect(scrollModule.messages).toEqual(["Promo 1", "Promo 2"]);
-    expect(staticModule.rotatingMessages).toEqual(["6 cuotas", "envío 24 hs"]);
+    expect(staticModule.message).toEqual("6 cuotas");
+    expect(rotatingModule.messages).toEqual(["Promo 1", "Promo 2"]);
   });
 
-  it("acepta microcopy adicional en badges", () => {
+  it("acepta microcopy adicional en badges aunque el layout final sea plano", () => {
     const module = normalizeAnnouncementBarModule(
       buildAnnouncementSection({
         variant: "badges",
         content: {
-          heading: "Compra protegida",
           items: [
             {
               icon: "shield",
@@ -115,7 +146,6 @@ describe("normalizeAnnouncementBarModule", () => {
     }
 
     expect(module.variant).toBe("badges");
-    expect(module.heading).toBe("Compra protegida");
     expect(module.items[0]).toEqual({
       icon: "shield",
       label: "Garantía oficial",

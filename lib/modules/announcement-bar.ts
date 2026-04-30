@@ -8,7 +8,7 @@
 
 import type { SectionInstance } from "@/lib/types/presentation";
 
-export type AnnouncementBarVariant = "static" | "scroll" | "countdown" | "badges";
+export type AnnouncementBarVariant = "static" | "rotating" | "scroll" | "countdown" | "badges";
 
 export type AnnouncementBarCta = {
   label: string;
@@ -48,17 +48,19 @@ type AnnouncementBarBase = {
 export type AnnouncementBarStaticModule = AnnouncementBarBase & {
   variant: "static";
   message: string;
-  eyebrow?: string | undefined;
-  detail?: string | undefined;
-  rotatingMessages?: string[] | undefined;
-  motion?: AnnouncementBarMotion | undefined;
   cta?: AnnouncementBarCta | undefined;
+};
+
+export type AnnouncementBarRotatingModule = AnnouncementBarBase & {
+  variant: "rotating";
+  messages: string[];
+  speed?: "slow" | "normal" | "fast" | undefined;
+  motion?: AnnouncementBarMotion | undefined;
 };
 
 export type AnnouncementBarScrollModule = AnnouncementBarBase & {
   variant: "scroll";
   messages: string[];
-  eyebrow?: string | undefined;
   separator?: string | undefined;
   speed?: "slow" | "normal" | "fast" | undefined;
   pauseOnHover?: boolean | undefined;
@@ -67,7 +69,6 @@ export type AnnouncementBarScrollModule = AnnouncementBarBase & {
 export type AnnouncementBarCountdownModule = AnnouncementBarBase & {
   variant: "countdown";
   message: string;
-  label?: string | undefined;
   /** ISO 8601 — fecha de fin del countdown */
   endsAt: string;
   completedMessage?: string | undefined;
@@ -76,13 +77,12 @@ export type AnnouncementBarCountdownModule = AnnouncementBarBase & {
 
 export type AnnouncementBarBadgesModule = AnnouncementBarBase & {
   variant: "badges";
-  heading?: string | undefined;
-  detail?: string | undefined;
   items: AnnouncementBarBadgeItem[];
 };
 
 export type AnnouncementBarModule =
   | AnnouncementBarStaticModule
+  | AnnouncementBarRotatingModule
   | AnnouncementBarScrollModule
   | AnnouncementBarCountdownModule
   | AnnouncementBarBadgesModule;
@@ -272,6 +272,20 @@ export function normalizeAnnouncementBarModule(
   };
 
   switch (section.variant) {
+    case "rotating":
+      return {
+        ...base,
+        variant: "rotating",
+        messages:
+          readStringArray(content.messages) ??
+          readStringArray(content.rotatingMessages) ??
+          (readString(content.message) ? [readString(content.message) as string] : []),
+        ...withDefinedProperties({
+          speed: scrollSpeed,
+          motion: normalizeMotion(content.motion),
+        }),
+      };
+
     case "scroll":
       return {
         ...base,
@@ -280,7 +294,6 @@ export function normalizeAnnouncementBarModule(
           readStringArray(content.messages) ??
           (readString(content.message) ? [readString(content.message) as string] : []),
         ...withDefinedProperties({
-          eyebrow: readString(content.eyebrow),
           separator: readString(content.separator),
           speed: scrollSpeed,
         }),
@@ -294,7 +307,6 @@ export function normalizeAnnouncementBarModule(
         message: readString(content.message) ?? "Oferta por tiempo limitado",
         endsAt: readString(content.endsAt) ?? new Date(Date.now() + 3600_000).toISOString(),
         ...withDefinedProperties({
-          label: readString(content.label),
           completedMessage: readString(content.completedMessage),
           cta: normalizeCta(content.cta),
         }),
@@ -305,10 +317,6 @@ export function normalizeAnnouncementBarModule(
         ...base,
         variant: "badges",
         items: normalizeBadgeItems(content.items),
-        ...withDefinedProperties({
-          heading: readString(content.heading),
-          detail: readString(content.detail),
-        }),
       };
 
     case "static":
@@ -318,14 +326,10 @@ export function normalizeAnnouncementBarModule(
         variant: "static",
         message:
           readString(content.message) ??
+          readStringArray(content.rotatingMessages)?.[0] ??
           readStringArray(content.messages)?.[0] ??
           "Descubrí beneficios exclusivos en nuestra tienda.",
         ...withDefinedProperties({
-          eyebrow: readString(content.eyebrow),
-          detail: readString(content.detail),
-          rotatingMessages:
-            readStringArray(content.rotatingMessages) ?? readStringArray(content.messages),
-          motion: normalizeMotion(content.motion),
           cta: normalizeCta(content.cta),
         }),
       };

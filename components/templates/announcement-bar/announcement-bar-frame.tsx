@@ -15,8 +15,6 @@ type AnnouncementBarFrameProps = {
 
 type AnnouncementBarPalette = {
   container: CSSProperties;
-  chip: CSSProperties;
-  chipSoft: CSSProperties;
   mutedText: CSSProperties;
   separator: CSSProperties;
   ctaPrimary: CSSProperties;
@@ -29,7 +27,6 @@ const DEFAULT_BACKGROUND =
   "linear-gradient(110deg, color-mix(in srgb, var(--ink) 94%, #111827 6%) 0%, color-mix(in srgb, var(--accent) 74%, #111827 26%) 52%, color-mix(in srgb, var(--ink) 92%, #020617 8%) 100%)";
 const DEFAULT_TEXT = "var(--paper)";
 const DEFAULT_BORDER = "color-mix(in srgb, var(--paper) 16%, transparent)";
-const DEFAULT_ACCENT = "color-mix(in srgb, var(--paper) 14%, transparent)";
 
 export function resolveAnnouncementBarPalette(
   appearance?: AnnouncementBarAppearance,
@@ -48,7 +45,6 @@ export function resolveAnnouncementBarPalette(
     : appearance?.backgroundColor ?? "color-mix(in srgb, var(--accent) 78%, #111827 22%)";
   const textColor = appearance?.textColor ?? DEFAULT_TEXT;
   const borderColor = appearance?.borderColor ?? DEFAULT_BORDER;
-  const accentColor = appearance?.accentColor ?? DEFAULT_ACCENT;
 
   return {
     container: {
@@ -56,16 +52,6 @@ export function resolveAnnouncementBarPalette(
       borderColor,
       backgroundColor,
       backgroundImage,
-    },
-    chip: {
-      backgroundColor: accentColor,
-      borderColor: "color-mix(in srgb, currentColor 20%, transparent)",
-      color: textColor,
-    },
-    chipSoft: {
-      backgroundColor: "color-mix(in srgb, currentColor 9%, transparent)",
-      borderColor: "color-mix(in srgb, currentColor 14%, transparent)",
-      color: textColor,
     },
     mutedText: {
       color: "color-mix(in srgb, currentColor 74%, transparent)",
@@ -128,19 +114,6 @@ export function AnnouncementBarFrame({
       )}
       style={palette.container}
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-70"
-        style={{
-          background:
-            "radial-gradient(circle at 18% 0%, color-mix(in srgb, currentColor 18%, transparent) 0%, transparent 36%), radial-gradient(circle at 82% 100%, color-mix(in srgb, currentColor 14%, transparent) 0%, transparent 34%)",
-        }}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-px"
-        style={{ backgroundColor: "color-mix(in srgb, currentColor 32%, transparent)" }}
-      />
       <div
         className={cn(
           "relative flex min-h-11 items-center px-4 py-2.5 sm:px-5",

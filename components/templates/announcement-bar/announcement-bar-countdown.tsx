@@ -3,10 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
-import { TimerReset } from "lucide-react";
 
 import type { AnnouncementBarModule } from "@/lib/modules/announcement-bar";
-import { themeTypographyStyles } from "@/lib/theme/typography";
 import { cn } from "@/lib/utils/cn";
 
 import { AnnouncementBarFrame, resolveAnnouncementBarPalette } from "@/components/templates/announcement-bar/announcement-bar-frame";
@@ -42,7 +40,7 @@ function pad(n: number) {
 export function AnnouncementBarCountdown({ module }: { module: AnnouncementBarModule }) {
   if (module.variant !== "countdown") return null;
 
-  const { message, label, endsAt, completedMessage, cta, appearance } = module;
+  const { message, endsAt, completedMessage, cta, appearance } = module;
   const palette = resolveAnnouncementBarPalette(appearance);
 
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(() => calcTimeLeft(endsAt));
@@ -64,19 +62,17 @@ export function AnnouncementBarCountdown({ module }: { module: AnnouncementBarMo
         dataTemplate="announcement-bar-countdown-completed"
         contentClassName="justify-center"
       >
-        <span className={themeTypographyStyles.label("text-sm tracking-[0.02em] normal-case")}>{completedMessage}</span>
+        <span className="text-sm font-medium leading-tight">{completedMessage}</span>
       </AnnouncementBarFrame>
     );
   }
 
   const segments: { label: string; value: string }[] = [
-    { label: "días", value: pad(timeLeft.days) },
-    { label: "hs", value: pad(timeLeft.hours) },
-    { label: "min", value: pad(timeLeft.minutes) },
-    { label: "seg", value: pad(timeLeft.seconds) },
+    { label: "dd", value: pad(timeLeft.days) },
+    { label: "hh", value: pad(timeLeft.hours) },
+    { label: "mm", value: pad(timeLeft.minutes) },
+    { label: "ss", value: pad(timeLeft.seconds) },
   ];
-
-  const visibleSegments = timeLeft.days > 0 ? segments : segments.slice(1);
 
   return (
     <AnnouncementBarFrame
@@ -84,44 +80,35 @@ export function AnnouncementBarCountdown({ module }: { module: AnnouncementBarMo
       role="timer"
       ariaLabel={`Cuenta regresiva: ${message}`}
       dataTemplate="announcement-bar-countdown"
-      contentClassName="flex-wrap justify-center gap-3 sm:justify-between"
+      contentClassName="justify-center text-center sm:min-h-10 sm:pr-32"
     >
-      <div className="flex min-w-0 flex-wrap items-center justify-center gap-3 sm:justify-start">
-        {label ? (
-          <span
-            className={themeTypographyStyles.kicker("inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px]")}
-            style={palette.chip}
-          >
-            <TimerReset className="size-3" aria-hidden="true" />
-            {label}
-          </span>
-        ) : null}
-
-        <span className={themeTypographyStyles.label("text-center text-sm tracking-[0.01em] normal-case sm:text-left")}>{message}</span>
+      <div className="flex min-w-0 flex-1 items-center justify-center px-2 sm:px-12">
+        <span className="text-sm font-medium leading-tight sm:text-[0.95rem]">
+          {message}
+        </span>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
-        <span className="flex items-baseline gap-1.5 rounded-full border px-3 py-1.5" style={palette.chipSoft}>
-          {visibleSegments.map(({ label: segmentLabel, value }, idx) => (
-            <span key={segmentLabel} className="flex items-baseline gap-1">
-              <span className="font-heading text-base font-bold tabular-nums">{value}</span>
-              <span className={themeTypographyStyles.label("text-[10px] tracking-[0.18em]")} style={palette.mutedText}>
+      <div className="mt-1 flex justify-center sm:absolute sm:right-5 sm:top-1/2 sm:mt-0 sm:-translate-y-1/2">
+        <span className="inline-flex items-baseline gap-1">
+          {segments.map(({ label: segmentLabel, value }, idx) => (
+            <span key={segmentLabel} className="inline-flex items-baseline gap-0.5">
+              <span className="font-heading text-xs font-bold tabular-nums sm:text-sm">{value}</span>
+              <span className="text-[9px] font-semibold uppercase tracking-[0.04em]" style={palette.mutedText}>
                 {segmentLabel}
               </span>
-              {idx < visibleSegments.length - 1 ? (
-                <span className="px-0.5 text-xs" style={palette.separator}>
+              {idx < segments.length - 1 ? (
+                <span className="px-0.5 text-[10px]" style={palette.separator}>
                   :
                 </span>
               ) : null}
             </span>
           ))}
         </span>
-
         {cta ? (
           <Link
             href={cta.href as Route}
             className={cn(
-              "inline-flex min-h-9 items-center justify-center rounded-full border px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] transition-transform duration-200 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
+              "ml-3 inline-flex min-h-8 items-center justify-center px-2 py-1 text-xs font-semibold underline-offset-4 transition-opacity duration-200 hover:underline hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
               cta.variant === "link" ? "underline-offset-4 hover:underline" : undefined,
             )}
             style={
