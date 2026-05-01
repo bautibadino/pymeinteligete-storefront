@@ -2,8 +2,10 @@
 
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
+import type { Route } from "next";
 import type { ReadonlyURLSearchParams } from "next/navigation";
 import { usePathname, useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 import { Input } from "@/components/ui/input";
 import type { StorefrontCategory } from "@/lib/storefront-api";
@@ -643,9 +645,9 @@ export function CatalogToolbar({
             const href = buildSortHref(pathname, searchParams, opt.value);
 
             return href ? (
-              <a
+              <Link
                 key={opt.value}
-                href={href}
+                href={href as Route}
                 className={
                   opt.value === selected
                     ? FILTER_CHIP_ACTIVE_CLASSNAME
@@ -654,7 +656,7 @@ export function CatalogToolbar({
                 aria-current={opt.value === selected ? "true" : undefined}
               >
                 {opt.label}
-              </a>
+              </Link>
             ) : (
               <span
                 key={opt.value}
@@ -699,9 +701,9 @@ function FilterGroupContent({ group }: { group: FilterGroup }) {
   return (
     <div className="flex flex-wrap gap-2">
       {group.options.map((option) => (
-        <a
+        <Link
           key={option.id}
-          href={option.href}
+          href={option.href as Route}
           aria-current={option.active ? "true" : undefined}
           className={
             option.active
@@ -710,7 +712,7 @@ function FilterGroupContent({ group }: { group: FilterGroup }) {
           }
         >
           {option.label}
-        </a>
+        </Link>
       ))}
     </div>
   );
@@ -756,8 +758,8 @@ function CategoryTreeList({
     <ul className={cn("space-y-1", depth > 0 ? "mt-1 border-l border-[color:var(--line)]/80 pl-3" : "")}>
       {nodes.map((node) => (
         <li key={node.id} className="space-y-1">
-          <a
-            href={node.href}
+          <Link
+            href={node.href as Route}
             aria-current={node.active ? "true" : undefined}
             className={
               node.active
@@ -766,7 +768,7 @@ function CategoryTreeList({
             }
           >
             {node.label}
-          </a>
+          </Link>
           {node.children.length > 0 ? (
             <CategoryTreeList depth={depth + 1} nodes={node.children} />
           ) : null}
@@ -862,23 +864,23 @@ export function FilterSidebar({
             <p className="text-sm text-muted">Refiná el catálogo con pocos clics.</p>
           </div>
           {filters.length > 0 ? (
-            <a href={clearAllHref} className="text-xs font-semibold text-[color:var(--accent)] transition hover:opacity-80">
+            <Link href={clearAllHref as Route} className="text-xs font-semibold text-[color:var(--accent)] transition hover:opacity-80">
               Limpiar
-            </a>
+            </Link>
           ) : null}
         </div>
 
         {filters.length > 0 ? (
           <div className="flex flex-wrap gap-2 border-b border-[color:var(--line)]/80 pb-3">
             {filters.map((filter) => (
-              <a
+              <Link
                 key={filter.key}
-                href={filter.href}
+                href={filter.href as Route}
                 className="inline-flex items-center gap-1 rounded-full border border-[color:var(--line)] bg-[color:var(--paper)]/68 px-3 py-1.5 text-xs text-foreground transition hover:border-[color:var(--accent)]/25 hover:bg-white"
               >
                 <span className="font-semibold text-[color:var(--accent)]">{filter.label}</span>
                 <span>{filter.value}</span>
-              </a>
+              </Link>
             ))}
           </div>
         ) : null}
@@ -942,23 +944,23 @@ export function FilterBar({
             </span>
           </div>
           {filters.length > 0 ? (
-            <a href={clearAllHref} className="text-xs font-semibold text-[color:var(--accent)] transition hover:opacity-80">
+            <Link href={clearAllHref as Route} className="text-xs font-semibold text-[color:var(--accent)] transition hover:opacity-80">
               Limpiar
-            </a>
+            </Link>
           ) : null}
         </div>
 
         {filters.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {filters.map((filter) => (
-              <a
+              <Link
                 key={filter.key}
-                href={filter.href}
+                href={filter.href as Route}
                 className="inline-flex min-h-8 items-center rounded-full border border-[color:var(--line)] bg-[color:var(--paper)]/68 px-3 py-1.5 text-xs font-medium text-[color:var(--ink)]"
               >
                 <span className="font-semibold text-[color:var(--accent)]">{filter.label}:</span>
                 <span className="ml-1">{filter.value}</span>
-              </a>
+              </Link>
             ))}
           </div>
         ) : null}
@@ -1024,13 +1026,13 @@ export function CatalogPagination({ pageSize }: { pageSize?: number | undefined 
   return (
     <nav aria-label="Paginación" className="flex items-center justify-center gap-3 pt-4">
       {previousPageHref ? (
-        <a
-          href={previousPageHref}
+        <Link
+          href={previousPageHref as Route}
           className="inline-flex h-9 min-w-9 items-center justify-center rounded-md border border-line bg-panel px-3 text-sm text-foreground hover:bg-panel-strong"
           aria-label="Página anterior"
         >
           ‹
-        </a>
+        </Link>
       ) : (
         <span
           aria-disabled="true"
@@ -1045,13 +1047,13 @@ export function CatalogPagination({ pageSize }: { pageSize?: number | undefined 
       >
         {currentPage}
       </span>
-      <a
-        href={nextPageHref}
+      <Link
+        href={nextPageHref as Route}
         className="inline-flex h-9 min-w-9 items-center justify-center rounded-md border border-line bg-panel px-3 text-sm text-foreground hover:bg-panel-strong"
         aria-label="Página siguiente"
       >
         ›
-      </a>
+      </Link>
     </nav>
   );
 }
@@ -1077,12 +1079,12 @@ export function CatalogInfiniteNavigation({
       <p className="text-sm text-muted">
         Página {currentPage} · {renderedCount} productos visibles
       </p>
-      <a
-        href={nextPageHref}
+      <Link
+        href={nextPageHref as Route}
         className="inline-flex items-center rounded-pill border border-line bg-panel px-4 py-2 text-sm font-medium text-foreground transition hover:bg-panel-strong"
       >
         Cargar página {currentPage + 1}
-      </a>
+      </Link>
     </div>
   );
 }
