@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { StorefrontCategory } from "@/lib/storefront-api";
 
 import {
   resolveProductCardTemplateId,
@@ -88,6 +89,11 @@ export interface CatalogLayoutModule {
    * Runtime-only: no se persiste en presentation.
    */
   products?: ProductCardData[];
+  /**
+   * Categorías públicas resueltas por host.
+   * Runtime-only: se usan para construir filtros descubribles.
+   */
+  categories?: StorefrontCategory[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

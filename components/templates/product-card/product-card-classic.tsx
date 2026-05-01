@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { ShoppingCart } from "lucide-react";
 
+import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
 import { Button } from "@/components/ui/button";
 import { themeTypographyStyles } from "@/lib/theme";
 import type {
@@ -83,17 +83,24 @@ export function ProductCardClassic({
         <p className="text-base font-bold text-foreground">{price.formatted}</p>
 
         {showAddToCart ? (
-          <Button
+          <AddToCartButton
+            item={{
+              productId: product.id,
+              slug: product.slug,
+              name: product.name,
+              href: product.href,
+              price: product.price,
+              ...(product.brand ? { brand: product.brand } : {}),
+              ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+            }}
             size="sm"
             className="mt-auto w-full"
             disabled={!isAvailable}
             aria-label={
               isAvailable ? `Agregar ${name} al carrito` : `${name} no disponible`
             }
-          >
-            <ShoppingCart className="mr-2 size-4" aria-hidden="true" />
-            {isAvailable ? "Agregar al carrito" : "No disponible"}
-          </Button>
+            unavailableLabel="No disponible"
+          />
         ) : (
           <Button asChild size="sm" variant="outline" className="mt-auto w-full">
             <Link href={href as Route}>Ver producto</Link>

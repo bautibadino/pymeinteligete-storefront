@@ -255,8 +255,8 @@ export function CheckoutForm({ paymentMethods, publicKey, initialItems }: Checko
             <span className="eyebrow">Items</span>
             <h3>Líneas del pedido</h3>
             <p>
-              Hasta que exista carrito persistente, esta superficie crea órdenes con líneas explícitas por
-              `productId` y cantidad.
+              El carrito ya puede precargar ítems, pero la orden oficial sigue viajando al backend
+              con líneas explícitas por `productId` y cantidad.
             </p>
           </div>
 

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Search, ShoppingCart, User, Menu } from "lucide-react";
+import { Search, User, Menu } from "lucide-react";
 
+import { HeaderCartButton } from "@/components/storefront/cart/header-cart-button";
 import type { HeaderModule } from "@/lib/modules/header";
 
 /**
@@ -95,19 +96,7 @@ export function HeaderStickyCompact({ module }: { module: HeaderModule }) {
               </button>
             ) : null}
             {showCart ? (
-              <button
-                type="button"
-                aria-label="Carrito (0 items)"
-                className="relative rounded-md p-1.5 text-muted transition-colors hover:bg-panel hover:text-foreground"
-              >
-                <ShoppingCart className="size-5" aria-hidden="true" />
-                <span
-                  aria-hidden="true"
-                  className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-pill bg-primary text-[10px] font-bold text-primary-foreground"
-                >
-                  0
-                </span>
-              </button>
+              <HeaderCartButton className="p-1.5" />
             ) : null}
             {/* Mobile menu toggle placeholder */}
             {navLinks.length > 0 ? (

@@ -1,6 +1,6 @@
-import { ShoppingCart, Zap, Truck, Shield, CreditCard, Star, Clock, Package, RotateCcw, BadgeCheck, Headset } from "lucide-react";
+import { Zap, Truck, Shield, CreditCard, Star, Clock, Package, RotateCcw, BadgeCheck, Headset } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
 import type { ProductDetailModule } from "@/lib/modules/product-detail";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>> = {
@@ -86,10 +86,20 @@ export function ProductDetailCardsFeatures({ module }: { module: ProductDetailMo
             </h1>
             <p className="text-2xl font-bold text-foreground">{product.price.formatted}</p>
           </div>
-          <Button size="lg" disabled={!isAvailable}>
-            <ShoppingCart className="mr-2 size-5" aria-hidden="true" />
-            {isAvailable ? "Agregar al carrito" : "No disponible"}
-          </Button>
+          <AddToCartButton
+            item={{
+              productId: product.id,
+              slug: product.slug,
+              name: product.name,
+              href: product.href,
+              price: product.price,
+              ...(product.brand ? { brand: product.brand } : {}),
+              ...(mainImage?.url ? { imageUrl: mainImage.url } : {}),
+            }}
+            size="lg"
+            disabled={!isAvailable}
+            unavailableLabel="No disponible"
+          />
         </div>
 
         {/* Feature cards */}

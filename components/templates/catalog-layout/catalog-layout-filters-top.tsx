@@ -18,7 +18,11 @@ export function CatalogLayoutFiltersTop({ module }: { module: CatalogLayoutModul
   return (
     <section className="py-8" data-template="catalog-layout-filters-top">
       <div className="mx-auto max-w-7xl px-4 space-y-6">
-        <FilterBar activeFilters={filters} />
+        <FilterBar
+          activeFilters={filters}
+          categories={module.categories}
+          products={products}
+        />
 
         <CatalogToolbar
           count={products.length}

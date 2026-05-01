@@ -8,32 +8,12 @@ import {
 import { CheckoutForm } from "@/components/storefront/checkout/checkout-form";
 import { PageIntro, SplitPanel } from "@/components/storefront/page-sections";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
+import { parseCheckoutItemsFromSearchParams } from "@/lib/cart/storefront-cart";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
 
 type CheckoutPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
-
-function getSingleValue(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-function parseInitialItems(searchParams: Record<string, string | string[] | undefined>) {
-  const productId = getSingleValue(searchParams.productId);
-  const quantityValue = Number(getSingleValue(searchParams.quantity));
-  const quantity = Number.isFinite(quantityValue) && quantityValue > 0 ? quantityValue : 1;
-
-  if (!productId) {
-    return [];
-  }
-
-  return [
-    {
-      productId,
-      quantity,
-    },
-  ];
-}
 
 export async function generateMetadata(): Promise<Metadata> {
   const snapshot = await resolveTenantSeoSnapshot();
@@ -50,7 +30,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   const experience = await loadCheckoutExperience();
   const host = experience.runtime.context.host;
   const displayName = resolveTenantDisplayName(experience.bootstrap, host);
-  const initialItems = parseInitialItems(resolvedSearchParams);
+  const initialItems = parseCheckoutItemsFromSearchParams(resolvedSearchParams);
   const canCheckout = canAccessCheckout(experience.bootstrap?.tenant.status ?? null);
   const visibleMethods = experience.paymentMethods?.paymentMethods.length ?? 0;
   const publicKey = experience.bootstrap?.commerce.payment.publicKey;

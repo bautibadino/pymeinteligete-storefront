@@ -112,7 +112,7 @@ export function adaptSectionToModule(
         normalizedContent.perPage ?? 12,
       );
 
-      return { ...base, content: normalizedContent, products };
+      return { ...base, content: normalizedContent, products, categories: context?.categories };
     }
 
     case "categoryTile": {

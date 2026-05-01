@@ -1,8 +1,9 @@
-import { Search, ShoppingCart } from "lucide-react";
+import { Search } from "lucide-react";
 import Link from "next/link";
 import type { Route } from "next";
 import type { ReactNode } from "react";
 
+import { HeaderCartButton } from "@/components/storefront/cart/header-cart-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -115,11 +116,7 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
           </form>
 
           <div className="flex justify-end">
-            <Button asChild size="icon" variant="ghost">
-              <Link href="/checkout" aria-label="Ir al checkout">
-                <ShoppingCart className="size-5" aria-hidden="true" />
-              </Link>
-            </Button>
+            <HeaderCartButton className="rounded-lg" />
           </div>
         </div>
 

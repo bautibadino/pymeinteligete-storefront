@@ -1,8 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { ShoppingCart } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
 import type { ProductDetailModule } from "@/lib/modules/product-detail";
 
 /**
@@ -146,10 +145,21 @@ export function ProductDetailGallerySpecs({ module }: { module: ProductDetailMod
             ) : null}
 
             <div className="flex gap-3 pt-2">
-              <Button size="lg" className="flex-1" disabled={!isAvailable}>
-                <ShoppingCart className="mr-2 size-5" aria-hidden="true" />
-                {isAvailable ? "Agregar al carrito" : "No disponible"}
-              </Button>
+              <AddToCartButton
+                item={{
+                  productId: product.id,
+                  slug: product.slug,
+                  name: product.name,
+                  href: product.href,
+                  price: product.price,
+                  ...(product.brand ? { brand: product.brand } : {}),
+                  ...(mainImage?.url ? { imageUrl: mainImage.url } : {}),
+                }}
+                size="lg"
+                className="flex-1"
+                disabled={!isAvailable}
+                unavailableLabel="No disponible"
+              />
             </div>
 
             {product.description ? (

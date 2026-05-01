@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { ShoppingCart } from "lucide-react";
 
+import { HeaderCartButton } from "@/components/storefront/cart/header-cart-button";
 import type { HeaderModule } from "@/lib/modules/header";
 
 /**
@@ -66,19 +66,7 @@ export function HeaderMinimal({ module }: { module: HeaderModule }) {
 
           {/* Cart only */}
           {showCart ? (
-            <button
-              type="button"
-              aria-label="Carrito (0 items)"
-              className="relative rounded-md p-2 text-muted transition-colors hover:bg-panel hover:text-foreground"
-            >
-              <ShoppingCart className="size-5" aria-hidden="true" />
-              <span
-                aria-hidden="true"
-                className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-pill bg-primary text-[10px] font-bold text-primary-foreground"
-              >
-                0
-              </span>
-            </button>
+            <HeaderCartButton />
           ) : null}
         </div>
       </div>

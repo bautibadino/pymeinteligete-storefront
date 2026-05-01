@@ -9,6 +9,7 @@ import {
   FilterSidebar,
 } from "@/components/templates/catalog-layout/catalog-layout-shared";
 import type { CatalogLayoutModule } from "@/lib/modules/catalog-layout";
+import type { StorefrontCategory } from "@/lib/storefront-api";
 import type { ProductCardData } from "@/lib/templates/product-card-catalog";
 
 const navigationState = vi.hoisted(() => ({
@@ -71,6 +72,28 @@ function createModule(
   };
 }
 
+function createCategories(): StorefrontCategory[] {
+  return [
+    {
+      categoryId: "cat-neumaticos",
+      slug: "neumaticos",
+      name: "Neumáticos",
+      children: [
+        {
+          categoryId: "cat-auto",
+          slug: "auto",
+          name: "Auto",
+        },
+      ],
+    },
+    {
+      categoryId: "cat-baterias",
+      slug: "baterias",
+      name: "Baterías",
+    },
+  ];
+}
+
 describe("catalog layout shared layer", () => {
   it("expone links de orden coherentes con la query actual cuando el módulo configura sort", () => {
     setCurrentUrl("/catalogo", "brand=Acme&search=bujias&page=3&sort=priceDesc");
@@ -112,6 +135,45 @@ describe("catalog layout shared layer", () => {
     expect(html).toContain("Inmediata");
     expect(html).toContain('href="/catalogo?minPrice=1000&maxPrice=5000&availability=inmediata"');
     expect(html).not.toContain("Opción A");
+  });
+
+  it("expone opciones de filtros descubribles cuando hay categorías y productos públicos", () => {
+    setCurrentUrl("/catalogo", "");
+    const baseProduct = createProducts(1)[0]!;
+
+    const html = renderHtml(
+      createElement(FilterSidebar, {
+        activeFilters: {
+          brand: true,
+          category: true,
+          priceRange: true,
+          availability: true,
+        },
+        categories: createCategories(),
+        products: [
+          {
+            ...baseProduct,
+            brand: "Michelin",
+            price: { amount: 92000, currency: "ARS", formatted: "$92.000" },
+          },
+          {
+            ...baseProduct,
+            id: "prod-2",
+            name: "Producto 2",
+            slug: "prod-2",
+            href: "/prod-2",
+            brand: "Pirelli",
+            price: { amount: 152000, currency: "ARS", formatted: "$152.000" },
+          },
+        ],
+      }),
+    );
+
+    expect(html).toContain("Neumáticos / Auto");
+    expect(html).toContain("Michelin");
+    expect(html).toContain("Pirelli");
+    expect(html).toContain("Entrega inmediata");
+    expect(html).not.toContain("No hay filtros activos.");
   });
 
   it("usa la página pública actual para construir la navegación del paginado clásico", () => {

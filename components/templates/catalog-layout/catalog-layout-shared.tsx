@@ -3,6 +3,7 @@
 import type { ReadonlyURLSearchParams } from "next/navigation";
 import { usePathname, useSearchParams } from "next/navigation";
 
+import type { StorefrontCategory } from "@/lib/storefront-api";
 import { resolveProductCardTemplate } from "@/lib/templates/product-card-registry";
 import type { ProductCardData, ProductCardDisplayOptions } from "@/lib/templates/product-card-catalog";
 
@@ -43,6 +44,230 @@ type ResolvedFilter = {
   label: string;
   value: string;
 };
+
+type FilterOption = {
+  active: boolean;
+  href: string;
+  id: string;
+  label: string;
+};
+
+type FilterGroup = {
+  key: string;
+  options: FilterOption[];
+  title: string;
+};
+
+function formatPrice(amount: number): string {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function flattenCategories(
+  categories: StorefrontCategory[] | undefined,
+  trail: string[] = [],
+): Array<{ categoryId: string; name: string; slug: string }> {
+  if (!categories || categories.length === 0) {
+    return [];
+  }
+
+  return categories.flatMap((category) => {
+    const nextTrail = [...trail, category.name];
+    const current = {
+      categoryId: category.categoryId,
+      slug: category.slug,
+      name: nextTrail.join(" / "),
+    };
+
+    return [current, ...flattenCategories(category.children, nextTrail)];
+  });
+}
+
+function buildClearAllFiltersHref(
+  pathname: string,
+  searchParams: URLSearchParams | ReadonlyURLSearchParams,
+) {
+  return buildHref(pathname, searchParams, {
+    availability: undefined,
+    brand: undefined,
+    category: undefined,
+    categoryId: undefined,
+    maxPrice: undefined,
+    minPrice: undefined,
+    onlyImmediate: undefined,
+    page: undefined,
+    rating: undefined,
+  });
+}
+
+function isNonEmptyString(value: string | undefined): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function resolvePriceRangeOptions(products: ProductCardData[]): Array<{
+  label: string;
+  maxPrice?: number;
+  minPrice?: number;
+}> {
+  const amounts = [...new Set(products.map((product) => Math.round(product.price.amount)))]
+    .filter((amount) => Number.isFinite(amount) && amount > 0)
+    .sort((left, right) => left - right);
+
+  if (amounts.length === 0) {
+    return [];
+  }
+
+  const min = amounts[0];
+  const max = amounts[amounts.length - 1];
+
+  if (min === undefined || max === undefined) {
+    return [];
+  }
+
+  if (min === max) {
+    return [{ maxPrice: max, label: `Hasta ${formatPrice(max)}` }];
+  }
+
+  const step = Math.max(1, Math.ceil((max - min) / 3));
+  const lowerMax = min + step;
+  const middleMin = lowerMax + 1;
+  const middleMax = Math.min(max, middleMin + step);
+  const upperMin = middleMax + 1;
+
+  return [
+    { maxPrice: lowerMax, label: `Hasta ${formatPrice(lowerMax)}` },
+    ...(middleMin <= middleMax
+      ? [
+          {
+            minPrice: middleMin,
+            maxPrice: middleMax,
+            label: `${formatPrice(middleMin)} a ${formatPrice(middleMax)}`,
+          },
+        ]
+      : []),
+    ...(upperMin <= max
+      ? [{ minPrice: upperMin, label: `Más de ${formatPrice(upperMin)}` }]
+      : []),
+  ];
+}
+
+function resolveFilterGroups(
+  activeFilters: Record<string, boolean | undefined> | undefined,
+  pathname: string,
+  searchParams: URLSearchParams | ReadonlyURLSearchParams,
+  products: ProductCardData[],
+  categories?: StorefrontCategory[],
+): FilterGroup[] {
+  if (!activeFilters) {
+    return [];
+  }
+
+  const groups: FilterGroup[] = [];
+
+  if (activeFilters.category) {
+    const selectedCategoryId = searchParams.get("categoryId");
+    const selectedCategorySlug = searchParams.get("category");
+    const categoryOptions = flattenCategories(categories)
+      .sort((left, right) => left.name.localeCompare(right.name, "es"))
+      .map((category) => ({
+        active:
+          selectedCategoryId === category.categoryId ||
+          selectedCategorySlug === category.slug,
+        href: buildHref(pathname, searchParams, {
+          category: undefined,
+          categoryId: category.categoryId,
+          page: undefined,
+        }),
+        id: category.categoryId,
+        label: category.name,
+      }));
+
+    if (categoryOptions.length > 0) {
+      groups.push({
+        key: "category",
+        title: "Categorías",
+        options: categoryOptions,
+      });
+    }
+  }
+
+  if (activeFilters.brand) {
+    const selectedBrand = searchParams.get("brand");
+    const brandOptions = [...new Set(products.map((product) => product.brand?.trim()).filter(isNonEmptyString))]
+      .sort((left, right) => left.localeCompare(right, "es"))
+      .map((brand) => ({
+        active: selectedBrand === brand,
+        href: buildHref(pathname, searchParams, {
+          brand,
+          page: undefined,
+        }),
+        id: brand,
+        label: brand,
+      }));
+
+    if (brandOptions.length > 0) {
+      groups.push({
+        key: "brand",
+        title: "Marcas",
+        options: brandOptions,
+      });
+    }
+  }
+
+  if (activeFilters.priceRange) {
+    const selectedMinPrice = searchParams.get("minPrice");
+    const selectedMaxPrice = searchParams.get("maxPrice");
+    const priceOptions = resolvePriceRangeOptions(products).map((range) => ({
+      active:
+        selectedMinPrice === (range.minPrice !== undefined ? String(range.minPrice) : null) &&
+        selectedMaxPrice === (range.maxPrice !== undefined ? String(range.maxPrice) : null),
+      href: buildHref(pathname, searchParams, {
+        maxPrice: range.maxPrice,
+        minPrice: range.minPrice,
+        page: undefined,
+      }),
+      id: `${range.minPrice ?? "na"}-${range.maxPrice ?? "na"}`,
+      label: range.label,
+    }));
+
+    if (priceOptions.length > 0) {
+      groups.push({
+        key: "priceRange",
+        title: "Rango de precio",
+        options: priceOptions,
+      });
+    }
+  }
+
+  if (activeFilters.availability) {
+    const availabilityValue = searchParams.get("availability");
+    const onlyImmediate = searchParams.get("onlyImmediate");
+    groups.push({
+      key: "availability",
+      title: "Disponibilidad",
+      options: [
+        {
+          active:
+            onlyImmediate === "true" ||
+            availabilityValue?.toLowerCase() === "immediate" ||
+            availabilityValue?.toLowerCase() === "inmediata",
+          href: buildHref(pathname, searchParams, {
+            availability: undefined,
+            onlyImmediate: "true",
+            page: undefined,
+          }),
+          id: "only-immediate",
+          label: "Entrega inmediata",
+        },
+      ],
+    });
+  }
+
+  return groups.filter((group) => group.options.length > 0);
+}
 
 function parsePositiveInteger(value: string | null): number | undefined {
   if (!value) {
@@ -368,46 +593,110 @@ export function CatalogToolbar({
   );
 }
 
+function FilterSection({
+  group,
+}: {
+  group: FilterGroup;
+}) {
+  return (
+    <section className="space-y-3">
+      <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+        {group.title}
+      </h4>
+      <div className="flex flex-wrap gap-2">
+        {group.options.map((option) => (
+          <a
+            key={option.id}
+            href={option.href}
+            aria-current={option.active ? "true" : undefined}
+            className={
+              option.active
+                ? "inline-flex items-center rounded-pill bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
+                : "inline-flex items-center rounded-pill border border-line bg-paper px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-panel-strong"
+            }
+          >
+            {option.label}
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /**
- * Lista de filtros configurados.
+ * Lista de filtros configurados y opciones disponibles.
  */
 export function FilterSidebar({
   activeFilters,
+  categories,
+  products = [],
 }: {
   activeFilters?: Record<string, boolean | undefined> | undefined;
+  categories?: StorefrontCategory[] | undefined;
+  products?: ProductCardData[] | undefined;
 }) {
   const pathname = usePathname() || "/catalogo";
   const searchParams = useSearchParams();
   const filters = resolveConfiguredFilters(activeFilters, pathname, searchParams);
+  const groups = resolveFilterGroups(
+    activeFilters,
+    pathname,
+    searchParams,
+    products,
+    categories,
+  );
+  const clearAllHref = buildClearAllFiltersHref(pathname, searchParams);
 
-  if (filters.length === 0) {
+  if (!activeFilters) {
     return (
       <aside className="space-y-6 rounded-xl border border-line bg-panel p-5">
         <h3 className="font-heading text-base font-semibold text-foreground">Filtros</h3>
-        <p className="text-sm text-muted">No hay filtros activos.</p>
+        <p className="text-sm text-muted">Este layout todavía no configuró filtros públicos.</p>
       </aside>
     );
   }
 
   return (
     <aside className="space-y-6 rounded-xl border border-line bg-panel p-5">
-      <h3 className="font-heading text-base font-semibold text-foreground">Filtros</h3>
-      {filters.map((filter) => (
-        <div key={filter.key} className="rounded-xl border border-line bg-panel-strong p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-foreground">{filter.label}</p>
-              <p className="text-sm text-muted">{filter.value}</p>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-heading text-base font-semibold text-foreground">Filtros</h3>
+        {filters.length > 0 ? (
+          <a href={clearAllHref} className="text-xs font-semibold text-primary transition hover:opacity-80">
+            Limpiar todo
+          </a>
+        ) : null}
+      </div>
+
+      {filters.length > 0 ? (
+        <div className="space-y-3">
+          {filters.map((filter) => (
+            <div key={filter.key} className="rounded-xl border border-line bg-panel-strong p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-foreground">{filter.label}</p>
+                  <p className="text-sm text-muted">{filter.value}</p>
+                </div>
+                <a
+                  href={filter.href}
+                  className="text-xs font-medium text-primary transition hover:opacity-80"
+                >
+                  Limpiar
+                </a>
+              </div>
             </div>
-            <a
-              href={filter.href}
-              className="text-xs font-medium text-primary transition hover:opacity-80"
-            >
-              Limpiar
-            </a>
-          </div>
+          ))}
         </div>
-      ))}
+      ) : (
+        <p className="text-sm text-muted">Elegí una categoría, marca o rango para refinar el catálogo.</p>
+      )}
+
+      {groups.length > 0 ? (
+        <div className="space-y-5 border-t border-line pt-5">
+          {groups.map((group) => (
+            <FilterSection key={group.key} group={group} />
+          ))}
+        </div>
+      ) : null}
     </aside>
   );
 }
@@ -417,32 +706,70 @@ export function FilterSidebar({
  */
 export function FilterBar({
   activeFilters,
+  categories,
+  products = [],
 }: {
   activeFilters?: Record<string, boolean | undefined> | undefined;
+  categories?: StorefrontCategory[] | undefined;
+  products?: ProductCardData[] | undefined;
 }) {
   const pathname = usePathname() || "/catalogo";
   const searchParams = useSearchParams();
   const filters = resolveConfiguredFilters(activeFilters, pathname, searchParams);
+  const groups = resolveFilterGroups(
+    activeFilters,
+    pathname,
+    searchParams,
+    products,
+    categories,
+  );
+  const clearAllHref = buildClearAllFiltersHref(pathname, searchParams);
 
-  if (filters.length === 0) {
+  if (!activeFilters) {
     return (
       <div className="rounded-xl border border-line bg-panel p-4">
-        <p className="text-sm text-muted">No hay filtros activos.</p>
+        <p className="text-sm text-muted">Este layout todavía no configuró filtros públicos.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-wrap gap-3 rounded-xl border border-line bg-panel p-4">
-      {filters.map((filter) => (
-        <a
-          key={filter.key}
-          href={filter.href}
-          className="inline-flex items-center rounded-pill bg-primary-soft px-3 py-1 text-xs font-medium text-primary"
-        >
-          {filter.label}: {filter.value} · Limpiar
-        </a>
-      ))}
+    <div className="space-y-4 rounded-xl border border-line bg-panel p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="font-heading text-base font-semibold text-foreground">Filtrar catálogo</h3>
+          <p className="text-sm text-muted">Combiná criterios públicos sin salir de la grilla.</p>
+        </div>
+        {filters.length > 0 ? (
+          <a href={clearAllHref} className="text-xs font-semibold text-primary transition hover:opacity-80">
+            Limpiar todo
+          </a>
+        ) : null}
+      </div>
+
+      {filters.length > 0 ? (
+        <div className="flex flex-wrap gap-3">
+          {filters.map((filter) => (
+            <a
+              key={filter.key}
+              href={filter.href}
+              className="inline-flex items-center rounded-pill bg-primary-soft px-3 py-1 text-xs font-medium text-primary"
+            >
+              {filter.label}: {filter.value} · Limpiar
+            </a>
+          ))}
+        </div>
+      ) : null}
+
+      {groups.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {groups.map((group) => (
+            <FilterSection key={group.key} group={group} />
+          ))}
+        </div>
+      ) : filters.length === 0 ? (
+        <p className="text-sm text-muted">Todavía no encontramos opciones públicas para filtrar esta vista.</p>
+      ) : null}
     </div>
   );
 }

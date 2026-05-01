@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { loadBootstrapExperience } from "@/app/(storefront)/_lib/storefront-shell-data";
+import { StorefrontCartProvider } from "@/components/storefront/cart/storefront-cart-provider";
 import { TenantThemeProvider } from "@/components/theme/TenantThemeProvider";
 import { StorefrontShell } from "@/components/storefront/storefront-shell";
 import { resolveEffectiveTenantTheme } from "@/lib/theme";
@@ -17,13 +18,15 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
 
   return (
     <TenantThemeProvider theme={theme}>
-      <StorefrontShell
-        bootstrap={experience.bootstrap}
-        host={experience.runtime.context.host}
-        issues={experience.issues}
-      >
-        {children}
-      </StorefrontShell>
+      <StorefrontCartProvider host={experience.runtime.context.host}>
+        <StorefrontShell
+          bootstrap={experience.bootstrap}
+          host={experience.runtime.context.host}
+          issues={experience.issues}
+        >
+          {children}
+        </StorefrontShell>
+      </StorefrontCartProvider>
     </TenantThemeProvider>
   );
 }

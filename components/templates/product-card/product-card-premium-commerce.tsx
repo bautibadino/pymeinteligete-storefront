@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { ShoppingCart, Truck, Clock } from "lucide-react";
+import { Truck, Clock } from "lucide-react";
 
+import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { themeTypographyStyles } from "@/lib/theme";
@@ -170,14 +171,20 @@ export function ProductCardPremiumCommerce({
 
         {/* CTA */}
         {showAddToCart && isAvailable ? (
-          <Button
+          <AddToCartButton
+            item={{
+              productId: product.id,
+              slug: product.slug,
+              name: product.name,
+              href: product.href,
+              price: product.price,
+              ...(product.brand ? { brand: product.brand } : {}),
+              ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+            }}
             size="sm"
             className="mt-auto w-full"
             aria-label={`Agregar ${name} al carrito`}
-          >
-            <ShoppingCart className="mr-2 size-4" aria-hidden="true" />
-            Agregar al carrito
-          </Button>
+          />
         ) : !showAddToCart ? (
           <Button asChild size="sm" variant="outline" className="mt-auto w-full">
             <Link href={href as Route}>Ver producto</Link>

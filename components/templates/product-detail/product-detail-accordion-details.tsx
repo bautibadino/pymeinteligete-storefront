@@ -1,6 +1,4 @@
-import { ShoppingCart } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
 import type { ProductDetailModule } from "@/lib/modules/product-detail";
 
 /**
@@ -85,10 +83,21 @@ export function ProductDetailAccordionDetails({ module }: { module: ProductDetai
               ) : null}
             </div>
 
-            <Button size="lg" className="w-full sm:w-auto" disabled={!isAvailable}>
-              <ShoppingCart className="mr-2 size-5" aria-hidden="true" />
-              {isAvailable ? "Agregar al carrito" : "No disponible"}
-            </Button>
+            <AddToCartButton
+              item={{
+                productId: product.id,
+                slug: product.slug,
+                name: product.name,
+                href: product.href,
+                price: product.price,
+                ...(product.brand ? { brand: product.brand } : {}),
+                ...(mainImage?.url ? { imageUrl: mainImage.url } : {}),
+              }}
+              size="lg"
+              className="w-full sm:w-auto"
+              disabled={!isAvailable}
+              unavailableLabel="No disponible"
+            />
 
             {product.description ? (
               <p className="leading-relaxed text-muted">{product.description}</p>
