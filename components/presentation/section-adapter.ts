@@ -100,6 +100,7 @@ export function adaptSectionToModule(
         context?.products,
         normalizedContent.source,
         normalizedContent.limit ?? 12,
+        context?.bootstrap,
       );
 
       return { ...base, content: normalizedContent, products };
@@ -110,6 +111,7 @@ export function adaptSectionToModule(
       const products = mapCatalogProductsToCardData(
         context?.products,
         normalizedContent.perPage ?? 12,
+        context?.bootstrap,
       );
 
       return { ...base, content: normalizedContent, products, categories: context?.categories };
@@ -151,12 +153,13 @@ export function adaptSectionToModule(
       return {
         ...base,
         content,
-        product: mapProductDetailToData(context?.product),
+        product: mapProductDetailToData(context?.product, context?.bootstrap),
         relatedProducts: selectRelatedProductsForDetail(
           context?.product,
           context?.products,
           content.relatedSource as "category" | "brand" | "collection" | undefined,
           relatedLimit,
+          context?.bootstrap,
         ),
       };
     }

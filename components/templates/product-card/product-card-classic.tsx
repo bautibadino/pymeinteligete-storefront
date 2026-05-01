@@ -8,6 +8,7 @@ import type {
   ProductCardData,
   ProductCardDisplayOptions,
 } from "@/lib/templates/product-card-catalog";
+import { ProductCardStockBadge } from "@/components/templates/product-card/product-card-stock-badge";
 
 interface ProductCardClassicProps {
   product: ProductCardData;
@@ -25,7 +26,11 @@ export function ProductCardClassic({
 }: ProductCardClassicProps) {
   const {
     showBrand = true,
+    showInstallments = true,
+    showCashDiscount = true,
     showAddToCart = true,
+    showStockBadge = true,
+    stockBadgeTone = "forest",
   } = displayOptions;
 
   const {
@@ -33,6 +38,9 @@ export function ProductCardClassic({
     brand,
     imageUrl,
     price,
+    compareAtPrice,
+    installments,
+    cashDiscount,
     stock,
     href,
   } = product;
@@ -60,6 +68,14 @@ export function ProductCardClassic({
               className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-soft to-accent-soft"
             />
           )}
+
+          {showStockBadge ? (
+            <ProductCardStockBadge
+              stock={stock}
+              tone={stockBadgeTone}
+              className="absolute bottom-2 left-2 z-10 backdrop-blur-sm"
+            />
+          ) : null}
         </div>
       </Link>
 
@@ -80,7 +96,34 @@ export function ProductCardClassic({
           </h3>
         </Link>
 
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          {compareAtPrice ? (
+            <span className="text-xs text-muted line-through">
+              {compareAtPrice.formatted}
+            </span>
+          ) : null}
+
+          {showCashDiscount && cashDiscount ? (
+            <span
+              className={themeTypographyStyles.label(
+                "rounded-sm bg-primary-soft px-1.5 py-0.5 text-[10px] text-primary",
+              )}
+            >
+              {cashDiscount.percent}% OFF contado
+            </span>
+          ) : null}
+        </div>
+
         <p className="text-base font-bold text-foreground">{price.formatted}</p>
+
+        {showInstallments && installments ? (
+          <p className="text-xs text-muted">
+            {installments.count}x {installments.formatted}
+            {installments.interestFree ? (
+              <span className="ml-1 font-medium text-primary">sin interés</span>
+            ) : null}
+          </p>
+        ) : null}
 
         {showAddToCart ? (
           <AddToCartButton

@@ -169,10 +169,12 @@ describe("catalog layout shared layer", () => {
       }),
     );
 
-    expect(html).toContain("Neumáticos / Auto");
+    expect(html).toContain("Neumáticos");
+    expect(html).toContain("Auto");
     expect(html).toContain("Michelin");
     expect(html).toContain("Pirelli");
     expect(html).toContain("Entrega inmediata");
+    expect(html).toContain("Buscar categoría...");
     expect(html).not.toContain("No hay filtros activos.");
   });
 

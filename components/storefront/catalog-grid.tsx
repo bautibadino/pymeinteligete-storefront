@@ -1,15 +1,16 @@
 import { ProductGrid } from "@/components/templates/catalog-layout/catalog-layout-shared";
 import { mapCatalogProductsToCardData } from "@/components/presentation/render-context";
-import type { StorefrontCatalogProduct } from "@/lib/storefront-api";
+import type { StorefrontBootstrap, StorefrontCatalogProduct } from "@/lib/storefront-api";
 
 type CatalogGridProps = {
+  bootstrap?: StorefrontBootstrap | null;
   products: StorefrontCatalogProduct[];
   emptyTitle: string;
   emptyDescription: string;
 };
 
-export function CatalogGrid({ products, emptyTitle, emptyDescription }: CatalogGridProps) {
-  const normalizedProducts = mapCatalogProductsToCardData(products, products.length);
+export function CatalogGrid({ bootstrap, products, emptyTitle, emptyDescription }: CatalogGridProps) {
+  const normalizedProducts = mapCatalogProductsToCardData(products, products.length, bootstrap);
 
   if (normalizedProducts.length === 0) {
     return (

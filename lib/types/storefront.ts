@@ -183,6 +183,10 @@ export interface StorefrontCommercePayment {
 
 export interface StorefrontCommerceConfig {
   payment: StorefrontCommercePayment;
+  shipping?: {
+    message?: string;
+    freeShippingThreshold?: number;
+  };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -283,6 +287,8 @@ export interface StorefrontCatalogProduct {
   category?: string;
   price?: StorefrontPrice;
   availability?: unknown;
+  freeShipping?: boolean;
+  dispatchType?: string;
 }
 
 export interface StorefrontPagination {
@@ -325,6 +331,7 @@ export interface StorefrontProductDetail {
   brand?: string;
   price?: StorefrontPrice;
   availability?: unknown;
+  freeShipping?: boolean;
   deliveryInfo?: unknown;
   commercialInfo?: unknown;
 }

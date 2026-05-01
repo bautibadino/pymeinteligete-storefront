@@ -26,6 +26,7 @@ export type PresentationRenderContext = {
 };
 
 type ProductRecord = StorefrontCatalogProduct & Record<string, unknown>;
+type ProductPaymentContext = Pick<StorefrontBootstrap, "commerce"> | null | undefined;
 
 function formatMoney(amount: number | undefined, currency = "ARS"): string {
   if (typeof amount !== "number" || !Number.isFinite(amount)) {
@@ -185,7 +186,6 @@ function hasExplicitFeaturedFlag(product: ProductRecord): boolean {
 function readPriceAmount(product: ProductRecord): number | undefined {
   const enrichedPrice =
     readNumber(product.priceWithTax) ??
-    readNumber(product.discountedPrice) ??
     readNumber(product.finalPrice);
   if (enrichedPrice !== undefined) return enrichedPrice;
 
@@ -194,6 +194,15 @@ function readPriceAmount(product: ProductRecord): number | undefined {
   }
 
   return readNumber(product.price);
+}
+
+function readDiscountedPriceAmount(product: ProductRecord): number | undefined {
+  return (
+    readNumber(product.discountedPrice) ??
+    (isRecord(product.price)
+      ? readNumber(product.price.discountedAmount) ?? readNumber(product.price.discountedPrice)
+      : undefined)
+  );
 }
 
 function readCompareAtPrice(product: ProductRecord): number | undefined {
@@ -234,6 +243,32 @@ function readInstallments(product: ProductRecord, amount: number | undefined, cu
   };
 }
 
+function readBootstrapInstallments(
+  bootstrap: ProductPaymentContext,
+  amount: number | undefined,
+  currency: string,
+): ProductCardInstallments | undefined {
+  const installmentsConfig = bootstrap?.commerce.payment.installments;
+  const mercadoPagoEnabled = bootstrap?.commerce.payment.visibleMethods.includes("mercadopago") ?? false;
+  const count =
+    mercadoPagoEnabled && installmentsConfig?.enabled && typeof installmentsConfig.count === "number"
+      ? installmentsConfig.count
+      : undefined;
+
+  if (!count || count < 2 || typeof amount !== "number" || amount <= 0) {
+    return undefined;
+  }
+
+  const installmentAmount = Math.round((amount / count) * 100) / 100;
+
+  return {
+    count,
+    amount: installmentAmount,
+    formatted: formatMoney(installmentAmount, currency),
+    interestFree: true,
+  };
+}
+
 function readCashDiscount(product: ProductRecord, amount: number | undefined, currency: string): ProductCardData["cashDiscount"] {
   if (!isRecord(product.bestDiscount)) {
     return undefined;
@@ -248,6 +283,19 @@ function readCashDiscount(product: ProductRecord, amount: number | undefined, cu
     percent: percentage,
     formatted: label.includes("%") ? label : `${label} ${formatMoney(amount, currency)}`,
   };
+}
+
+function hasFreeShipping(
+  product: ProductRecord,
+  bootstrap: ProductPaymentContext,
+  amount: number | undefined,
+): boolean {
+  if (readBoolean(product.freeShipping) === true) {
+    return true;
+  }
+
+  const threshold = readNumber(bootstrap?.commerce.shipping?.freeShippingThreshold);
+  return typeof threshold === "number" && threshold > 0 && typeof amount === "number" && amount >= threshold;
 }
 
 function resolveProductStock(product: ProductRecord): ProductCardData["stock"] {
@@ -286,12 +334,17 @@ function resolveProductStock(product: ProductRecord): ProductCardData["stock"] {
   return undefined;
 }
 
-function readBadges(product: ProductRecord): ProductCardBadge[] | undefined {
+function readBadges(
+  product: ProductRecord,
+  bootstrap: ProductPaymentContext,
+  amount: number | undefined,
+): ProductCardBadge[] | undefined {
   const badges: ProductCardBadge[] = [];
 
   if (readBoolean(product.isFeatured)) badges.push({ label: "Top", tone: "accent" });
   if (readBoolean(product.isNewProduct)) badges.push({ label: "Nuevo", tone: "info" });
   if (readBoolean(product.isOnSale)) badges.push({ label: "Oferta", tone: "warning" });
+  if (hasFreeShipping(product, bootstrap, amount)) badges.push({ label: "Envío gratis", tone: "success" });
 
   const dispatchType = readString(product.dispatchType);
   if (dispatchType === "IMMEDIATE") {
@@ -301,7 +354,10 @@ function readBadges(product: ProductRecord): ProductCardBadge[] | undefined {
   return badges.length > 0 ? badges : undefined;
 }
 
-export function mapCatalogProductToCardData(product: StorefrontCatalogProduct): ProductCardData | null {
+export function mapCatalogProductToCardData(
+  product: StorefrontCatalogProduct,
+  bootstrap?: ProductPaymentContext,
+): ProductCardData | null {
   const record = product as ProductRecord;
   const slug = readProductSlug(record);
   const id = readProductId(record) ?? slug;
@@ -311,16 +367,20 @@ export function mapCatalogProductToCardData(product: StorefrontCatalogProduct): 
     return null;
   }
 
-  const amount = readPriceAmount(record);
+  const listAmount = readPriceAmount(record);
+  const discountedAmount = readDiscountedPriceAmount(record);
+  const effectiveAmount = discountedAmount ?? listAmount;
   const currency = readCurrency(record);
-  const compareAt = readCompareAtPrice(record);
+  const compareAt = discountedAmount !== undefined ? listAmount : readCompareAtPrice(record);
   const stock = resolveProductStock(record);
   const imageUrl = readProductImages(record);
   const brand = readProductBrand(record);
   const category = readProductCategory(record);
-  const installments = readInstallments(record, amount, currency);
-  const cashDiscount = readCashDiscount(record, amount, currency);
-  const badges = readBadges(record);
+  const installments =
+    readInstallments(record, compareAt ?? effectiveAmount, currency) ??
+    readBootstrapInstallments(bootstrap, compareAt ?? effectiveAmount, currency);
+  const cashDiscount = readCashDiscount(record, effectiveAmount, currency);
+  const badges = readBadges(record, bootstrap, effectiveAmount);
 
   return {
     id,
@@ -329,9 +389,9 @@ export function mapCatalogProductToCardData(product: StorefrontCatalogProduct): 
     ...(brand ? { brand } : category ? { brand: category } : {}),
     ...(imageUrl ? { imageUrl } : {}),
     price: {
-      amount: amount ?? 0,
+      amount: effectiveAmount ?? 0,
       currency,
-      formatted: formatMoney(amount, currency),
+      formatted: formatMoney(effectiveAmount, currency),
     },
     ...(typeof compareAt === "number"
       ? { compareAtPrice: { amount: compareAt, formatted: formatMoney(compareAt, currency) } }
@@ -346,6 +406,7 @@ export function mapCatalogProductToCardData(product: StorefrontCatalogProduct): 
 
 export function mapProductDetailToData(
   product: StorefrontProductDetail | null | undefined,
+  bootstrap?: ProductPaymentContext,
 ): ProductDetailData | undefined {
   if (!product) {
     return undefined;
@@ -353,11 +414,17 @@ export function mapProductDetailToData(
 
   const record = product as ProductRecord;
   const id = product.productId || readProductId(record) || product.slug;
-  const amount = readPriceAmount(record);
+  const listAmount = readPriceAmount(record);
+  const discountedAmount = readDiscountedPriceAmount(record);
+  const effectiveAmount = discountedAmount ?? listAmount;
   const currency = readCurrency(record);
-  const compareAt = readCompareAtPrice(record);
+  const compareAt = discountedAmount !== undefined ? listAmount : readCompareAtPrice(record);
   const imageUrls = Array.isArray(product.images) ? product.images.filter((image): image is string => Boolean(readString(image))) : [];
   const stock = resolveProductStock(record);
+  const installments =
+    readInstallments(record, compareAt ?? effectiveAmount, currency) ??
+    readBootstrapInstallments(bootstrap, compareAt ?? effectiveAmount, currency);
+  const cashDiscount = readCashDiscount(record, effectiveAmount, currency);
 
   return {
     id,
@@ -367,13 +434,15 @@ export function mapProductDetailToData(
     ...(product.description ? { description: product.description } : {}),
     images: imageUrls.map((url) => ({ url })),
     price: {
-      amount: amount ?? 0,
+      amount: effectiveAmount ?? 0,
       currency,
-      formatted: formatMoney(amount, currency),
+      formatted: formatMoney(effectiveAmount, currency),
     },
     ...(typeof compareAt === "number"
       ? { compareAtPrice: { amount: compareAt, formatted: formatMoney(compareAt, currency) } }
       : {}),
+    ...(installments ? { installments } : {}),
+    ...(cashDiscount ? { cashDiscount } : {}),
     ...(stock ? { stock } : {}),
     href: `/producto/${encodeURIComponent(product.slug)}`,
   };
@@ -406,6 +475,7 @@ export function selectProductsForGrid(
   products: StorefrontCatalogProduct[] | undefined,
   source: ProductGridSource,
   limit = 12,
+  bootstrap?: ProductPaymentContext,
 ): ProductCardData[] {
   const sourceProducts = products ?? [];
   let selected = sourceProducts;
@@ -439,16 +509,17 @@ export function selectProductsForGrid(
 
   return selected
     .slice(0, limit)
-    .map(mapCatalogProductToCardData)
+    .map((product) => mapCatalogProductToCardData(product, bootstrap))
     .filter((product): product is ProductCardData => product !== null);
 }
 
 export function mapCatalogProductsToCardData(
   products: StorefrontCatalogProduct[] | undefined,
   limit = 12,
+  bootstrap?: ProductPaymentContext,
 ): ProductCardData[] {
   return (products ?? [])
-    .map(mapCatalogProductToCardData)
+    .map((product) => mapCatalogProductToCardData(product, bootstrap))
     .filter((product): product is ProductCardData => product !== null)
     .slice(0, limit);
 }
@@ -463,6 +534,7 @@ export function selectRelatedProductsForDetail(
   products: StorefrontCatalogProduct[] | undefined,
   relatedSource: "category" | "brand" | "collection" | undefined,
   limit = 4,
+  bootstrap?: ProductPaymentContext,
 ): ProductCardData[] {
   if (!product || !products || products.length === 0 || !relatedSource) {
     return [];
@@ -490,7 +562,7 @@ export function selectRelatedProductsForDetail(
 
   return selected
     .slice(0, limit)
-    .map(mapCatalogProductToCardData)
+    .map((candidate) => mapCatalogProductToCardData(candidate, bootstrap))
     .filter((candidate): candidate is ProductCardData => candidate !== null);
 }
 

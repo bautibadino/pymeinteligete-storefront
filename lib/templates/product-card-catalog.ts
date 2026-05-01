@@ -144,6 +144,25 @@ export interface ProductCardStock {
   label?: string;
 }
 
+export const PRODUCT_CARD_STOCK_BADGE_TONES = [
+  "slate",
+  "forest",
+  "ocean",
+  "amber",
+] as const;
+
+export type ProductCardStockBadgeTone =
+  (typeof PRODUCT_CARD_STOCK_BADGE_TONES)[number];
+
+export function isProductCardStockBadgeTone(
+  value: unknown,
+): value is ProductCardStockBadgeTone {
+  return (
+    typeof value === "string" &&
+    (PRODUCT_CARD_STOCK_BADGE_TONES as readonly string[]).includes(value)
+  );
+}
+
 /**
  * Datos del producto que cada variante de card consume.
  * Provienen de la API del producto (no del contentSchema del módulo).
@@ -173,6 +192,8 @@ export interface ProductCardDisplayOptions {
   showInstallments?: boolean | undefined;
   showCashDiscount?: boolean | undefined;
   showAddToCart?: boolean | undefined;
+  showStockBadge?: boolean | undefined;
+  stockBadgeTone?: ProductCardStockBadgeTone | undefined;
 }
 
 export const ProductCardDisplayOptionsSchema = z.object({
@@ -181,4 +202,6 @@ export const ProductCardDisplayOptionsSchema = z.object({
   showInstallments: z.boolean().optional(),
   showCashDiscount: z.boolean().optional(),
   showAddToCart: z.boolean().optional(),
+  showStockBadge: z.boolean().optional(),
+  stockBadgeTone: z.enum(PRODUCT_CARD_STOCK_BADGE_TONES).optional(),
 });

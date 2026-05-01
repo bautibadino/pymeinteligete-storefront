@@ -149,6 +149,8 @@ describe("ProductGridContentSchema", () => {
         showBadges: true,
         showInstallments: false,
         showCashDiscount: true,
+        showStockBadge: true,
+        stockBadgeTone: "amber",
         showAddToCart: true,
       },
       showViewAllLink: true,
@@ -202,5 +204,21 @@ describe("normalizeProductGridContent", () => {
 
     expect(normalized.source).toEqual({ type: "handpicked", productIds: ["prod-1", "prod-2"] });
     expect(normalized.cardVariant).toBe("premium-commerce");
+  });
+
+  it("conserva el tono del badge de stock cuando el builder envía un preset válido", () => {
+    const normalized = normalizeProductGridContent({
+      source: { type: "featured" },
+      cardVariant: "classic",
+      cardDisplayOptions: {
+        showStockBadge: true,
+        stockBadgeTone: "forest",
+      },
+    });
+
+    expect(normalized.cardDisplayOptions).toEqual({
+      showStockBadge: true,
+      stockBadgeTone: "forest",
+    });
   });
 });

@@ -185,6 +185,8 @@ describe("CatalogLayoutContentSchema", () => {
         showBadges: true,
         showInstallments: false,
         showCashDiscount: true,
+        showStockBadge: true,
+        stockBadgeTone: "ocean",
         showAddToCart: true,
       },
       filters: {
@@ -278,6 +280,18 @@ describe("normalizeCatalogLayoutContent", () => {
     expect(normalized.filters).toEqual({ brand: true, availability: false });
     expect(normalized.sort).toEqual({ options: ["priceAsc", "popular"], default: "priceAsc" });
     expect(normalized.perPage).toBe(96);
+  });
+
+  it("normaliza display options nuevas del badge de stock y omite tonos inválidos", () => {
+    const normalized = normalizeCatalogLayoutContent({
+      cardVariant: "classic",
+      cardDisplayOptions: {
+        showStockBadge: true,
+        stockBadgeTone: "lavanda",
+      },
+    });
+
+    expect(normalized.cardDisplayOptions).toEqual({ showStockBadge: true });
   });
 
   it("omite sort si el builder no envía opciones válidas", () => {

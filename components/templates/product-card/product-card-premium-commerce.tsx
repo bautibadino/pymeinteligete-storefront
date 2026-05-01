@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Truck, Clock } from "lucide-react";
 
 import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +10,7 @@ import type {
   ProductCardDisplayOptions,
   ProductCardBadge,
 } from "@/lib/templates/product-card-catalog";
+import { ProductCardStockBadge } from "@/components/templates/product-card/product-card-stock-badge";
 
 interface ProductCardPremiumCommerceProps {
   product: ProductCardData;
@@ -44,6 +44,8 @@ export function ProductCardPremiumCommerce({
     showInstallments = true,
     showCashDiscount = true,
     showAddToCart = true,
+    showStockBadge = true,
+    stockBadgeTone = "forest",
   } = displayOptions;
 
   const {
@@ -60,7 +62,6 @@ export function ProductCardPremiumCommerce({
   } = product;
 
   const isAvailable = stock === undefined || stock.available;
-  const stockLabel = stock?.label;
   const hasBadges = showBadges && badges && badges.length > 0;
 
   return (
@@ -101,16 +102,12 @@ export function ProductCardPremiumCommerce({
             />
           )}
 
-          {/* Indicador de stock sobre imagen */}
-          {stockLabel ? (
-            <div className="absolute bottom-2 left-2 right-2 flex items-center gap-1 rounded-full bg-panel/90 px-2 py-0.5 text-[10px] font-medium text-foreground backdrop-blur-sm">
-              {stockLabel.toLowerCase().includes("inmediato") ? (
-                <Truck className="size-3 shrink-0 text-primary" aria-hidden="true" />
-              ) : (
-                <Clock className="size-3 shrink-0 text-muted" aria-hidden="true" />
-              )}
-              <span className="truncate">{stockLabel}</span>
-            </div>
+          {showStockBadge ? (
+            <ProductCardStockBadge
+              stock={stock}
+              tone={stockBadgeTone}
+              className="absolute bottom-2 left-2 z-10 backdrop-blur-sm"
+            />
           ) : null}
         </div>
       </Link>

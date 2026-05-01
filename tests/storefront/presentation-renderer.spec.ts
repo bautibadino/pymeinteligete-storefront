@@ -341,6 +341,7 @@ describe("presentation renderer logic", () => {
         bestDiscount: { percentage: 20, label: "20% OFF contado" },
         stock: 7,
         dispatchType: "IMMEDIATE",
+        freeShipping: true,
         category: { name: "Neumáticos", slug: "neumaticos" },
         installments: { enabled: true, count: 6, amount: 76896, interestFree: true },
         images: [{ url: "https://cdn.example.com/cubierta.webp", alt: "Cubierta" }],
@@ -379,11 +380,13 @@ describe("presentation renderer logic", () => {
       slug: "cubierta-premium",
       href: "/producto/cubierta-premium",
       imageUrl: "https://cdn.example.com/cubierta.webp",
-      price: { amount: 461374 },
+      price: { amount: 369099 },
+      compareAtPrice: { amount: 461374 },
       installments: { count: 6, interestFree: true },
       cashDiscount: { percent: 20, formatted: "20% OFF contado" },
       stock: { available: true, label: "Stock disponible" },
     });
+    expect(module.products[0]?.badges?.map((badge) => badge.label)).toContain("Envío gratis");
     expect(module.products[0]?.badges?.map((badge) => badge.label)).toContain("Despacho inmediato");
   });
 
@@ -466,6 +469,91 @@ describe("presentation renderer logic", () => {
       price: { amount: 123456 },
       stock: { available: true, label: "Stock disponible" },
     });
+  });
+
+  it("usa cuotas del bootstrap cuando el producto público no trae installments enriquecidos", () => {
+    const products = [
+      {
+        productId: "prod-bootstrap-1",
+        ecommerceSlug: "cubierta-bootstrap",
+        name: "Cubierta Bootstrap",
+        priceWithTax: 240000,
+        category: { name: "Neumáticos", slug: "neumaticos" },
+      },
+    ] as unknown as StorefrontCatalogProduct[];
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "catalogLayout",
+        variant: "filters-sidebar",
+        content: {
+          cardVariant: "premium-commerce",
+          perPage: 12,
+        },
+      }),
+      {
+        products,
+        bootstrap: {
+          commerce: {
+            payment: {
+              visibleMethods: ["mercadopago"],
+              installments: { enabled: true, count: 6, label: "Hasta 6 cuotas sin interés" },
+            },
+          },
+        } as StorefrontBootstrap,
+      },
+    ) as {
+      products: Array<{
+        installments?: { count: number; amount: number; interestFree: boolean };
+      }>;
+    };
+
+    expect(module.products[0]?.installments).toMatchObject({
+      count: 6,
+      amount: 40000,
+      interestFree: true,
+    });
+  });
+
+  it("muestra envío gratis cuando el producto supera el umbral global del shop", () => {
+    const products = [
+      {
+        productId: "prod-envio-threshold",
+        ecommerceSlug: "cubierta-envio-threshold",
+        name: "Cubierta Envío Threshold",
+        priceWithTax: 240000,
+      },
+    ] as unknown as StorefrontCatalogProduct[];
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "catalogLayout",
+        variant: "filters-sidebar",
+        content: {
+          cardVariant: "premium-commerce",
+          perPage: 12,
+        },
+      }),
+      {
+        products,
+        bootstrap: {
+          commerce: {
+            payment: {
+              visibleMethods: [],
+            },
+            shipping: {
+              freeShippingThreshold: 200000,
+            },
+          },
+        } as unknown as StorefrontBootstrap,
+      },
+    ) as {
+      products: Array<{
+        badges?: Array<{ label: string }>;
+      }>;
+    };
+
+    expect(module.products[0]?.badges?.map((badge) => badge.label)).toContain("Envío gratis");
   });
 
   it("filtra productos sin slug estable para evitar /producto/undefined", () => {

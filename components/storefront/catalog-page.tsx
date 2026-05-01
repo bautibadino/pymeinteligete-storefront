@@ -137,6 +137,7 @@ export function CatalogPageContent({
       ) : null}
 
       <CatalogGrid
+        bootstrap={bootstrap}
         products={products}
         emptyTitle="Sin productos para mostrar"
         emptyDescription="No encontramos productos para la búsqueda actual. Probá ajustar los filtros o volvé más tarde."

@@ -7,6 +7,7 @@ import type {
   ProductCardData,
   ProductCardDisplayOptions,
 } from "@/lib/templates/product-card-catalog";
+import { ProductCardStockBadge } from "@/components/templates/product-card/product-card-stock-badge";
 
 interface ProductCardCompactProps {
   product: ProductCardData;
@@ -22,7 +23,11 @@ export function ProductCardCompact({
   product,
   displayOptions = {},
 }: ProductCardCompactProps) {
-  const { showBrand = false } = displayOptions;
+  const {
+    showBrand = false,
+    showStockBadge = true,
+    stockBadgeTone = "forest",
+  } = displayOptions;
 
   const { name, brand, imageUrl, price, stock, href } = product;
 
@@ -49,6 +54,14 @@ export function ProductCardCompact({
               className="flex h-full w-full bg-gradient-to-br from-primary-soft to-accent-soft"
             />
           )}
+
+          {showStockBadge ? (
+            <ProductCardStockBadge
+              stock={stock}
+              tone={stockBadgeTone}
+              className="absolute bottom-2 left-2 z-10 max-w-[calc(100%-1rem)] backdrop-blur-sm"
+            />
+          ) : null}
 
           {!isAvailable ? (
             <div

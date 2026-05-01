@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 
+import { ProductCardStockBadge } from "@/components/templates/product-card/product-card-stock-badge";
 import { themeTypographyStyles } from "@/lib/theme";
 import type {
   ProductCardData,
@@ -21,7 +22,11 @@ export function ProductCardEditorial({
   product,
   displayOptions = {},
 }: ProductCardEditorialProps) {
-  const { showBrand = true } = displayOptions;
+  const {
+    showBrand = true,
+    showStockBadge = true,
+    stockBadgeTone = "forest",
+  } = displayOptions;
 
   const { name, brand, imageUrl, price, compareAtPrice, href } = product;
 
@@ -51,6 +56,14 @@ export function ProductCardEditorial({
             aria-hidden="true"
             className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           />
+
+          {showStockBadge ? (
+            <ProductCardStockBadge
+              stock={product.stock}
+              tone={stockBadgeTone}
+              className="absolute bottom-3 left-3 z-10 backdrop-blur-sm"
+            />
+          ) : null}
         </div>
       </Link>
 

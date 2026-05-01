@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { StorefrontCategory } from "@/lib/storefront-api";
 
 import {
+  isProductCardStockBadgeTone,
   resolveProductCardTemplateId,
   type ProductCardData,
   type ProductCardDisplayOptions,
@@ -127,12 +128,18 @@ function readDisplayOptions(value: unknown): ProductCardDisplayOptions | undefin
   const showInstallments = readBoolean(value.showInstallments);
   const showCashDiscount = readBoolean(value.showCashDiscount);
   const showAddToCart = readBoolean(value.showAddToCart);
+  const showStockBadge = readBoolean(value.showStockBadge);
+  const stockBadgeTone = isProductCardStockBadgeTone(value.stockBadgeTone)
+    ? value.stockBadgeTone
+    : undefined;
 
   if (showBrand !== undefined) displayOptions.showBrand = showBrand;
   if (showBadges !== undefined) displayOptions.showBadges = showBadges;
   if (showInstallments !== undefined) displayOptions.showInstallments = showInstallments;
   if (showCashDiscount !== undefined) displayOptions.showCashDiscount = showCashDiscount;
   if (showAddToCart !== undefined) displayOptions.showAddToCart = showAddToCart;
+  if (showStockBadge !== undefined) displayOptions.showStockBadge = showStockBadge;
+  if (stockBadgeTone !== undefined) displayOptions.stockBadgeTone = stockBadgeTone;
 
   return Object.keys(displayOptions).length > 0 ? displayOptions : undefined;
 }
