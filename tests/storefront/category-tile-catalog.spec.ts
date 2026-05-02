@@ -185,6 +185,25 @@ describe("validateCategoryTileContent", () => {
     expect(result.success).toBe(true);
   });
 
+  it("acepta metadata aditiva por tile mientras imageUrl siga siendo público", () => {
+    const result = validateCategoryTileContent("grid-cards", {
+      tiles: [
+        {
+          label: "A",
+          href: "/a",
+          imageUrl: "https://cdn.example.com/img.jpg",
+          image: {
+            url: "https://cdn.example.com/img.jpg",
+            alt: "Imagen pública",
+            width: 1200,
+            height: 1200,
+          },
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
   it("acepta campo icon como string arbitrario (nombre lucide)", () => {
     const result = validateCategoryTileContent("compact-list", {
       tiles: [{ label: "A", href: "/a", icon: "car" }],

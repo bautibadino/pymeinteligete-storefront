@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 
 // Hero
 import { HeroCommerce } from "@/components/templates/hero/hero-commerce";
+import { HeroButtonOverlay } from "@/components/templates/hero/hero-button-overlay";
 import { HeroEditorial } from "@/components/templates/hero/hero-editorial";
 import { HeroSplit } from "@/components/templates/hero/hero-split";
 import { HeroWorkshop } from "@/components/templates/hero/hero-workshop";
@@ -139,6 +140,7 @@ export const HERO_TEMPLATES: Record<HeroTemplateId, HeroTemplateComponent> = {
   workshop: HeroWorkshop,
   editorial: HeroEditorial,
   commerce: HeroCommerce,
+  "button-overlay": HeroButtonOverlay,
 };
 
 export function resolveHeroTemplate(templateId: unknown): HeroTemplateComponent {

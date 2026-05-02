@@ -22,8 +22,8 @@ function buildHero(overrides: Partial<HeroModule> = {}): HeroModule {
 }
 
 describe("Hero template catalog", () => {
-  it("expone las 3 variantes declaradas en el schema de módulos", () => {
-    expect(HERO_TEMPLATE_IDS).toEqual(["split", "workshop", "editorial", "commerce"]);
+  it("expone las variantes declaradas en el schema de módulos", () => {
+    expect(HERO_TEMPLATE_IDS).toEqual(["split", "workshop", "editorial", "commerce", "button-overlay"]);
   });
 
   it("describe cada template con label, descripción y casos de uso", () => {
@@ -41,6 +41,7 @@ describe("Hero template catalog", () => {
     expect(isHeroTemplateId("workshop")).toBe(true);
     expect(isHeroTemplateId("editorial")).toBe(true);
     expect(isHeroTemplateId("commerce")).toBe(true);
+    expect(isHeroTemplateId("button-overlay")).toBe(true);
     expect(isHeroTemplateId("no-existe")).toBe(false);
     expect(isHeroTemplateId(undefined)).toBe(false);
     expect(isHeroTemplateId(null)).toBe(false);
@@ -53,6 +54,7 @@ describe("Hero template catalog", () => {
     expect(resolveHeroTemplateId("workshop")).toBe("workshop");
     expect(resolveHeroTemplateId("editorial")).toBe("editorial");
     expect(resolveHeroTemplateId("commerce")).toBe("commerce");
+    expect(resolveHeroTemplateId("button-overlay")).toBe("button-overlay");
   });
 
   it("degrada al default cuando el input no matchea", () => {

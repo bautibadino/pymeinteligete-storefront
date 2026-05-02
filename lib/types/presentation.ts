@@ -79,6 +79,21 @@ export interface ThemeConfig {
   overrides?: Partial<ThemeTokens>;
 }
 
+export interface PresentationResolvedMediaMetadata {
+  url?: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+  mimeType?: string;
+}
+
+export interface PresentationSeoConfig {
+  title?: string;
+  description?: string;
+  ogImageUrl?: string;
+  ogImage?: PresentationResolvedMediaMetadata;
+}
+
 export type SectionType =
   | "announcementBar"
   | "header"
@@ -114,11 +129,7 @@ export interface GlobalBlocks {
 }
 
 export interface PageConfig {
-  seo?: {
-    title?: string;
-    description?: string;
-    ogImageUrl?: string;
-  };
+  seo?: PresentationSeoConfig;
   sections: SectionInstance[];
 }
 

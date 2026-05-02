@@ -19,6 +19,7 @@ export type ModuleVariant =
   | "workshop"
   | "editorial"
   | "commerce"
+  | "button-overlay"
   | "grid"
   | "spotlight"
   | "rail"
@@ -56,7 +57,8 @@ export type HeroBadge = {
   label: string;
 };
 
-export type HeroModule = StorefrontModuleBase<"hero", "split" | "workshop" | "editorial" | "commerce"> & {
+export type HeroModule = StorefrontModuleBase<"hero", "split" | "workshop" | "editorial" | "commerce" | "button-overlay"> & {
+  buttonPosition?: "left" | "right";
   eyebrow?: string;
   title: string;
   description: string;

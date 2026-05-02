@@ -19,7 +19,7 @@ const ERP_CATALOG_DESCRIPTOR_IDS = {
   announcementBar: ["static", "rotating", "scroll", "badges", "countdown"],
   header: ["centered-logo", "left-logo-search", "sticky-compact", "minimal"],
   footer: ["four-columns", "minimal", "with-newsletter", "corporate"],
-  hero: ["split", "workshop", "editorial", "commerce"],
+  hero: ["split", "workshop", "editorial", "commerce", "button-overlay"],
   trustBar: ["inline", "stacked-cards", "rail-dense", "compact-strip"],
   categoryTile: ["grid-cards", "rail-horizontal", "masonry", "compact-list"],
   productGrid: ["carousel-arrows", "grid-3", "grid-4", "masonry", "spotlight-carousel"],

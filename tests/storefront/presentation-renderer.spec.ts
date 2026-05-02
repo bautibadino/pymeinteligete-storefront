@@ -176,6 +176,38 @@ describe("presentation renderer logic", () => {
     expect(html).toContain('data-template="announcement-bar-rotating"');
   });
 
+  it("renderiza el hero button-overlay con un único CTA superpuesto", () => {
+    const presentation = buildPresentation({
+      pages: {
+        home: {
+          sections: [
+            buildSection({
+              id: "hero-overlay-1",
+              type: "hero",
+              variant: "button-overlay",
+              content: {
+                imageUrl: "https://cdn.example.com/hero-campaign.webp",
+                imageAlt: "Portada de campaña",
+                buttonPosition: "right",
+                primaryCta: { label: "Ver más", href: "/catalogo", variant: "primary" },
+              },
+            }),
+          ],
+        },
+        catalog: { sections: [] },
+        product: { sections: [] },
+      },
+    });
+
+    const html = renderToStaticMarkup(
+      createElement(PresentationRenderer, { presentation, page: "home" }),
+    );
+
+    expect(html).toContain('data-template="hero-button-overlay"');
+    expect(html).toContain("Ver más");
+    expect(html).toContain("/catalogo");
+  });
+
   it("expone globals como secciones seleccionables para la preview del editor", () => {
     const presentation = buildPresentation({
       globals: {
@@ -696,6 +728,52 @@ describe("presentation renderer logic", () => {
     expect(module.logoAlt).toBe("Alt editable");
   });
 
+  it("expone metadata saneada de logo sin dejar de usar logoUrl público en header", () => {
+    const bootstrap = {
+      tenant: { tenantSlug: "tenant-demo", status: "active" },
+      branding: {
+        storeName: "Tienda Demo",
+        logoUrl: "https://cdn.example.com/logo-bootstrap.svg",
+        logo: {
+          url: "https://cdn.example.com/logo-bootstrap.svg",
+          alt: "Logo demo",
+          width: 320,
+          height: 120,
+          mimeType: "image/svg+xml",
+          assetId: "interno-que-no-debe-salir",
+        },
+      },
+      navigation: { headerLinks: [], footerColumns: [] },
+    } as unknown as StorefrontBootstrap;
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "header",
+        variant: "left-logo-search",
+        content: {},
+      }),
+      { bootstrap },
+    ) as {
+      logoUrl?: string;
+      logoMetadata?: {
+        url?: string;
+        alt?: string;
+        width?: number;
+        height?: number;
+        mimeType?: string;
+      };
+    };
+
+    expect(module.logoUrl).toBe("https://cdn.example.com/logo-bootstrap.svg");
+    expect(module.logoMetadata).toEqual({
+      url: "https://cdn.example.com/logo-bootstrap.svg",
+      alt: "Logo demo",
+      width: 320,
+      height: 120,
+      mimeType: "image/svg+xml",
+    });
+  });
+
   it("apaga showAccount en storefront aunque llegue activado desde contenido legacy", () => {
     const module = adaptSectionToModule(
       buildSection({
@@ -733,6 +811,51 @@ describe("presentation renderer logic", () => {
     ) as { content: { logoUrl?: string } };
 
     expect(module.content.logoUrl).toBe("https://cdn.example.com/logo-bootstrap.svg");
+  });
+
+  it("mantiene imageUrl público del hero y expone metadata aditiva saneada aparte", () => {
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "hero",
+        variant: "commerce",
+        content: {
+          imageUrl: "https://cdn.example.com/hero-publica.webp",
+          imageAlt: "Hero pública",
+          image: {
+            url: "https://cdn.example.com/hero-publica.webp",
+            alt: "Metadata pública",
+            width: 1600,
+            height: 900,
+            mimeType: "image/webp",
+            assetId: "asset-interno",
+          },
+          title: "Portada comercial",
+        },
+      }),
+    ) as {
+      imageUrl?: string;
+      image?: { src: string; alt: string };
+      imageMetadata?: {
+        url?: string;
+        alt?: string;
+        width?: number;
+        height?: number;
+        mimeType?: string;
+      };
+    };
+
+    expect(module.imageUrl).toBe("https://cdn.example.com/hero-publica.webp");
+    expect(module.image).toEqual({
+      src: "https://cdn.example.com/hero-publica.webp",
+      alt: "Hero pública",
+    });
+    expect(module.imageMetadata).toEqual({
+      url: "https://cdn.example.com/hero-publica.webp",
+      alt: "Metadata pública",
+      width: 1600,
+      height: 900,
+      mimeType: "image/webp",
+    });
   });
 
   it("degrada productGrid a lista vacía profesional cuando no hay productos del backend", () => {
