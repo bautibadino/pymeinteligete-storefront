@@ -27,6 +27,12 @@ export type TenantTheme = {
     danger: string;
     dangerSoft: string;
   };
+  controls: {
+    surfaceMuted: string;
+    surfaceRaised: string;
+    surfaceOverlay: string;
+    focusRing: string;
+  };
   typography: {
     heading: string;
     body: string;
@@ -47,6 +53,7 @@ type ThemeConfig = {
   preset?: ThemePreset;
   name?: string;
   colors?: Partial<TenantTheme["colors"]>;
+  controls?: Partial<TenantTheme["controls"]>;
   typography?: Partial<TenantTheme["typography"]>;
   radii?: Partial<TenantTheme["radii"]>;
   shadow?: string;
@@ -91,6 +98,13 @@ const THEME_RADIUS_KEYS = [
   "xlarge",
   "pill",
 ] as const satisfies readonly (keyof TenantTheme["radii"])[];
+
+const THEME_CONTROL_KEYS = [
+  "surfaceMuted",
+  "surfaceRaised",
+  "surfaceOverlay",
+  "focusRing",
+] as const satisfies readonly (keyof TenantTheme["controls"])[];
 
 const PRESENTATION_COLOR_TOKEN_MAP = {
   bg: "background",
@@ -150,6 +164,13 @@ const PRESENTATION_RADIUS_TOKEN_MAP = {
   pill: "pill",
 } as const satisfies Record<string, keyof TenantTheme["radii"]>;
 
+const PRESENTATION_CONTROL_TOKEN_MAP = {
+  surfaceMuted: "surfaceMuted",
+  surfaceRaised: "surfaceRaised",
+  surfaceOverlay: "surfaceOverlay",
+  focusRing: "focusRing",
+} as const satisfies Record<string, keyof TenantTheme["controls"]>;
+
 export const THEME_PRESETS: Record<ThemePreset, TenantTheme> = {
   industrialWarm: {
     preset: "industrialWarm",
@@ -175,6 +196,12 @@ export const THEME_PRESETS: Record<ThemePreset, TenantTheme> = {
       draftSoft: "rgba(95, 90, 143, 0.14)",
       danger: "#7d2c2c",
       dangerSoft: "rgba(125, 44, 44, 0.12)",
+    },
+    controls: {
+      surfaceMuted: "rgba(255, 250, 242, 0.72)",
+      surfaceRaised: "rgba(255, 252, 247, 0.96)",
+      surfaceOverlay: "rgba(255, 250, 242, 0.84)",
+      focusRing: "rgba(140, 67, 25, 0.18)",
     },
     typography: {
       heading: '"Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif',
@@ -216,6 +243,12 @@ export const THEME_PRESETS: Record<ThemePreset, TenantTheme> = {
       danger: "#8a302e",
       dangerSoft: "rgba(138, 48, 46, 0.1)",
     },
+    controls: {
+      surfaceMuted: "rgba(247, 248, 246, 0.78)",
+      surfaceRaised: "rgba(255, 255, 255, 0.98)",
+      surfaceOverlay: "rgba(255, 255, 255, 0.86)",
+      focusRing: "rgba(36, 63, 54, 0.16)",
+    },
     typography: {
       heading: '"Optima", "Avenir Next", "Segoe UI", sans-serif',
       body: '"Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif',
@@ -255,6 +288,12 @@ export const THEME_PRESETS: Record<ThemePreset, TenantTheme> = {
       draftSoft: "rgba(170, 162, 255, 0.14)",
       danger: "#f08a7e",
       dangerSoft: "rgba(240, 138, 126, 0.13)",
+    },
+    controls: {
+      surfaceMuted: "rgba(36, 34, 31, 0.78)",
+      surfaceRaised: "rgba(29, 28, 26, 0.98)",
+      surfaceOverlay: "rgba(18, 17, 16, 0.86)",
+      focusRing: "rgba(216, 154, 82, 0.22)",
     },
     typography: {
       heading: '"Didot", "Bodoni 72", "Iowan Old Style", serif',
@@ -312,6 +351,7 @@ function pickPresentationThemeOverrides(value: unknown): ThemeConfig {
   }
 
   const colors: Partial<TenantTheme["colors"]> = {};
+  const controls: Partial<TenantTheme["controls"]> = {};
   const typography: Partial<TenantTheme["typography"]> = {};
   const radii: Partial<TenantTheme["radii"]> = {};
   const shadow = readString(value.shadow);
@@ -341,8 +381,17 @@ function pickPresentationThemeOverrides(value: unknown): ThemeConfig {
     }
   }
 
+  for (const [token, themeKey] of Object.entries(PRESENTATION_CONTROL_TOKEN_MAP)) {
+    const override = readString(value[token]);
+
+    if (override) {
+      controls[themeKey] = override;
+    }
+  }
+
   return {
     ...(Object.keys(colors).length > 0 ? { colors } : {}),
+    ...(Object.keys(controls).length > 0 ? { controls } : {}),
     ...(Object.keys(typography).length > 0 ? { typography } : {}),
     ...(Object.keys(radii).length > 0 ? { radii } : {}),
     ...(shadow ? { shadow } : {}),
@@ -359,6 +408,10 @@ function mergeThemeConfigs(...configs: ThemeConfig[]): ThemeConfig {
         ...merged.colors,
         ...config.colors,
       },
+      controls: {
+        ...merged.controls,
+        ...config.controls,
+      },
       typography: {
         ...merged.typography,
         ...config.typography,
@@ -370,6 +423,75 @@ function mergeThemeConfigs(...configs: ThemeConfig[]): ThemeConfig {
     }),
     {},
   );
+}
+
+function readPaletteThemeConfig(value: unknown): ThemeConfig {
+  if (!isRecord(value)) {
+    return {};
+  }
+
+  const palette = isRecord(value.palette) ? value.palette : undefined;
+  if (!palette) {
+    return {};
+  }
+
+  const primary = isRecord(palette.primary) ? palette.primary : undefined;
+  const secondary = isRecord(palette.secondary) ? palette.secondary : undefined;
+  const surface = isRecord(palette.surface) ? palette.surface : undefined;
+  const state = isRecord(palette.state) ? palette.state : undefined;
+  const focus = isRecord(palette.focus) ? palette.focus : undefined;
+
+  const colors: Partial<TenantTheme["colors"]> = {};
+  const controls: Partial<TenantTheme["controls"]> = {};
+
+  const assignColor = (key: keyof TenantTheme["colors"], token: unknown) => {
+    const value = readString(token);
+    if (value) {
+      colors[key] = value;
+    }
+  };
+
+  const assignControl = (key: keyof TenantTheme["controls"], token: unknown) => {
+    const value = readString(token);
+    if (value) {
+      controls[key] = value;
+    }
+  };
+
+  assignColor("primary", primary?.solid);
+  assignColor("primarySoft", primary?.soft);
+  assignColor("primaryContrast", primary?.contrast);
+  assignColor("accent", secondary?.solid);
+  assignColor("accentSoft", secondary?.soft);
+
+  assignColor("background", surface?.background);
+  assignColor("paper", surface?.paper);
+  assignColor("panel", surface?.panel);
+  assignColor("panelStrong", surface?.panelStrong);
+  assignColor("border", surface?.line);
+  assignControl("surfaceMuted", surface?.muted);
+  assignControl("surfaceRaised", surface?.raised);
+  assignControl("surfaceOverlay", surface?.overlay);
+
+  const live = isRecord(state?.live) ? state.live : undefined;
+  const paused = isRecord(state?.paused) ? state.paused : undefined;
+  const draft = isRecord(state?.draft) ? state.draft : undefined;
+  const disabled = isRecord(state?.disabled) ? state.disabled : undefined;
+
+  assignColor("success", live?.solid);
+  assignColor("successSoft", live?.soft);
+  assignColor("warning", paused?.solid);
+  assignColor("warningSoft", paused?.soft);
+  assignColor("draft", draft?.solid);
+  assignColor("draftSoft", draft?.soft);
+  assignColor("danger", disabled?.solid);
+  assignColor("dangerSoft", disabled?.soft);
+  assignControl("focusRing", focus?.ring);
+
+  return {
+    ...(Object.keys(colors).length > 0 ? { colors } : {}),
+    ...(Object.keys(controls).length > 0 ? { controls } : {}),
+  };
 }
 
 function readThemeConfig(value: unknown): ThemeConfig {
@@ -386,19 +508,25 @@ function readThemeConfig(value: unknown): ThemeConfig {
   const shadow = readString(value.shadow);
   const contentWidth = readString(value.contentWidth);
   const colors = pickStringOverrides(value.colors, THEME_COLOR_KEYS);
+  const controls = pickStringOverrides(value.controls, THEME_CONTROL_KEYS);
   const typography = pickStringOverrides(value.typography, THEME_TYPOGRAPHY_KEYS);
   const radii = pickStringOverrides(value.radii, THEME_RADIUS_KEYS);
   const legacyConfig: ThemeConfig = {
     ...(preset ? { preset } : {}),
     ...(name ? { name } : {}),
     ...(colors ? { colors } : {}),
+    ...(controls ? { controls } : {}),
     ...(typography ? { typography } : {}),
     ...(radii ? { radii } : {}),
     ...(shadow ? { shadow } : {}),
     ...(contentWidth ? { contentWidth } : {}),
   };
 
-  return mergeThemeConfigs(legacyConfig, pickPresentationThemeOverrides(value.overrides));
+  return mergeThemeConfigs(
+    legacyConfig,
+    readPaletteThemeConfig(value),
+    pickPresentationThemeOverrides(value.overrides),
+  );
 }
 
 function readBrandingThemeConfig(bootstrap: StorefrontBootstrap | null): BrandingThemeConfig {
@@ -445,6 +573,10 @@ function mergeThemeConfig(base: TenantTheme, config: ThemeConfig): TenantTheme {
     colors: {
       ...base.colors,
       ...config.colors,
+    },
+    controls: {
+      ...base.controls,
+      ...config.controls,
     },
     typography,
     radii: {

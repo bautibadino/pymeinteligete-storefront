@@ -8,11 +8,15 @@
   --paper: rgba(255, 250, 242, 0.88);
   --panel: rgba(255, 252, 247, 0.94);
   --panel-strong: #fffaf2;
+  --surface-muted: rgba(255, 250, 242, 0.72);
+  --surface-raised: rgba(255, 252, 247, 0.96);
+  --surface-overlay: rgba(255, 250, 242, 0.84);
   --ink: #1f1a17;
   --muted: #6f6259;
   --line: rgba(58, 42, 29, 0.12);
   --accent: #8c4319;
   --accent-soft: rgba(140, 67, 25, 0.12);
+  --focus-ring: rgba(140, 67, 25, 0.18);
   --accent-live: #235f53;
   --accent-live-soft: rgba(35, 95, 83, 0.12);
   --accent-paused: #a7651d;
@@ -27,6 +31,7 @@
   --action-contrast: #fffaf2;
   --font-heading: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
   --font-body: "Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif;
+  --font-accent: "Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif;
   --font-mono: "SFMono-Regular", "SF Mono", "Roboto Mono", monospace;
   --radius-xl: 34px;
   --radius-lg: 24px;
@@ -567,7 +572,7 @@ img {
 .filter-strip {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .filter-chip,
@@ -575,11 +580,20 @@ img {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
+  min-height: 34px;
+  padding: 7px 12px;
   border-radius: 999px;
-  background: var(--accent-soft);
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.filter-chip strong,
+.availability-pill strong {
   color: var(--accent);
-  font-size: 0.86rem;
+  font-weight: 700;
 }
 
 .product-grid {

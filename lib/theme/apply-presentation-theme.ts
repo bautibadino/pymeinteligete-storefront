@@ -12,12 +12,16 @@ const VAR_MAP: Record<keyof ThemeTokens, CssVarName> = {
   paper: "--paper",
   panel: "--panel",
   panelStrong: "--panel-strong",
+  surfaceMuted: "--surface-muted",
+  surfaceRaised: "--surface-raised",
+  surfaceOverlay: "--surface-overlay",
   ink: "--ink",
   muted: "--muted",
   line: "--line",
   accent: "--accent",
   accentSoft: "--accent-soft",
   accentContrast: "--action-contrast",
+  focusRing: "--focus-ring",
   moduleAccent: "--module-accent",
   moduleAccentSoft: "--module-accent-soft",
   accentLive: "--accent-live",
@@ -50,6 +54,12 @@ function resolvePresetValue(preset: TenantTheme, token: keyof ThemeTokens): stri
       return preset.colors.panel;
     case "panelStrong":
       return preset.colors.panelStrong;
+    case "surfaceMuted":
+      return preset.controls.surfaceMuted;
+    case "surfaceRaised":
+      return preset.controls.surfaceRaised;
+    case "surfaceOverlay":
+      return preset.controls.surfaceOverlay;
     case "ink":
       return preset.colors.text;
     case "muted":
@@ -62,6 +72,8 @@ function resolvePresetValue(preset: TenantTheme, token: keyof ThemeTokens): stri
       return preset.colors.primarySoft;
     case "accentContrast":
       return preset.colors.primaryContrast;
+    case "focusRing":
+      return preset.controls.focusRing;
     case "moduleAccent":
       return preset.colors.accent;
     case "moduleAccentSoft":

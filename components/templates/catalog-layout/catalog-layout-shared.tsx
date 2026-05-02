@@ -8,6 +8,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 import { Input } from "@/components/ui/input";
+import type { CatalogLayoutDensity } from "@/lib/modules/catalog-layout";
 import type { StorefrontCategory } from "@/lib/storefront-api";
 import { resolveProductCardTemplate } from "@/lib/templates/product-card-registry";
 import type { ProductCardData, ProductCardDisplayOptions } from "@/lib/templates/product-card-catalog";
@@ -75,13 +76,17 @@ type CategoryTreeOption = {
 };
 
 const FILTER_CHIP_ACTIVE_CLASSNAME =
-  "inline-flex min-h-9 items-center rounded-full border border-transparent bg-[color:var(--accent)]/95 px-3 py-2 text-xs font-semibold text-white shadow-sm shadow-black/10 transition hover:brightness-[1.04]";
+  "inline-flex min-h-8 items-center rounded-full border border-transparent bg-[color:var(--accent)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--action-contrast)] transition hover:brightness-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-raised)]";
 
 const FILTER_CHIP_IDLE_CLASSNAME =
-  "inline-flex min-h-9 items-center rounded-full border border-[color:var(--line)] bg-white/88 px-3 py-2 text-xs font-medium text-[color:var(--ink)] shadow-[0_1px_0_rgba(15,23,42,0.03)] transition hover:border-[color:var(--accent)]/30 hover:bg-white";
+  "inline-flex min-h-8 items-center rounded-full border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--ink)] transition hover:border-[color:var(--accent)] hover:bg-[color:var(--surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-raised)]";
 
 const FILTER_SUMMARY_CLASSNAME =
-  "flex w-full items-center justify-between gap-3 rounded-xl border border-[color:var(--line)] bg-white px-3 py-2 text-left transition hover:border-[color:var(--accent)]/28 hover:bg-[color:var(--paper)]/82";
+  "flex w-full items-center justify-between gap-2.5 rounded-lg border border-[color:var(--line)] bg-[color:var(--paper)]/88 px-2.5 py-2 text-left transition hover:border-[color:var(--accent)] hover:bg-[color:var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-muted)]";
+
+function resolveCatalogDensity(density?: CatalogLayoutDensity): CatalogLayoutDensity {
+  return density === "comfortable" ? "comfortable" : "compact";
+}
 
 function formatPrice(amount: number): string {
   return new Intl.NumberFormat("es-AR", {
@@ -211,10 +216,6 @@ function filterCategoryTree(
 
     return [{ ...node, children }];
   });
-}
-
-function hasActiveNode(nodes: CategoryTreeOption[]): boolean {
-  return nodes.some((node) => node.active || hasActiveNode(node.children));
 }
 
 function countTreeNodes(nodes: CategoryTreeOption[]): number {
@@ -607,13 +608,16 @@ export function CatalogToolbar({
   count,
   sortOptions,
   defaultSort,
+  density,
 }: {
   count: number;
   sortOptions?: string[] | undefined;
   defaultSort?: string | undefined;
+  density?: CatalogLayoutDensity | undefined;
 }) {
   const pathname = usePathname() || "/catalogo";
   const searchParams = useSearchParams();
+  const resolvedDensity = resolveCatalogDensity(density);
   const options = sortOptions?.length
     ? SORT_OPTIONS.filter((o) => sortOptions.includes(o.value))
     : SORT_OPTIONS;
@@ -628,13 +632,23 @@ export function CatalogToolbar({
   );
 
   return (
-    <div className="rounded-2xl border border-white/75 bg-white/88 px-4 py-3 shadow-[0_10px_26px_rgba(15,23,42,0.06)] backdrop-blur-sm">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div
+      className={cn(
+        "rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-raised)] shadow-sm backdrop-blur-sm",
+        resolvedDensity === "comfortable" ? "px-4 py-3.5" : "px-3.5 py-3",
+      )}
+    >
+      <div
+        className={cn(
+          "flex flex-col lg:flex-row lg:items-center lg:justify-between",
+          resolvedDensity === "comfortable" ? "gap-3" : "gap-2.5",
+        )}
+      >
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold text-foreground tabular-nums">
             {count} resultados
           </span>
-          <span className="hidden text-sm text-muted sm:inline">Ordená y filtrá sin salir de la grilla</span>
+          <span className="hidden text-sm text-muted md:inline">Ordená sin salir de la grilla</span>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
           <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
@@ -679,12 +693,12 @@ function FilterSection({
   group: FilterGroup;
 }) {
   return (
-    <section className="space-y-2.5">
+    <section className="space-y-2">
       <div className="flex items-center justify-between gap-3">
-        <h4 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+        <h4 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
           {group.title}
         </h4>
-        <span className="text-[11px] font-medium text-muted tabular-nums">
+        <span className="text-[10px] font-medium text-muted tabular-nums">
           {countGroupOptions(group)}
         </span>
       </div>
@@ -727,20 +741,20 @@ function CategoryFilterSectionContent({ group }: { group: FilterGroup }) {
   const hasCategories = countTreeNodes(filteredOptions) > 0;
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2">
       <Input
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         placeholder="Buscar categoría..."
-        className="h-8 rounded-lg border-[color:var(--line)] bg-white text-sm shadow-none"
+        className="h-8 rounded-md border-[color:var(--line)] bg-[color:var(--surface-raised)] text-sm shadow-none focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-0"
         aria-label="Buscar categoría"
       />
 
-      <div className="max-h-52 space-y-1 overflow-y-auto rounded-xl border border-[color:var(--line)] bg-[color:var(--paper)]/52 p-2">
+      <div className="max-h-44 space-y-1 overflow-y-auto rounded-lg border border-[color:var(--line)] bg-[color:var(--surface-muted)] p-1.5">
         {hasCategories ? (
           <CategoryTreeList nodes={filteredOptions} />
         ) : (
-          <p className="px-3 py-2 text-sm text-muted">No encontramos categorías para esa búsqueda.</p>
+          <p className="px-2.5 py-2 text-sm text-muted">No encontramos categorías para esa búsqueda.</p>
         )}
       </div>
     </div>
@@ -763,8 +777,8 @@ function CategoryTreeList({
             aria-current={node.active ? "true" : undefined}
             className={
               node.active
-                ? "flex items-center rounded-lg bg-[color:var(--accent)]/92 px-2.5 py-2 text-sm font-semibold text-white shadow-sm shadow-black/10"
-                : "flex items-center rounded-lg px-2.5 py-2 text-sm text-foreground transition hover:bg-white"
+                ? "flex items-center rounded-md bg-[color:var(--accent)] px-2.5 py-1.5 text-sm font-semibold text-[color:var(--action-contrast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-muted)]"
+                : "flex items-center rounded-md px-2.5 py-1.5 text-sm text-foreground transition hover:bg-[color:var(--surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-muted)]"
             }
           >
             {node.label}
@@ -782,20 +796,26 @@ function FilterPanelWrapper({
   children,
   defaultOpen = false,
   filtersCount = 0,
+  density,
   title,
 }: {
   children: React.ReactNode;
   defaultOpen?: boolean;
   filtersCount?: number;
+  density?: CatalogLayoutDensity | undefined;
   title: string;
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const resolvedDensity = resolveCatalogDensity(density);
 
   return (
     <div className="space-y-4">
       <button
         type="button"
-        className="flex w-full items-center justify-between rounded-xl border border-white/75 bg-white/88 px-4 py-3 text-left shadow-[0_8px_20px_rgba(15,23,42,0.06)] backdrop-blur-sm md:hidden"
+        className={cn(
+          "flex w-full items-center justify-between rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-raised)] text-left shadow-sm backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-overlay)] md:hidden",
+          resolvedDensity === "comfortable" ? "px-4 py-3.5" : "px-4 py-3",
+        )}
         aria-expanded={isOpen}
         onClick={() => setIsOpen((current) => !current)}
       >
@@ -803,7 +823,7 @@ function FilterPanelWrapper({
           <SlidersHorizontal className="size-4 text-muted" aria-hidden="true" />
           <span className="font-heading text-sm font-semibold text-foreground">{title}</span>
           {filtersCount > 0 ? (
-            <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-[color:var(--accent)]/12 px-2 py-0.5 text-[11px] font-semibold text-[color:var(--accent)]">
+            <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-[color:var(--surface-muted)] px-2 py-0.5 text-[11px] font-semibold text-[color:var(--accent)]">
               {filtersCount}
             </span>
           ) : null}
@@ -824,14 +844,17 @@ function FilterPanelWrapper({
 export function FilterSidebar({
   activeFilters,
   categories,
+  density,
   products = [],
 }: {
   activeFilters?: Record<string, boolean | undefined> | undefined;
   categories?: StorefrontCategory[] | undefined;
+  density?: CatalogLayoutDensity | undefined;
   products?: ProductCardData[] | undefined;
 }) {
   const pathname = usePathname() || "/catalogo";
   const searchParams = useSearchParams();
+  const resolvedDensity = resolveCatalogDensity(density);
   const filters = resolveConfiguredFilters(activeFilters, pathname, searchParams);
   const groups = resolveFilterGroups(
     activeFilters,
@@ -854,17 +877,23 @@ export function FilterSidebar({
   return (
     <FilterPanelWrapper
       title="Filtros"
-      defaultOpen={filters.length > 0 || groups.some((group) => group.key === "category" && hasActiveNode(group.categoryTree ?? []))}
-      filtersCount={filters.length > 0 ? filters.length : groups.reduce((total, group) => total + countGroupOptions(group), 0)}
+      defaultOpen={false}
+      filtersCount={filters.length}
+      density={resolvedDensity}
     >
-      <aside className="space-y-4 rounded-2xl border border-white/75 bg-white/88 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.07)] backdrop-blur-sm">
+      <aside
+        className={cn(
+          "space-y-4 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-raised)] shadow-sm backdrop-blur-sm",
+          resolvedDensity === "comfortable" ? "p-4.5" : "p-4",
+        )}
+      >
         <div className="flex items-center justify-between gap-3">
           <div className="space-y-1">
             <h3 className="text-base font-semibold text-foreground">Filtros</h3>
             <p className="text-sm text-muted">Refiná el catálogo con pocos clics.</p>
           </div>
           {filters.length > 0 ? (
-            <Link href={clearAllHref as Route} className="text-xs font-semibold text-[color:var(--accent)] transition hover:opacity-80">
+            <Link href={clearAllHref as Route} className="text-xs font-semibold text-[color:var(--accent)] transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-raised)]">
               Limpiar
             </Link>
           ) : null}
@@ -876,7 +905,7 @@ export function FilterSidebar({
               <Link
                 key={filter.key}
                 href={filter.href as Route}
-                className="inline-flex items-center gap-1 rounded-full border border-[color:var(--line)] bg-[color:var(--paper)]/68 px-3 py-1.5 text-xs text-foreground transition hover:border-[color:var(--accent)]/25 hover:bg-white"
+                className="inline-flex items-center gap-1 rounded-full border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-3 py-1.5 text-xs text-foreground transition hover:border-[color:var(--accent)] hover:bg-[color:var(--surface-raised)]"
               >
                 <span className="font-semibold text-[color:var(--accent)]">{filter.label}</span>
                 <span>{filter.value}</span>
@@ -903,14 +932,17 @@ export function FilterSidebar({
 export function FilterBar({
   activeFilters,
   categories,
+  density,
   products = [],
 }: {
   activeFilters?: Record<string, boolean | undefined> | undefined;
   categories?: StorefrontCategory[] | undefined;
+  density?: CatalogLayoutDensity | undefined;
   products?: ProductCardData[] | undefined;
 }) {
   const pathname = usePathname() || "/catalogo";
   const searchParams = useSearchParams();
+  const resolvedDensity = resolveCatalogDensity(density);
   const filters = resolveConfiguredFilters(activeFilters, pathname, searchParams);
   const groups = resolveFilterGroups(
     activeFilters,
@@ -932,31 +964,37 @@ export function FilterBar({
   return (
     <FilterPanelWrapper
       title="Filtrar catálogo"
-      defaultOpen={filters.length > 0 || groups.length > 0}
-      filtersCount={filters.length > 0 ? filters.length : groups.reduce((total, group) => total + countGroupOptions(group), 0)}
+      defaultOpen={false}
+      filtersCount={filters.length}
+      density={resolvedDensity}
     >
-      <div className="space-y-3 rounded-2xl border border-white/75 bg-white/90 p-3.5 shadow-[0_10px_26px_rgba(15,23,42,0.06)] backdrop-blur-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div
+        className={cn(
+          "space-y-2.5 rounded-[1.35rem] border border-[color:var(--line)] bg-[color:var(--surface-raised)] shadow-sm backdrop-blur-sm",
+          resolvedDensity === "comfortable" ? "p-3.5" : "p-3",
+        )}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <h3 className="text-sm font-semibold text-foreground">Filtros</h3>
-            <span className="text-xs text-muted">
+            <span className="text-[11px] text-muted">
               {groups.reduce((total, group) => total + countGroupOptions(group), 0)} opciones
             </span>
           </div>
           {filters.length > 0 ? (
-            <Link href={clearAllHref as Route} className="text-xs font-semibold text-[color:var(--accent)] transition hover:opacity-80">
+            <Link href={clearAllHref as Route} className="text-xs font-semibold text-[color:var(--accent)] transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-raised)]">
               Limpiar
             </Link>
           ) : null}
         </div>
 
         {filters.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {filters.map((filter) => (
               <Link
                 key={filter.key}
                 href={filter.href as Route}
-                className="inline-flex min-h-8 items-center rounded-full border border-[color:var(--line)] bg-[color:var(--paper)]/68 px-3 py-1.5 text-xs font-medium text-[color:var(--ink)]"
+                className="inline-flex min-h-8 items-center rounded-full border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--ink)]"
               >
                 <span className="font-semibold text-[color:var(--accent)]">{filter.label}:</span>
                 <span className="ml-1">{filter.value}</span>
@@ -966,41 +1004,41 @@ export function FilterBar({
         ) : null}
 
         {groups.length > 0 ? (
-          <div className="grid gap-2 lg:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-1.5 md:grid-cols-2 xl:grid-cols-4">
             {groups.map((group) => (
               <details
                 key={group.key}
                 className={cn(
-                  "rounded-xl border border-[color:var(--line)] bg-[color:var(--paper)]/52 p-2.5",
+                  "group rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-muted)] p-1.5",
                   group.key === "category" ? "xl:col-span-2" : "",
                 )}
               >
                 <summary className={cn(FILTER_SUMMARY_CLASSNAME, "list-none")}>
-                  <div className="space-y-0.5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
                       {group.title}
                     </p>
-                    <p className="text-xs text-foreground">
+                    <p className="truncate text-[11px] text-foreground">
                       {group.key === "category"
                         ? "Elegí categoría"
                         : `${countGroupOptions(group)} opciones`}
                     </p>
                   </div>
                   <span className="flex items-center gap-2">
-                    <span className="rounded-full bg-[color:var(--paper)] px-2 py-1 text-[11px] font-semibold text-muted tabular-nums">
+                    <span className="rounded-full bg-[color:var(--surface-raised)] px-2 py-0.5 text-[10px] font-semibold text-muted tabular-nums">
                       {countGroupOptions(group)}
                     </span>
-                    <ChevronDown className="size-4 text-muted transition" />
+                    <ChevronDown className="size-4 text-muted transition group-open:rotate-180" />
                   </span>
                 </summary>
-                <div className="mt-2 border-t border-[color:var(--line)]/80 pt-2.5">
+                <div className="mt-1.5 border-t border-[color:var(--line)]/80 pt-1.5">
                   <FilterGroupContent group={group} />
                 </div>
               </details>
             ))}
           </div>
         ) : filters.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[color:var(--line)] bg-[color:var(--paper)]/48 p-3">
+          <div className="rounded-xl border border-dashed border-[color:var(--line)] bg-[color:var(--paper)]/48 p-2.5">
             <p className="text-sm text-muted">Todavía no encontramos opciones públicas para filtrar esta vista.</p>
           </div>
         ) : null}
@@ -1097,12 +1135,15 @@ export function ProductGrid({
   cardVariant,
   cardDisplayOptions,
   columns = 3,
+  density,
 }: {
   products: ProductCardData[];
   cardVariant: string;
   cardDisplayOptions?: ProductCardDisplayOptions | undefined;
   columns?: 2 | 3 | 4;
+  density?: CatalogLayoutDensity | undefined;
 }) {
+  const resolvedDensity = resolveCatalogDensity(density);
   const gridCols =
     columns === 4
       ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
@@ -1111,7 +1152,13 @@ export function ProductGrid({
         : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
 
   return (
-    <div className={`grid ${gridCols} gap-4`}>
+    <div
+      className={cn(
+        "grid",
+        gridCols,
+        resolvedDensity === "comfortable" ? "gap-4 md:gap-5" : "gap-3 md:gap-4",
+      )}
+    >
       {products.map((product) => {
         const ProductCard = resolveProductCardTemplate(cardVariant);
         return (

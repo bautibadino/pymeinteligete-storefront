@@ -127,8 +127,12 @@ describe("tenant theme", () => {
           overrides: {
             bg: "#f1f5f9",
             paper: "#ffffff",
+            surfaceMuted: "rgba(255,255,255,0.74)",
+            surfaceRaised: "rgba(255,255,255,0.92)",
+            surfaceOverlay: "rgba(255,255,255,0.84)",
             accent: "#123456",
             accentSoft: "rgba(18, 52, 86, 0.14)",
+            focusRing: "rgba(18, 52, 86, 0.24)",
             moduleAccent: "#abcdef",
             moduleAccentSoft: "rgba(171, 205, 239, 0.18)",
             fontHeading: "Brand",
@@ -145,8 +149,12 @@ describe("tenant theme", () => {
     expect(theme.preset).toBe("minimalClean");
     expect(vars["--bg"]).toBe("#f1f5f9");
     expect(vars["--paper"]).toBe("#ffffff");
+    expect(vars["--surface-muted"]).toBe("rgba(255,255,255,0.74)");
+    expect(vars["--surface-raised"]).toBe("rgba(255,255,255,0.92)");
+    expect(vars["--surface-overlay"]).toBe("rgba(255,255,255,0.84)");
     expect(vars["--accent"]).toBe("#123456");
     expect(vars["--accent-soft"]).toBe("rgba(18, 52, 86, 0.14)");
+    expect(vars["--focus-ring"]).toBe("rgba(18, 52, 86, 0.24)");
     expect(vars["--module-accent"]).toBe("#abcdef");
     expect(vars["--module-accent-soft"]).toBe("rgba(171, 205, 239, 0.18)");
     expect(vars["--font-heading"]).toBe("Brand");

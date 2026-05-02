@@ -14,24 +14,30 @@ import {
  */
 export function CatalogLayoutPaginatedClassic({ module }: { module: CatalogLayoutModule }) {
   const { content } = module;
-  const { cardVariant, cardDisplayOptions, filters, sort, perPage } = content;
+  const { cardVariant, cardDisplayOptions, density, filters, sort, perPage } = content;
   const products = (module.products ?? []).slice(0, perPage ?? 12);
+  const resolvedDensity = density ?? "compact";
 
   return (
-    <section className="py-8" data-template="catalog-layout-paginated-classic">
+    <section
+      className={resolvedDensity === "comfortable" ? "py-8" : "py-6"}
+      data-template="catalog-layout-paginated-classic"
+    >
       <div className="mx-auto max-w-7xl px-4">
-        <div className="flex flex-col gap-6 lg:flex-row">
-          <div className="shrink-0 lg:w-64">
+        <div className={resolvedDensity === "comfortable" ? "flex flex-col gap-6 lg:flex-row" : "flex flex-col gap-5 lg:flex-row"}>
+          <div className="shrink-0 self-start lg:sticky lg:top-28 lg:w-72">
             <FilterSidebar
               activeFilters={filters}
               categories={module.categories}
+              density={resolvedDensity}
               products={products}
             />
           </div>
 
-          <div className="flex-1 space-y-6">
+          <div className={resolvedDensity === "comfortable" ? "flex-1 space-y-6" : "flex-1 space-y-5"}>
             <CatalogToolbar
               count={products.length}
+              density={resolvedDensity}
               sortOptions={sort?.options}
               defaultSort={sort?.default}
             />
@@ -43,6 +49,7 @@ export function CatalogLayoutPaginatedClassic({ module }: { module: CatalogLayou
                   cardVariant={cardVariant}
                   cardDisplayOptions={cardDisplayOptions}
                   columns={3}
+                  density={resolvedDensity}
                 />
                 <CatalogPagination pageSize={perPage} />
               </>

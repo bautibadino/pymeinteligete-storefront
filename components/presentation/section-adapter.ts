@@ -114,7 +114,12 @@ export function adaptSectionToModule(
         context?.bootstrap,
       );
 
-      return { ...base, content: normalizedContent, products, categories: context?.categories };
+      return {
+        ...base,
+        content: normalizedContent,
+        products,
+        categories: context?.categories,
+      };
     }
 
     case "categoryTile": {

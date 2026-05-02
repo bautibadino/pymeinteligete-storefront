@@ -34,8 +34,11 @@ export const CATALOG_LAYOUT_SORT_OPTIONS = [
 ] as const;
 
 export type CatalogLayoutSortOption = (typeof CATALOG_LAYOUT_SORT_OPTIONS)[number];
+export const CATALOG_LAYOUT_DENSITIES = ["compact", "comfortable"] as const;
+export type CatalogLayoutDensity = (typeof CATALOG_LAYOUT_DENSITIES)[number];
 
 export const CatalogLayoutSortOptionSchema = z.enum(CATALOG_LAYOUT_SORT_OPTIONS);
+export const CatalogLayoutDensitySchema = z.enum(CATALOG_LAYOUT_DENSITIES);
 
 export const CatalogLayoutSortSchema = z
   .object({
@@ -62,6 +65,7 @@ export const CatalogLayoutFiltersSchema = z.object({
 
 export const CatalogLayoutContentSchema = z.object({
   cardVariant: z.enum(["classic", "compact", "editorial", "premium-commerce"]),
+  density: CatalogLayoutDensitySchema.optional(),
   cardDisplayOptions: z
     .object({
       showBrand: z.boolean().optional(),
@@ -144,6 +148,10 @@ function readDisplayOptions(value: unknown): ProductCardDisplayOptions | undefin
   return Object.keys(displayOptions).length > 0 ? displayOptions : undefined;
 }
 
+function isCatalogLayoutDensity(value: unknown): value is CatalogLayoutDensity {
+  return typeof value === "string" && (CATALOG_LAYOUT_DENSITIES as readonly string[]).includes(value);
+}
+
 function readFilters(value: unknown): CatalogLayoutFilters | undefined {
   if (!isRecord(value)) {
     return undefined;
@@ -205,6 +213,7 @@ export function normalizeCatalogLayoutContent(input: unknown): CatalogLayoutCont
   const content = isRecord(input) ? input : {};
   const normalized: CatalogLayoutContent = {
     cardVariant: resolveProductCardTemplateId(content.cardVariant),
+    density: isCatalogLayoutDensity(content.density) ? content.density : "compact",
   };
   const cardDisplayOptions = readDisplayOptions(content.cardDisplayOptions);
   const filters = readFilters(content.filters);

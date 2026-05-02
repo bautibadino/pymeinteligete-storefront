@@ -180,6 +180,7 @@ describe("CatalogLayoutContentSchema", () => {
   it("valida un content completo", () => {
     const result = CatalogLayoutContentSchema.safeParse({
       cardVariant: "premium-commerce",
+      density: "compact",
       cardDisplayOptions: {
         showBrand: true,
         showBadges: true,
@@ -253,6 +254,7 @@ describe("CatalogLayoutContentSchema", () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.cardDisplayOptions).toBeUndefined();
+      expect(result.data.density).toBeUndefined();
       expect(result.data.filters).toBeUndefined();
       expect(result.data.sort).toBeUndefined();
       expect(result.data.perPage).toBeUndefined();
@@ -277,6 +279,7 @@ describe("normalizeCatalogLayoutContent", () => {
     });
 
     expect(normalized.cardVariant).toBe("classic");
+    expect(normalized.density).toBe("compact");
     expect(normalized.filters).toEqual({ brand: true, availability: false });
     expect(normalized.sort).toEqual({ options: ["priceAsc", "popular"], default: "priceAsc" });
     expect(normalized.perPage).toBe(96);
@@ -304,6 +307,7 @@ describe("normalizeCatalogLayoutContent", () => {
     });
 
     expect(normalized.cardVariant).toBe("premium-commerce");
+    expect(normalized.density).toBe("compact");
     expect(normalized.sort).toBeUndefined();
   });
 });

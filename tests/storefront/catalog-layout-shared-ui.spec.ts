@@ -108,7 +108,8 @@ describe("catalog layout shared layer", () => {
 
     expect(html).toContain('href="/catalogo?brand=Acme&search=bujias&sort=priceAsc"');
     expect(html).toContain('href="/catalogo?brand=Acme&search=bujias&sort=priceDesc"');
-    expect(html).toContain('aria-current="true">Mayor precio<');
+    expect(html).toContain('aria-current="true"');
+    expect(html).toContain(">Mayor precio<");
     expect(html).toContain('href="/catalogo?brand=Acme&search=bujias"');
   });
 
@@ -205,7 +206,7 @@ describe("catalog layout shared layer", () => {
     expect(html).not.toContain('aria-current="page">1<');
   });
 
-  it("usa query pública para el estado y el siguiente paso del layout infinite scroll", () => {
+  it("expone estado de scroll infinito real sin CTA de paginación encubierto", () => {
     setCurrentUrl("/catalogo", "search=filtro&page=2&pageSize=24");
 
     const html = renderHtml(
@@ -222,8 +223,8 @@ describe("catalog layout shared layer", () => {
       }),
     );
 
-    expect(html).toContain("Página 2");
     expect(html).toContain("20 productos visibles");
-    expect(html).toContain('href="/catalogo?search=filtro&page=3&pageSize=24"');
+    expect(html).toContain("Llegaste al final del catálogo.");
+    expect(html).not.toContain('href="/catalogo?search=filtro&page=3&pageSize=24"');
   });
 });

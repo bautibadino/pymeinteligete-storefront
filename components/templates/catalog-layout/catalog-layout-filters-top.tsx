@@ -12,20 +12,26 @@ import {
  */
 export function CatalogLayoutFiltersTop({ module }: { module: CatalogLayoutModule }) {
   const { content } = module;
-  const { cardVariant, cardDisplayOptions, filters, sort, perPage } = content;
+  const { cardVariant, cardDisplayOptions, density, filters, sort, perPage } = content;
   const products = (module.products ?? []).slice(0, perPage ?? 12);
+  const resolvedDensity = density ?? "compact";
 
   return (
-    <section className="py-8" data-template="catalog-layout-filters-top">
-      <div className="mx-auto max-w-7xl px-4 space-y-6">
+    <section
+      className={resolvedDensity === "comfortable" ? "py-7" : "py-4"}
+      data-template="catalog-layout-filters-top"
+    >
+      <div className={resolvedDensity === "comfortable" ? "mx-auto max-w-7xl space-y-5 px-4" : "mx-auto max-w-7xl space-y-4 px-4"}>
         <FilterBar
           activeFilters={filters}
           categories={module.categories}
+          density={resolvedDensity}
           products={products}
         />
 
         <CatalogToolbar
           count={products.length}
+          density={resolvedDensity}
           sortOptions={sort?.options}
           defaultSort={sort?.default}
         />
@@ -36,6 +42,7 @@ export function CatalogLayoutFiltersTop({ module }: { module: CatalogLayoutModul
             cardVariant={cardVariant}
             cardDisplayOptions={cardDisplayOptions}
             columns={4}
+            density={resolvedDensity}
           />
         ) : (
           <EmptyCatalogState />

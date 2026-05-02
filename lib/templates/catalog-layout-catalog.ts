@@ -13,6 +13,7 @@ import { z } from "zod";
 
 import type { CatalogLayoutVariant } from "@/lib/modules/catalog-layout";
 import {
+  CatalogLayoutDensitySchema,
   CATALOG_LAYOUT_VARIANTS,
   CatalogLayoutFiltersSchema,
   CatalogLayoutSortSchema,
@@ -30,6 +31,7 @@ export const DEFAULT_CATALOG_LAYOUT_TEMPLATE_ID: CatalogLayoutTemplateId = "filt
 
 export const CatalogLayoutContentSchema = z.object({
   cardVariant: z.enum(["classic", "compact", "editorial", "premium-commerce"]),
+  density: CatalogLayoutDensitySchema.optional(),
   cardDisplayOptions: z
     .object({
       showBrand: z.boolean().optional(),
