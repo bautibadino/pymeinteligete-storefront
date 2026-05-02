@@ -346,6 +346,79 @@ describe("presentation renderer logic", () => {
     expect(module.products[0]?.price.formatted).toContain("$");
   });
 
+  it("renderiza spotlight-carousel con spotlight-commerce usando datos comerciales reales", () => {
+    const presentation = buildPresentation({
+      pages: {
+        home: {
+          sections: [
+            buildSection({
+              id: "home-spotlight",
+              type: "productGrid",
+              variant: "spotlight-carousel",
+              order: 0,
+              content: {
+                title: "Lo mejor del mes",
+                subtitle: "Selección comercial destacada",
+                source: { type: "featured" },
+                cardVariant: "spotlight-commerce",
+                cardDisplayOptions: {
+                  showBrand: true,
+                  showBadges: true,
+                  showInstallments: true,
+                  showCashDiscount: true,
+                  showStockBadge: true,
+                  showAddToCart: true,
+                },
+              },
+            }),
+          ],
+        },
+        catalog: { sections: [] },
+        product: { sections: [] },
+      },
+    });
+    const products = [
+      {
+        _id: "mongo-prod-spotlight-1",
+        ecommerceSlug: "producto-spotlight",
+        name: "Producto Spotlight",
+        brand: "BYM",
+        priceWithTax: 125000,
+        discountedPrice: 99999,
+        bestDiscount: { percentage: 20, label: "20% OFF contado" },
+        stock: 4,
+        installments: { enabled: true, count: 6, amount: 16666, interestFree: true },
+        images: [{ url: "https://cdn.example.com/spotlight.webp", alt: "Spotlight" }],
+        isFeatured: true,
+        isOnSale: true,
+      },
+      {
+        _id: "mongo-prod-spotlight-2",
+        ecommerceSlug: "producto-spotlight-2",
+        name: "Producto Spotlight 2",
+        brand: "BYM",
+        priceWithTax: 99000,
+        stock: 2,
+        images: [{ url: "https://cdn.example.com/spotlight-2.webp", alt: "Spotlight 2" }],
+        isFeatured: true,
+      },
+    ] as unknown as StorefrontCatalogProduct[];
+
+    const html = renderToStaticMarkup(
+      createElement(PresentationRenderer, {
+        presentation,
+        page: "home",
+        context: { products },
+      }),
+    );
+
+    expect(html).toContain('data-template="product-grid-spotlight-carousel"');
+    expect(html).toContain('data-template="product-card-spotlight-commerce"');
+    expect(html).toContain("20% OFF contado");
+    expect(html).toContain("6x");
+    expect(html).toContain("Producto Spotlight");
+  });
+
   it("normaliza producto enriquecido real sin perder campos comerciales existentes", () => {
     const products = [
       {

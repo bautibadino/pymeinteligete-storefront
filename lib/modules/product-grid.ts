@@ -61,7 +61,7 @@ export const ProductGridContentSchema = z.object({
   subtitle: z.string().optional(),
   source: ProductGridSourceSchema,
   limit: z.number().int().min(1).max(100).optional(),
-  cardVariant: z.enum(["classic", "compact", "editorial", "premium-commerce"]),
+  cardVariant: z.enum(["classic", "compact", "editorial", "premium-commerce", "spotlight-commerce"]),
   cardDisplayOptions: ProductCardDisplayOptionsSchema.optional(),
   showViewAllLink: z.boolean().optional(),
   viewAllHref: z.string().optional(),
@@ -73,13 +73,19 @@ export type ProductGridSource = z.infer<typeof ProductGridSourceSchema>;
 
 // ─── Variants ───────────────────────────────────────────────────────────────
 
-export type ProductGridVariant = "grid-3" | "grid-4" | "carousel-arrows" | "masonry";
+export type ProductGridVariant =
+  | "grid-3"
+  | "grid-4"
+  | "carousel-arrows"
+  | "masonry"
+  | "spotlight-carousel";
 
 export const PRODUCT_GRID_VARIANTS: readonly ProductGridVariant[] = [
   "grid-3",
   "grid-4",
   "carousel-arrows",
   "masonry",
+  "spotlight-carousel",
 ] as const;
 
 // ─── Module type ────────────────────────────────────────────────────────────

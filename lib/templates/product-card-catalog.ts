@@ -28,13 +28,15 @@ export type ProductCardTemplateId =
   | "classic"
   | "compact"
   | "editorial"
-  | "premium-commerce";
+  | "premium-commerce"
+  | "spotlight-commerce";
 
 export const PRODUCT_CARD_TEMPLATE_IDS: readonly ProductCardTemplateId[] = [
   "classic",
   "compact",
   "editorial",
   "premium-commerce",
+  "spotlight-commerce",
 ];
 
 export const DEFAULT_PRODUCT_CARD_TEMPLATE_ID: ProductCardTemplateId = "classic";
@@ -86,6 +88,14 @@ export const PRODUCT_CARD_TEMPLATE_DESCRIPTORS: Record<
       "Badges, marca, imagen, nombre, cuotas, precio tachado, descuento contado y estado de stock. Paridad BYM.",
     bestFor: ["lubricentros", "mayoristas", "ferretería", "tiendas con cuotas"],
     thumbnailUrl: "/template-thumbnails/product-card-premium-commerce.svg",
+  },
+  "spotlight-commerce": {
+    id: "spotlight-commerce",
+    label: "Spotlight Commerce",
+    description:
+      "Card comercial protagonista para home: imagen dominante, badges premium, precio jerarquizado y CTA fuerte sin inventar datos.",
+    bestFor: ["home destacada", "lanzamientos", "campañas comerciales premium", "carruseles hero"],
+    thumbnailUrl: "/template-thumbnails/product-card-spotlight-commerce.svg",
   },
 };
 

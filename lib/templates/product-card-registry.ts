@@ -4,6 +4,7 @@ import { ProductCardClassic } from "@/components/templates/product-card/product-
 import { ProductCardCompact } from "@/components/templates/product-card/product-card-compact";
 import { ProductCardEditorial } from "@/components/templates/product-card/product-card-editorial";
 import { ProductCardPremiumCommerce } from "@/components/templates/product-card/product-card-premium-commerce";
+import { ProductCardSpotlightCommerce } from "@/components/templates/product-card/product-card-spotlight-commerce";
 import {
   resolveProductCardTemplateId,
   type ProductCardData,
@@ -35,6 +36,7 @@ export const PRODUCT_CARD_TEMPLATES: Record<ProductCardTemplateId, ProductCardCo
   compact: ProductCardCompact,
   editorial: ProductCardEditorial,
   "premium-commerce": ProductCardPremiumCommerce,
+  "spotlight-commerce": ProductCardSpotlightCommerce,
 };
 
 /**

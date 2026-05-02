@@ -64,7 +64,7 @@ export const CatalogLayoutFiltersSchema = z.object({
 });
 
 export const CatalogLayoutContentSchema = z.object({
-  cardVariant: z.enum(["classic", "compact", "editorial", "premium-commerce"]),
+  cardVariant: z.enum(["classic", "compact", "editorial", "premium-commerce", "spotlight-commerce"]),
   density: CatalogLayoutDensitySchema.optional(),
   cardDisplayOptions: z
     .object({
@@ -72,6 +72,8 @@ export const CatalogLayoutContentSchema = z.object({
       showBadges: z.boolean().optional(),
       showInstallments: z.boolean().optional(),
       showCashDiscount: z.boolean().optional(),
+      showStockBadge: z.boolean().optional(),
+      stockBadgeTone: z.enum(["slate", "forest", "ocean", "amber"]).optional(),
       showAddToCart: z.boolean().optional(),
     })
     .optional(),

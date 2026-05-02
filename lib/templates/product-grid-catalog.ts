@@ -67,7 +67,7 @@ export const ProductGridContentSchema = z.object({
   subtitle: z.string().optional(),
   source: ProductGridSourceSchema,
   limit: z.number().int().min(1).max(100).optional(),
-  cardVariant: z.enum(["classic", "compact", "editorial", "premium-commerce"]),
+  cardVariant: z.enum(["classic", "compact", "editorial", "premium-commerce", "spotlight-commerce"]),
   cardDisplayOptions: ProductCardDisplayOptionsSchema.optional(),
   showViewAllLink: z.boolean().optional(),
   viewAllHref: z.string().optional(),
@@ -129,6 +129,15 @@ export const PRODUCT_GRID_TEMPLATE_DESCRIPTORS: Record<
       "Grilla de altura variable con cards de diferentes proporciones. Estética editorial para marcas premium.",
     bestFor: ["marcas premium", "lookbooks", "editorial de producto"],
     thumbnailUrl: buildThumbnailUrl("masonry"),
+    contentSchema: ProductGridContentSchema,
+  },
+  "spotlight-carousel": {
+    id: "spotlight-carousel",
+    label: "Spotlight Carousel",
+    description:
+      "Carrusel premium para home con dos cards activas más grandes, laterales desaturadas y navegación con motion real.",
+    bestFor: ["home principal", "campañas comerciales", "destacados premium", "lanzamientos"],
+    thumbnailUrl: buildThumbnailUrl("spotlight-carousel"),
     contentSchema: ProductGridContentSchema,
   },
 };
