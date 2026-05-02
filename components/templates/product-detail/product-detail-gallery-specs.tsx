@@ -37,32 +37,34 @@ export function ProductDetailGallerySpecs({ module }: { module: ProductDetailMod
         {/* Breadcrumb contract kept for legacy spec: href={"/catalogo" as Route} */}
         {showBreadcrumbs ? <ProductDetailBreadcrumbs productName={product.name} /> : null}
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(340px,0.88fr)] lg:items-start">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(300px,320px)] lg:items-start lg:gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(340px,0.88fr)] xl:gap-6">
           <ProductImageGallery
             images={product.images}
             productName={product.name}
-            aspectClassName="aspect-[4/5] md:aspect-square"
+            aspectClassName="aspect-[11/10] sm:aspect-square md:aspect-[6/5] lg:aspect-[5/4] xl:aspect-square"
             className="min-w-0"
           />
 
-          <div className="lg:sticky lg:top-24">
+          <div className="grid min-w-0 gap-3 lg:sticky lg:top-20 lg:gap-5 xl:gap-6 xl:top-24">
             <ProductDetailPurchaseCard
               product={product}
               mainImage={mainImage}
               description={product.description}
               commercialData={commercialData}
             />
+
+            <ProductDetailSpecsCard
+              title="Lectura rápida"
+              description="Los atributos publicados más relevantes quedan visibles también fuera de la pestaña técnica."
+              specifications={product.specifications}
+              limit={6}
+              className="hidden lg:block"
+            />
           </div>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.42fr)]">
+        <div className="mt-4 md:mt-5 xl:mt-6">
           <ProductDetailSegmentedTabs sections={tabs} />
-          <ProductDetailSpecsCard
-            title="Lectura rápida"
-            description="Los atributos disponibles quedan visibles también fuera de la pestaña técnica."
-            specifications={product.specifications}
-            limit={6}
-          />
         </div>
 
         {showRelated && relatedProducts.length > 0 ? (

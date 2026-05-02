@@ -49,6 +49,8 @@ type ProductDetailBreadcrumbsProps = {
 type ProductDetailBadgeGroupProps = {
   badges?: ProductDetailBadge[] | undefined;
   className?: string | undefined;
+  limit?: number | undefined;
+  compact?: boolean | undefined;
 };
 
 type ProductDetailPriceStackProps = {
@@ -99,10 +101,10 @@ type ProductDetailRelatedGridProps = {
 };
 
 const CARD_BASE =
-  "rounded-[28px] border border-white/10 bg-white/[0.04] shadow-[0_28px_90px_rgba(0,0,0,0.24)] backdrop-blur-xl";
+  "min-w-0 rounded-none border-y border-black/10 border-x-0 bg-white shadow-none sm:rounded-[24px] sm:border sm:shadow-[0_16px_42px_rgba(15,23,42,0.08)] xl:rounded-[28px] xl:border-white/10 xl:bg-white/[0.04] xl:shadow-[0_28px_90px_rgba(0,0,0,0.24)] xl:backdrop-blur-xl";
 
 const INNER_PANEL =
-  "rounded-[24px] border border-white/10 bg-black/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]";
+  "rounded-[20px] border border-black/10 bg-black/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] xl:rounded-[24px] xl:border-white/10 xl:bg-black/20 xl:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]";
 
 function formatCurrency(amount: number, currency: string) {
   return new Intl.NumberFormat("es-AR", {
@@ -224,24 +226,6 @@ function getSummaryFacts(product: ProductDetailData) {
     });
   }
 
-  if (product.installments) {
-    facts.push({
-      id: "installments",
-      label: "Financiación",
-      value: `${product.installments.count} cuotas de ${product.installments.formatted}${product.installments.interestFree ? " sin interés" : ""}`,
-      icon: <CreditCard className="size-4" aria-hidden="true" />,
-    });
-  }
-
-  if (product.cashDiscount) {
-    facts.push({
-      id: "cash-discount",
-      label: "Pago",
-      value: product.cashDiscount.formatted,
-      icon: <Sparkles className="size-4" aria-hidden="true" />,
-    });
-  }
-
   return facts;
 }
 
@@ -348,18 +332,18 @@ export function productDetailInnerPanelClassName(className?: string) {
 
 export function ProductDetailShell({ children, className }: ProductDetailShellProps) {
   return (
-    <section className="py-5 md:py-8" data-surface="product-detail-premium">
-      <div className="mx-auto max-w-7xl px-4">
+    <section className="py-0 md:py-6 xl:py-8" data-surface="product-detail-premium">
+      <div className="mx-auto max-w-7xl px-3 sm:px-0">
         <div
           className={cn(
-            "relative overflow-hidden rounded-[34px] border border-white/10 bg-foreground text-white shadow-[0_38px_130px_rgba(0,0,0,0.34)]",
-            "before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--accent)_22%,transparent),transparent_34%)] before:content-['']",
-            "after:absolute after:inset-0 after:bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--module-accent)_18%,transparent),transparent_30%)] after:content-['']",
+            "relative overflow-hidden bg-transparent text-foreground shadow-none sm:rounded-[28px] sm:border sm:border-black/6 sm:bg-white/92 sm:shadow-[0_24px_70px_rgba(15,23,42,0.08)] xl:rounded-[34px] xl:border-white/10 xl:bg-foreground xl:text-white xl:shadow-[0_38px_130px_rgba(0,0,0,0.34)]",
+            "xl:before:absolute xl:before:inset-0 xl:before:bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--accent)_22%,transparent),transparent_34%)] xl:before:content-['']",
+            "xl:after:absolute xl:after:inset-0 xl:after:bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--module-accent)_18%,transparent),transparent_30%)] xl:after:content-['']",
             className,
           )}
         >
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0)_24%,rgba(0,0,0,0.16))]" />
-          <div className="relative z-10 p-5 md:p-8 lg:p-10">{children}</div>
+          <div className="absolute inset-0 hidden bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0)_24%,rgba(0,0,0,0.16))] xl:block" />
+          <div className="relative z-10 p-0 sm:p-4 md:p-5 xl:p-10">{children}</div>
         </div>
       </div>
     </section>
@@ -370,10 +354,10 @@ export function ProductDetailEmptyState() {
   return (
     <ProductDetailShell>
       <div className={productDetailCardClassName("px-6 py-14 text-center")}>
-        <p className="font-heading text-2xl font-semibold text-white md:text-3xl">
+        <p className="font-heading text-2xl font-semibold text-foreground md:text-3xl xl:text-white">
           Producto no disponible
         </p>
-        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-white/68 md:text-base">
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground md:text-base xl:text-white/68">
           Este detalle todavía no tiene información suficiente para renderizar una ficha
           comercial.
         </p>
@@ -390,15 +374,15 @@ export function ProductDetailBreadcrumbs({
     <nav
       aria-label="Breadcrumb"
       className={cn(
-        "mb-6 text-xs font-medium uppercase tracking-[0.18em] text-white/52 md:mb-8",
+        "mb-4 hidden overflow-x-auto text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground sm:block md:mb-6 md:text-xs md:tracking-[0.18em] xl:text-white/52",
         className,
       )}
     >
-      <ol className="flex flex-wrap items-center gap-2 md:gap-3">
+      <ol className="flex min-w-max items-center gap-2 whitespace-nowrap md:gap-3">
         <li>
           <Link
             href="/"
-            className="transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
+            className="transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background xl:hover:text-white xl:focus-visible:ring-white/70 xl:focus-visible:ring-offset-foreground"
           >
             Inicio
           </Link>
@@ -407,13 +391,13 @@ export function ProductDetailBreadcrumbs({
         <li>
           <Link
             href={"/catalogo" as Route}
-            className="transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
+            className="transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background xl:hover:text-white xl:focus-visible:ring-white/70 xl:focus-visible:ring-offset-foreground"
           >
             Catálogo
           </Link>
         </li>
         <li aria-hidden="true">/</li>
-        <li className="text-white" aria-current="page">
+        <li className="max-w-[10rem] truncate text-foreground sm:max-w-[16rem] md:max-w-none xl:text-white" aria-current="page">
           {productName}
         </li>
       </ol>
@@ -424,20 +408,43 @@ export function ProductDetailBreadcrumbs({
 export function ProductDetailBadgeGroup({
   badges,
   className,
+  limit,
+  compact = false,
 }: ProductDetailBadgeGroupProps) {
   if (!badges || badges.length === 0) return null;
 
+  const visibleBadges = typeof limit === "number" ? badges.slice(0, limit) : badges;
+  const hiddenCount = badges.length - visibleBadges.length;
+
   return (
     <div className={cn("flex flex-wrap gap-2", className)}>
-      {badges.map((badge, index) => (
+      {visibleBadges.map((badge, index) => (
         <Badge
           key={`${badge.label}-${index}`}
           variant={mapBadgeVariant(badge.tone)}
-          className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white shadow-none"
+          className={cn(
+            "rounded-full border border-black/10 bg-black/[0.03] uppercase text-foreground shadow-none xl:border-white/10 xl:bg-white/[0.06] xl:text-white",
+            compact
+              ? "px-2.5 py-1 text-[10px] tracking-[0.14em]"
+              : "px-3 py-1 text-[11px] tracking-[0.16em]",
+          )}
         >
           {badge.label}
         </Badge>
       ))}
+      {hiddenCount > 0 ? (
+        <Badge
+          variant="soft"
+          className={cn(
+            "rounded-full border border-black/10 bg-black/[0.03] uppercase text-muted-foreground shadow-none xl:border-white/10 xl:bg-white/[0.04] xl:text-white/72",
+            compact
+              ? "px-2.5 py-1 text-[10px] tracking-[0.14em]"
+              : "px-3 py-1 text-[11px] tracking-[0.16em]",
+          )}
+        >
+          +{hiddenCount}
+        </Badge>
+      ) : null}
     </div>
   );
 }
@@ -449,38 +456,52 @@ export function ProductDetailPriceStack({
   const savings = getSavings(product);
 
   return (
-    <div className={cn("grid gap-3", className)}>
-      <div className="grid gap-2">
+    <div className={cn("grid gap-2.5", className)}>
+      <div className="grid gap-1.5">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2">
-          <p className="font-heading text-4xl font-semibold tracking-[-0.04em] text-white md:text-5xl">
+          <p className="font-heading text-[1.75rem] font-semibold tracking-[-0.05em] text-foreground sm:text-[2.05rem] md:text-[2.35rem] lg:text-5xl xl:text-white">
             {product.price.formatted}
           </p>
           {product.compareAtPrice ? (
-            <p className="text-sm text-white/46 line-through md:text-base">
+            <p className="text-sm text-muted-foreground line-through md:text-base xl:text-white/46">
               {product.compareAtPrice.formatted}
             </p>
           ) : null}
         </div>
 
         {savings ? (
-          <div className="inline-flex w-fit items-center rounded-full border border-[color:color-mix(in_srgb,var(--accent)_40%,white_10%)] bg-[color:color-mix(in_srgb,var(--accent)_18%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white">
+          <div className="inline-flex w-fit items-center rounded-full border border-[color:color-mix(in_srgb,var(--accent)_40%,black_10%)] bg-[color:color-mix(in_srgb,var(--accent)_18%,transparent)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-foreground xl:border-[color:color-mix(in_srgb,var(--accent)_40%,white_10%)] xl:text-white">
             Ahorrás {savings.formatted}
           </div>
         ) : null}
       </div>
 
       {product.installments || product.cashDiscount ? (
-        <div className={productDetailInnerPanelClassName("grid gap-2 px-4 py-3")}>
+        <div
+          className={productDetailInnerPanelClassName(
+            "grid gap-2 px-3 py-2.5 sm:grid-cols-2 sm:items-start",
+          )}
+        >
           {product.installments ? (
-            <p className="text-sm leading-6 text-white/72">
-              {product.installments.count} cuotas de {product.installments.formatted}
-              {product.installments.interestFree ? " sin interés" : ""}
-            </p>
+            <div className="grid gap-0.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground xl:text-white/46">
+                Cuotas
+              </p>
+              <p className="text-[13px] leading-5 text-foreground/80 xl:text-white/78">
+                {product.installments.count} de {product.installments.formatted}
+                {product.installments.interestFree ? " sin interés" : ""}
+              </p>
+            </div>
           ) : null}
           {product.cashDiscount ? (
-            <p className="text-sm font-medium leading-6 text-white">
-              {product.cashDiscount.formatted}
-            </p>
+            <div className="grid gap-0.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground xl:text-white/46">
+                Contado
+              </p>
+              <p className="text-[13px] font-medium leading-5 text-foreground xl:text-white">
+                {product.cashDiscount.formatted}
+              </p>
+            </div>
           ) : null}
         </div>
       ) : null}
@@ -499,51 +520,114 @@ export function ProductDetailPurchaseCard({
   const quickSpecs = product.specifications?.slice(0, 4) ?? [];
   const facts = getSummaryFacts(product);
   const commercialSignals = getCommercialSignals(product, commercialData);
+  const primaryFacts = facts.slice(0, 1);
+  const secondaryFacts = facts.slice(1);
+  const secondarySignals = commercialSignals.slice(2);
 
   return (
-    <aside className={productDetailCardClassName(cn("grid gap-6 p-5 md:p-6", className))}>
-      <div className="grid gap-4">
+    <aside
+      className={productDetailCardClassName(
+        cn("grid gap-4 p-3.5 sm:p-4 md:gap-5 md:p-5 xl:gap-6 xl:p-6", className),
+      )}
+    >
+      <div className="grid gap-3">
         {product.brand ? (
-          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/54">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground xl:text-white/54">
             {product.brand}
           </span>
         ) : null}
 
-        <div className="grid gap-3">
-          <h1 className="font-heading text-4xl font-semibold leading-[0.96] tracking-[-0.05em] text-white md:text-5xl">
+        <div className="grid gap-2.5">
+          <h1 className="font-heading text-[1.55rem] font-semibold leading-[0.96] tracking-[-0.05em] text-foreground [overflow-wrap:anywhere] sm:text-[1.9rem] md:text-[2.3rem] lg:text-[2.6rem] xl:text-5xl xl:text-white">
             {product.name}
           </h1>
-          <ProductDetailBadgeGroup badges={product.badges} />
+          <ProductDetailBadgeGroup
+            badges={product.badges}
+            limit={2}
+            compact
+            className="gap-1.5 md:gap-2"
+          />
         </div>
 
         {description ? (
-          <p className="max-w-[54ch] text-sm leading-7 text-white/70 md:text-base">
+          <p className="hidden max-w-[54ch] text-sm leading-7 text-muted-foreground xl:block xl:text-base xl:text-white/70">
             {description}
           </p>
         ) : null}
       </div>
 
-      <ProductDetailPriceStack product={product} />
+      <ProductDetailPriceStack product={product} className="gap-2.5" />
 
-      <div className={productDetailInnerPanelClassName("grid gap-3 p-4")}>
-        <AddToCartButton
-          item={{
-            productId: product.id,
-            slug: product.slug,
-            name: product.name,
-            href: product.href,
-            price: product.price,
-            ...(product.brand ? { brand: product.brand } : {}),
-            ...(mainImage?.url ? { imageUrl: mainImage.url } : {}),
-          }}
-          size="lg"
-          className="h-14 w-full rounded-[18px] text-base font-semibold shadow-[0_18px_40px_rgba(0,0,0,0.28)] transition-transform duration-200 hover:translate-y-[-1px] motion-reduce:transition-none"
-          disabled={!isAvailable}
-          unavailableLabel="No disponible"
-        />
+      <AddToCartButton
+        item={{
+          productId: product.id,
+          slug: product.slug,
+          name: product.name,
+          href: product.href,
+          price: product.price,
+          ...(product.brand ? { brand: product.brand } : {}),
+          ...(mainImage?.url ? { imageUrl: mainImage.url } : {}),
+        }}
+        size="lg"
+        className="h-12 w-full rounded-[16px] text-sm font-semibold shadow-[0_18px_40px_rgba(0,0,0,0.28)] transition-transform duration-200 hover:translate-y-[-1px] focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none sm:h-14 sm:text-base xl:focus-visible:ring-white/80 xl:focus-visible:ring-offset-foreground"
+        disabled={!isAvailable}
+        unavailableLabel="No disponible"
+      />
 
-        <div className="grid gap-2">
-          {facts.map((fact) => (
+      {(commercialSignals.length > 0 || primaryFacts.length > 0) ? (
+        <div className={productDetailInnerPanelClassName("grid gap-2.5 p-3")}>
+          {commercialSignals.length > 0 ? (
+            <div className="grid gap-2">
+              {commercialSignals.slice(0, 2).map((signal) => (
+                <div
+                  key={signal.id}
+                  className={cn(
+                    "grid min-h-10 grid-cols-[auto_minmax(0,1fr)] items-start gap-2 rounded-[14px] border px-3 py-2",
+                    signal.emphasized
+                      ? "border-black/12 bg-black/[0.04] xl:border-white/16 xl:bg-white/[0.08]"
+                      : "border-black/10 bg-black/[0.02] xl:border-white/10 xl:bg-white/[0.04]",
+                  )}
+                >
+                  <div className="mt-0.5 text-muted-foreground xl:text-white/72">{signal.icon}</div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground xl:text-white/44">
+                      {signal.label}
+                    </p>
+                    <p className="mt-0.5 text-[13px] leading-5 text-foreground xl:text-white/84">
+                      {signal.value}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {primaryFacts.length > 0 ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {primaryFacts.map((fact) => (
+                <div
+                  key={fact.id}
+                  className="grid min-h-10 grid-cols-[auto_minmax(0,1fr)] items-start gap-2 rounded-[14px] border border-black/10 bg-black/[0.02] px-3 py-2 xl:border-white/10 xl:bg-white/[0.03]"
+                >
+                  <div className="mt-0.5 text-muted-foreground xl:text-white/66">{fact.icon}</div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground xl:text-white/48">
+                      {fact.label}
+                    </p>
+                    <p className="mt-0.5 text-[13px] leading-5 text-foreground/80 xl:text-white/78">
+                      {fact.value}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {secondaryFacts.length > 0 ? (
+        <div className="hidden gap-2 xl:grid">
+          {secondaryFacts.map((fact) => (
             <div
               key={fact.id}
               className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 rounded-[18px] border border-white/10 bg-white/[0.03] px-3 py-3"
@@ -558,15 +642,15 @@ export function ProductDetailPurchaseCard({
             </div>
           ))}
         </div>
-      </div>
+      ) : null}
 
-      {commercialSignals.length > 0 ? (
-        <div className="grid gap-2">
+      {secondarySignals.length > 0 ? (
+        <div className="hidden gap-2 xl:grid">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/48">
-            Señales comerciales
+            Más señales comerciales
           </p>
           <div className="grid gap-2">
-            {commercialSignals.map((signal) => (
+            {secondarySignals.map((signal) => (
               <div
                 key={signal.id}
                 className={cn(
@@ -593,7 +677,7 @@ export function ProductDetailPurchaseCard({
       ) : null}
 
       {quickSpecs.length > 0 ? (
-        <div className="grid gap-3">
+        <div className="hidden gap-3 xl:grid">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/48">
             Snapshot técnico
           </p>
@@ -625,14 +709,14 @@ export function ProductDetailRelatedGrid({
   return (
     <div className={productDetailCardClassName(cn("p-5 md:p-6", className))}>
       <div className="mb-4 flex items-start gap-3">
-        <div className="rounded-full border border-white/10 bg-white/[0.06] p-2 text-white/72">
+        <div className="rounded-full border border-black/10 bg-black/[0.03] p-2 text-muted-foreground xl:border-white/10 xl:bg-white/[0.06] xl:text-white/72">
           <Sparkles className="size-4" aria-hidden="true" />
         </div>
         <div className="min-w-0">
-          <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-white">
+          <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-foreground xl:text-white">
             Relacionados
           </h2>
-          <p className="mt-1 text-sm leading-6 text-white/62">
+          <p className="mt-1 text-sm leading-6 text-muted-foreground xl:text-white/62">
             Productos del contexto actual del storefront.
           </p>
         </div>
@@ -659,14 +743,16 @@ export function ProductDetailFallbackCard({
   return (
     <div className={productDetailCardClassName(cn("p-5 md:p-6", className))}>
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 rounded-full border border-white/10 bg-white/[0.06] p-2 text-white/72">
+        <div className="mt-0.5 rounded-full border border-black/10 bg-black/[0.03] p-2 text-muted-foreground xl:border-white/10 xl:bg-white/[0.06] xl:text-white/72">
           <Info className="size-4" aria-hidden="true" />
         </div>
         <div className="min-w-0">
-          <h3 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-white">
+          <h3 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-foreground xl:text-white">
             {title}
           </h3>
-          <p className="mt-2 text-sm leading-7 text-white/68 md:text-base">{body}</p>
+          <p className="mt-2 text-sm leading-7 text-muted-foreground md:text-base xl:text-white/68">
+            {body}
+          </p>
         </div>
       </div>
     </div>
@@ -695,15 +781,17 @@ export function ProductDetailSpecsCard({
   return (
     <div className={productDetailCardClassName(cn("p-5 md:p-6", className))}>
       <div className="mb-5 flex items-start gap-3">
-        <div className="rounded-full border border-white/10 bg-white/[0.06] p-2 text-white/74">
+        <div className="rounded-full border border-black/10 bg-black/[0.03] p-2 text-muted-foreground xl:border-white/10 xl:bg-white/[0.06] xl:text-white/74">
           <Package className="size-4" aria-hidden="true" />
         </div>
         <div className="min-w-0">
-          <h3 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-white">
+          <h3 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-foreground xl:text-white">
             {title}
           </h3>
           {description ? (
-            <p className="mt-2 text-sm leading-6 text-white/64">{description}</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground xl:text-white/64">
+              {description}
+            </p>
           ) : null}
         </div>
       </div>
@@ -714,10 +802,12 @@ export function ProductDetailSpecsCard({
             key={`${spec.label}-${index}`}
             className={productDetailInnerPanelClassName("px-4 py-3")}
           >
-            <dt className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/42">
+            <dt className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground xl:text-white/42">
               {spec.label}
             </dt>
-            <dd className="mt-1 text-sm font-medium leading-6 text-white/82">{spec.value}</dd>
+            <dd className="mt-1 text-sm font-medium leading-6 text-foreground xl:text-white/82">
+              {spec.value}
+            </dd>
           </div>
         ))}
       </dl>

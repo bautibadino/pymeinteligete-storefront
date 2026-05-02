@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -205,6 +206,20 @@ describe("presentation renderer logic", () => {
     expect(html).toContain('data-section-scope="global"');
     expect(html).toContain('data-section-id="hdr-global-1"');
     expect(html).toContain('data-section-id="ftr-global-1"');
+  });
+
+  it("mantiene el renderer acotado en grid y resalta la selección sin outline externo", () => {
+    const globalsCss = readFileSync(
+      "/Users/bautista/Desktop/Repositorios/pymeinteligete-storefront/app/globals.css",
+      "utf8",
+    );
+
+    expect(globalsCss).toContain(".presentation-renderer {");
+    expect(globalsCss).toContain(".presentation-renderer-content {");
+    expect(globalsCss).toContain(".presentation-shell-content > [data-presentation-renderer=\"true\"] {");
+    expect(globalsCss).toContain("min-width: 0;");
+    expect(globalsCss).toContain("box-shadow: inset 0 0 0 2px var(--module-accent);");
+    expect(globalsCss).not.toContain("outline-offset: 6px;");
   });
 
   it("normaliza announcementBar a static cuando llega una variante desconocida", () => {
