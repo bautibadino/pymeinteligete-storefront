@@ -489,6 +489,7 @@ describe("presentation renderer logic", () => {
         slug: string;
         href: string;
         imageUrl?: string;
+        basePrice?: { amount: number };
         price: { amount: number };
         installments?: { count: number; formatted: string; interestFree: boolean };
         cashDiscount?: { percent: number; formatted: string };
@@ -503,6 +504,7 @@ describe("presentation renderer logic", () => {
       slug: "cubierta-premium",
       href: "/producto/cubierta-premium",
       imageUrl: "https://cdn.example.com/cubierta.webp",
+      basePrice: { amount: 461374 },
       price: { amount: 369099 },
       compareAtPrice: { amount: 461374 },
       installments: { count: 6, interestFree: true },
@@ -1097,6 +1099,7 @@ describe("presentation renderer logic", () => {
       product?: {
         slug: string;
         images: Array<{ url: string; alt?: string }>;
+        basePrice?: { amount: number };
         price: { amount: number };
         compareAtPrice?: { amount: number };
         installments?: { count: number; interestFree: boolean };
@@ -1114,6 +1117,7 @@ describe("presentation renderer logic", () => {
         { url: "https://cdn.example.com/cubierta-premium-1.webp", alt: "Vista principal" },
         { url: "https://cdn.example.com/cubierta-premium-2.webp", alt: "Vista lateral" },
       ],
+      basePrice: { amount: 461374 },
       price: { amount: 369099 },
       compareAtPrice: { amount: 461374 },
       installments: { count: 6, interestFree: true },

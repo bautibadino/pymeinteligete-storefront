@@ -183,6 +183,7 @@ export interface ProductCardData {
   slug: string;
   brand?: string;
   imageUrl?: string;
+  basePrice?: ProductCardPrice;
   price: ProductCardPrice;
   compareAtPrice?: { amount: number; formatted: string };
   installments?: ProductCardInstallments;

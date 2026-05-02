@@ -15,6 +15,23 @@ export interface StorefrontCartItem {
   quantity: number;
 }
 
+export function resolveCartItemPrice(input: {
+  price: StorefrontCartItemPrice;
+  basePrice?: StorefrontCartItemPrice | undefined;
+}): StorefrontCartItemPrice {
+  const { price, basePrice } = input;
+
+  if (!basePrice) {
+    return price;
+  }
+
+  return {
+    amount: basePrice.amount,
+    formatted: basePrice.formatted,
+    ...(basePrice.currency ? { currency: basePrice.currency } : {}),
+  };
+}
+
 export const STOREFRONT_CART_UI_MODES = [
   "drawer",
   "floating-drawer",

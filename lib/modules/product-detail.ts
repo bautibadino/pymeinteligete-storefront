@@ -108,6 +108,7 @@ export interface ProductDetailData {
   brand?: string;
   description?: string;
   images: ProductDetailImage[];
+  basePrice?: ProductDetailPrice;
   price: ProductDetailPrice;
   compareAtPrice?: { amount: number; formatted: string };
   installments?: ProductDetailInstallments;

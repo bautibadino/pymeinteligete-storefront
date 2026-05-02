@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildCheckoutHrefFromCartItems,
   parseCheckoutItemsFromSearchParams,
+  resolveCartItemPrice,
   type StorefrontCartItem,
 } from "@/lib/cart/storefront-cart";
 
@@ -56,5 +57,42 @@ describe("storefront cart helpers", () => {
         quantity: "5",
       }),
     ).toEqual([{ productId: "legacy-prod", quantity: 5 }]);
+  });
+
+  it("usa el precio base para carrito cuando existe basePrice", () => {
+    expect(
+      resolveCartItemPrice({
+        price: {
+          amount: 80000,
+          currency: "ARS",
+          formatted: "$80.000",
+        },
+        basePrice: {
+          amount: 100000,
+          formatted: "$100.000",
+          currency: "ARS",
+        },
+      }),
+    ).toEqual({
+      amount: 100000,
+      currency: "ARS",
+      formatted: "$100.000",
+    });
+  });
+
+  it("conserva el precio visible cuando no existe compareAtPrice", () => {
+    expect(
+      resolveCartItemPrice({
+        price: {
+          amount: 80000,
+          currency: "ARS",
+          formatted: "$80.000",
+        },
+      }),
+    ).toEqual({
+      amount: 80000,
+      currency: "ARS",
+      formatted: "$80.000",
+    });
   });
 });
