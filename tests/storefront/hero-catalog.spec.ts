@@ -10,13 +10,14 @@ import {
   resolveHeroTemplateId,
 } from "@/lib/templates/hero-catalog";
 
-describe("Hero template catalog — variante commerce", () => {
-  it("incluye 'commerce' en HERO_TEMPLATE_IDS", () => {
+describe("Hero template catalog — variantes hero", () => {
+  it("incluye 'commerce' y 'button-overlay' en HERO_TEMPLATE_IDS", () => {
     expect(HERO_TEMPLATE_IDS).toContain("commerce");
+    expect(HERO_TEMPLATE_IDS).toContain("button-overlay");
   });
 
-  it("expone las 4 variantes declaradas", () => {
-    expect(HERO_TEMPLATE_IDS).toEqual(["split", "workshop", "editorial", "commerce"]);
+  it("expone las 5 variantes declaradas", () => {
+    expect(HERO_TEMPLATE_IDS).toEqual(["split", "workshop", "editorial", "commerce", "button-overlay"]);
   });
 
   it("tiene descriptor para 'commerce' con id, label, description y bestFor", () => {
@@ -39,6 +40,30 @@ describe("Hero template catalog — variante commerce", () => {
       expect(descriptor.thumbnailUrl).toBeDefined();
       expect(descriptor.thumbnailUrl.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("HERO_CONTENT_SCHEMAS['button-overlay']", () => {
+  it("valida el defaultHeroContent('button-overlay') sin errores", () => {
+    const defaults = defaultHeroContent("button-overlay");
+    const result = HERO_CONTENT_SCHEMAS["button-overlay"].safeParse(defaults);
+    expect(result.success).toBe(true);
+  });
+
+  it("requiere imageUrl y primaryCta", () => {
+    const result = HERO_CONTENT_SCHEMAS["button-overlay"].safeParse({
+      buttonPosition: "left",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("acepta una configuración mínima válida", () => {
+    const result = HERO_CONTENT_SCHEMAS["button-overlay"].safeParse({
+      imageUrl: "https://cdn.example.com/hero-campaign.webp",
+      primaryCta: { label: "Ver más", href: "/catalogo", variant: "primary" },
+      buttonPosition: "right",
+    });
+    expect(result.success).toBe(true);
   });
 });
 
@@ -90,6 +115,20 @@ describe("HERO_CONTENT_SCHEMAS['commerce']", () => {
   it("acepta commerce sin campos opcionales", () => {
     const result = HERO_CONTENT_SCHEMAS.commerce.safeParse({
       imageUrl: "https://cdn.example.com/hero.jpg",
+      title: "Neumáticos y servicios",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("acepta metadata aditiva de imagen mientras imageUrl siga resuelto", () => {
+    const result = HERO_CONTENT_SCHEMAS.commerce.safeParse({
+      imageUrl: "https://cdn.example.com/hero.jpg",
+      image: {
+        url: "https://cdn.example.com/hero.jpg",
+        alt: "Taller BYM",
+        width: 1600,
+        height: 900,
+      },
       title: "Neumáticos y servicios",
     });
     expect(result.success).toBe(true);
@@ -166,11 +205,15 @@ describe("resolveHeroTemplateId con variante commerce", () => {
     expect(isHeroTemplateId("commerce")).toBe(true);
   });
 
+  it("isHeroTemplateId reconoce 'button-overlay' como válido", () => {
+    expect(isHeroTemplateId("button-overlay")).toBe(true);
+  });
+
   it("degrada al default si el input es inválido (no se rompe)", () => {
     expect(resolveHeroTemplateId("no-existe")).toBe(DEFAULT_HERO_TEMPLATE_ID);
   });
 
-  it("las 4 variantes se resuelven como identidad", () => {
+  it("las 5 variantes se resuelven como identidad", () => {
     for (const id of HERO_TEMPLATE_IDS) {
       expect(resolveHeroTemplateId(id)).toBe(id);
     }

@@ -25,6 +25,11 @@ vi.mock("@/components/templates/product-grid/product-grid-masonry", () => ({
     return null;
   },
 }));
+vi.mock("@/components/templates/product-grid/product-grid-spotlight-carousel", () => ({
+  ProductGridSpotlightCarousel: function ProductGridSpotlightCarousel() {
+    return null;
+  },
+}));
 
 import {
   DEFAULT_PRODUCT_GRID_TEMPLATE_ID,
@@ -34,18 +39,20 @@ import {
   resolveProductGridTemplateId,
 } from "@/lib/templates/product-grid-catalog";
 import { normalizeProductGridContent } from "@/lib/modules/product-grid";
+import { resolveProductGridTemplate } from "@/lib/templates/registry";
 
 // ---------------------------------------------------------------------------
 // Catálogo
 // ---------------------------------------------------------------------------
 
 describe("Product grid template catalog", () => {
-  it("expone las 4 variantes declaradas en el catálogo", () => {
+  it("expone las 5 variantes declaradas en el catálogo", () => {
     expect(PRODUCT_GRID_TEMPLATE_IDS).toEqual([
       "grid-3",
       "grid-4",
       "carousel-arrows",
       "masonry",
+      "spotlight-carousel",
     ]);
   });
 
@@ -73,6 +80,9 @@ describe("Product grid template catalog", () => {
     );
     expect(PRODUCT_GRID_TEMPLATE_DESCRIPTORS["masonry"].thumbnailUrl).toBe(
       "/template-thumbnails/product-grid-masonry.svg"
+    );
+    expect(PRODUCT_GRID_TEMPLATE_DESCRIPTORS["spotlight-carousel"].thumbnailUrl).toBe(
+      "/template-thumbnails/product-grid-spotlight-carousel.svg"
     );
   });
 });
@@ -143,7 +153,7 @@ describe("ProductGridContentSchema", () => {
       subtitle: "Lo mejor de la semana",
       source: { type: "collection", collectionId: "summer-2026" },
       limit: 8,
-      cardVariant: "premium-commerce",
+      cardVariant: "spotlight-commerce",
       cardDisplayOptions: {
         showBrand: true,
         showBadges: true,
@@ -199,11 +209,11 @@ describe("normalizeProductGridContent", () => {
   it("normaliza handpicked descartando productIds no string", () => {
     const normalized = normalizeProductGridContent({
       source: { type: "handpicked", productIds: ["prod-1", 42, "prod-2"] },
-      cardVariant: "premium-commerce",
+      cardVariant: "spotlight-commerce",
     });
 
     expect(normalized.source).toEqual({ type: "handpicked", productIds: ["prod-1", "prod-2"] });
-    expect(normalized.cardVariant).toBe("premium-commerce");
+    expect(normalized.cardVariant).toBe("spotlight-commerce");
   });
 
   it("conserva el tono del badge de stock cuando el builder envía un preset válido", () => {
@@ -220,5 +230,28 @@ describe("normalizeProductGridContent", () => {
       showStockBadge: true,
       stockBadgeTone: "forest",
     });
+  });
+});
+
+describe("resolveProductGridTemplate", () => {
+  it("devuelve un componente (función) para cada id válido", () => {
+    for (const id of PRODUCT_GRID_TEMPLATE_IDS) {
+      const Component = resolveProductGridTemplate(id);
+      expect(typeof Component).toBe("function");
+    }
+  });
+
+  it("devuelve el componente grid-3 (default) cuando el input no matchea", () => {
+    const fallback = resolveProductGridTemplate("no-existe");
+    const grid3 = resolveProductGridTemplate("grid-3");
+
+    expect(fallback).toBe(grid3);
+  });
+
+  it("devuelve componentes distintos para spotlight y carousel legacy", () => {
+    const arrows = resolveProductGridTemplate("carousel-arrows");
+    const spotlight = resolveProductGridTemplate("spotlight-carousel");
+
+    expect(arrows).not.toBe(spotlight);
   });
 });

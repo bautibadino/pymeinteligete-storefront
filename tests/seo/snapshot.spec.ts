@@ -28,6 +28,11 @@ function buildBootstrap(): StorefrontBootstrap {
     branding: {
       storeName: "Acme Store",
       faviconUrl: "https://cdn.example.com/favicon.png",
+      favicon: {
+        url: "https://cdn.example.com/favicon.png",
+        mimeType: "image/png",
+        assetId: "favicon-interno",
+      },
       colors: { primary: "#111827" },
     },
     theme: { preset: "default", layout: "commerce" },
@@ -35,6 +40,12 @@ function buildBootstrap(): StorefrontBootstrap {
       defaultTitle: "Acme Store",
       defaultDescription: "Cubiertas y accesorios",
       ogImage: "https://cdn.example.com/og.png",
+      ogImageMetadata: {
+        url: "https://cdn.example.com/og.png",
+        width: 1200,
+        height: 630,
+        assetId: "og-interno",
+      },
     },
     navigation: { headerLinks: [], footerColumns: [] },
     home: { modules: [] },
@@ -47,7 +58,7 @@ function buildBootstrap(): StorefrontBootstrap {
       searchEnabled: false,
     },
     pages: [],
-  };
+  } as StorefrontBootstrap;
 }
 
 describe("resolveTenantSeoSnapshotByRequest", () => {
@@ -73,5 +84,22 @@ describe("resolveTenantSeoSnapshotByRequest", () => {
     expect(snapshot.ogImageUrl).toBe("https://cdn.example.com/og.png");
     expect(snapshot.faviconUrl).toBe("https://cdn.example.com/favicon.png");
     expect(snapshot.canonicalBaseUrl.toString()).toBe("https://acme.example.com/");
+  });
+
+  it("prioriza las URLs públicas existentes aunque lleguen metadatos aditivos de media", async () => {
+    getBootstrapForSeoMock.mockResolvedValueOnce({
+      bootstrap: buildBootstrap(),
+      issues: [],
+    });
+
+    const snapshot = await resolveTenantSeoSnapshotByRequest({
+      protocol: "https",
+      requestHost: "acme.example.com",
+      resolvedHost: "acme.example.com",
+      requestOrigin: new URL("https://acme.example.com"),
+    });
+
+    expect(snapshot.ogImageUrl).toBe("https://cdn.example.com/og.png");
+    expect(snapshot.faviconUrl).toBe("https://cdn.example.com/favicon.png");
   });
 });

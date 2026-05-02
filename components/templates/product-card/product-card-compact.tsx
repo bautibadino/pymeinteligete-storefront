@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { ArrowRight } from "lucide-react";
 
+import { ProductCardMediaFrame } from "@/components/templates/product-card/product-card-media-frame";
 import { themeTypographyStyles } from "@/lib/theme";
 import type {
   ProductCardData,
@@ -36,25 +37,17 @@ export function ProductCardCompact({
   return (
     <article
       aria-label={name}
-      className="group relative flex flex-col overflow-hidden rounded-md border border-border bg-panel transition-shadow hover:shadow-sm"
+      className="group relative flex flex-col overflow-hidden rounded-md border border-border bg-white transition-shadow hover:shadow-sm"
       data-template="product-card-compact"
     >
       <Link href={href as Route} className="contents" tabIndex={-1} aria-hidden="true">
-        <div className="relative aspect-square overflow-hidden bg-panel-strong">
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={name}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              loading="lazy"
-            />
-          ) : (
-            <div
-              aria-hidden="true"
-              className="flex h-full w-full bg-gradient-to-br from-primary-soft to-accent-soft"
-            />
-          )}
-
+        <ProductCardMediaFrame
+          imageUrl={imageUrl}
+          alt={name}
+          fit="contain"
+          frameClassName="aspect-square"
+          imageClassName="p-2.5 group-hover:scale-[1.02]"
+        >
           {showStockBadge ? (
             <ProductCardStockBadge
               stock={stock}
@@ -77,7 +70,7 @@ export function ProductCardCompact({
               </span>
             </div>
           ) : null}
-        </div>
+        </ProductCardMediaFrame>
       </Link>
 
       <div className="flex flex-col gap-1 p-2">

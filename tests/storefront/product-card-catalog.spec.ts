@@ -25,6 +25,11 @@ vi.mock("@/components/templates/product-card/product-card-premium-commerce", () 
     return null;
   },
 }));
+vi.mock("@/components/templates/product-card/product-card-spotlight-commerce", () => ({
+  ProductCardSpotlightCommerce: function ProductCardSpotlightCommerce() {
+    return null;
+  },
+}));
 
 import {
   DEFAULT_PRODUCT_CARD_TEMPLATE_ID,
@@ -40,12 +45,13 @@ import { resolveProductCardTemplate } from "@/lib/templates/product-card-registr
 // ---------------------------------------------------------------------------
 
 describe("Product card template catalog", () => {
-  it("expone las 4 variantes declaradas en el catálogo", () => {
+  it("expone las 5 variantes declaradas en el catálogo", () => {
     expect(PRODUCT_CARD_TEMPLATE_IDS).toEqual([
       "classic",
       "compact",
       "editorial",
       "premium-commerce",
+      "spotlight-commerce",
     ]);
   });
 
@@ -72,6 +78,9 @@ describe("Product card template catalog", () => {
     );
     expect(PRODUCT_CARD_TEMPLATE_DESCRIPTORS["premium-commerce"].thumbnailUrl).toBe(
       "/template-thumbnails/product-card-premium-commerce.svg"
+    );
+    expect(PRODUCT_CARD_TEMPLATE_DESCRIPTORS["spotlight-commerce"].thumbnailUrl).toBe(
+      "/template-thumbnails/product-card-spotlight-commerce.svg"
     );
   });
 });
@@ -144,12 +153,17 @@ describe("resolveProductCardTemplate", () => {
     const compact = resolveProductCardTemplate("compact");
     const editorial = resolveProductCardTemplate("editorial");
     const premium = resolveProductCardTemplate("premium-commerce");
+    const spotlight = resolveProductCardTemplate("spotlight-commerce");
 
     expect(classic).not.toBe(compact);
     expect(classic).not.toBe(editorial);
     expect(classic).not.toBe(premium);
+    expect(classic).not.toBe(spotlight);
     expect(compact).not.toBe(editorial);
     expect(compact).not.toBe(premium);
+    expect(compact).not.toBe(spotlight);
     expect(editorial).not.toBe(premium);
+    expect(editorial).not.toBe(spotlight);
+    expect(premium).not.toBe(spotlight);
   });
 });

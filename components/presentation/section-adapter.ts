@@ -1,7 +1,10 @@
 import { normalizeAnnouncementBarModule } from "@/lib/modules/announcement-bar";
 import { normalizeCatalogLayoutContent } from "@/lib/modules/catalog-layout";
 import { normalizeProductGridContent } from "@/lib/modules/product-grid";
-import type { SectionInstance } from "@/lib/types/presentation";
+import type {
+  PresentationResolvedMediaMetadata,
+  SectionInstance,
+} from "@/lib/types/presentation";
 import {
   mapCategoriesToTiles,
   mapCatalogProductsToCardData,
@@ -21,12 +24,46 @@ function readString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+function readFiniteNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
 /**
  * Adapta una SectionInstance del contrato presentation al shape de módulo
  * que espera cada componente de template.
  */
 function readArray(value: unknown): unknown[] | undefined {
   return Array.isArray(value) ? value : undefined;
+}
+
+function readResolvedMediaMetadata(value: unknown): PresentationResolvedMediaMetadata | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const url = readString(value.url);
+  const alt = readString(value.alt);
+  const width = readFiniteNumber(value.width);
+  const height = readFiniteNumber(value.height);
+  const mimeType = readString(value.mimeType);
+
+  if (
+    url === undefined &&
+    alt === undefined &&
+    width === undefined &&
+    height === undefined &&
+    mimeType === undefined
+  ) {
+    return undefined;
+  }
+
+  return {
+    ...(url ? { url } : {}),
+    ...(alt ? { alt } : {}),
+    ...(width !== undefined ? { width } : {}),
+    ...(height !== undefined ? { height } : {}),
+    ...(mimeType ? { mimeType } : {}),
+  };
 }
 
 function resolveHeaderLinks(context?: PresentationRenderContext) {
@@ -66,6 +103,9 @@ function adaptHeaderSection(
   context?: PresentationRenderContext,
 ) {
   const showSearchByDefault = section.variant !== "minimal";
+  const logoMetadata = readResolvedMediaMetadata(
+    isRecord(context?.bootstrap?.branding) ? context.bootstrap.branding.logo : undefined,
+  );
 
   return {
     id: section.id,
@@ -73,6 +113,7 @@ function adaptHeaderSection(
     variant: section.variant,
     ...content,
     logoUrl: context?.bootstrap?.branding?.logoUrl,
+    logoMetadata,
     logoHref: "/",
     logoAlt: readString(content.logoAlt) ?? resolveStoreName(context),
     navLinks: readArray(content.navLinks) ?? resolveHeaderLinks(context),
@@ -101,6 +142,7 @@ export function adaptSectionToModule(
     case "hero": {
       const imageUrl = readString(content.imageUrl) ?? "";
       const imageAlt = readString(content.imageAlt) ?? "Imagen principal";
+      const imageMetadata = readResolvedMediaMetadata(content.image);
       const storeName = resolveStoreName(context);
 
       return {
@@ -113,6 +155,7 @@ export function adaptSectionToModule(
           context?.bootstrap?.seo?.defaultDescription ??
           "Explorá el catálogo online y encontrá productos disponibles para comprar.",
         image: imageUrl ? { src: imageUrl, alt: imageAlt } : undefined,
+        imageMetadata,
         primaryAction: content.primaryAction ?? content.primaryCta,
         secondaryAction: content.secondaryAction ?? content.secondaryCta,
         searchPlaceholder:
@@ -200,6 +243,9 @@ export function adaptSectionToModule(
 
     case "footer": {
       const storeName = resolveStoreName(context);
+      const logoMetadata = readResolvedMediaMetadata(
+        isRecord(context?.bootstrap?.branding) ? context.bootstrap.branding.logo : undefined,
+      );
 
       return {
         ...base,
@@ -208,6 +254,7 @@ export function adaptSectionToModule(
         content: {
           ...content,
           logoUrl: context?.bootstrap?.branding?.logoUrl,
+          logoMetadata,
           tagline:
             readString(content.tagline) ??
             context?.bootstrap?.seo?.defaultDescription ??

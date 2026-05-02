@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 
 // Hero
 import { HeroCommerce } from "@/components/templates/hero/hero-commerce";
+import { HeroButtonOverlay } from "@/components/templates/hero/hero-button-overlay";
 import { HeroEditorial } from "@/components/templates/hero/hero-editorial";
 import { HeroSplit } from "@/components/templates/hero/hero-split";
 import { HeroWorkshop } from "@/components/templates/hero/hero-workshop";
@@ -29,6 +30,7 @@ import { ProductGridCarouselArrows } from "@/components/templates/product-grid/p
 import { ProductGridGrid3 } from "@/components/templates/product-grid/product-grid-grid-3";
 import { ProductGridGrid4 } from "@/components/templates/product-grid/product-grid-grid-4";
 import { ProductGridMasonry } from "@/components/templates/product-grid/product-grid-masonry";
+import { ProductGridSpotlightCarousel } from "@/components/templates/product-grid/product-grid-spotlight-carousel";
 import type { ProductGridModule } from "@/lib/modules/product-grid";
 import { resolveProductGridTemplateId, type ProductGridTemplateId } from "@/lib/templates/product-grid-catalog";
 
@@ -138,6 +140,7 @@ export const HERO_TEMPLATES: Record<HeroTemplateId, HeroTemplateComponent> = {
   workshop: HeroWorkshop,
   editorial: HeroEditorial,
   commerce: HeroCommerce,
+  "button-overlay": HeroButtonOverlay,
 };
 
 export function resolveHeroTemplate(templateId: unknown): HeroTemplateComponent {
@@ -189,6 +192,7 @@ export const PRODUCT_GRID_TEMPLATES: Record<ProductGridTemplateId, ProductGridTe
   "grid-4": ProductGridGrid4,
   "carousel-arrows": ProductGridCarouselArrows,
   masonry: ProductGridMasonry,
+  "spotlight-carousel": ProductGridSpotlightCarousel,
 };
 
 export function resolveProductGridTemplate(templateId: unknown): ProductGridTemplateComponent {

@@ -1,25 +1,14 @@
-import {
-  Truck,
-  Shield,
-  CreditCard,
-  Clock,
-  BadgeCheck,
-  Headset,
-  Package,
-  RefreshCw,
-} from "lucide-react";
-import type { TrustBarModule } from "@/lib/modules/trust-bar";
+"use client";
 
-const ICON_MAP = {
-  truck: Truck,
-  shield: Shield,
-  "credit-card": CreditCard,
-  clock: Clock,
-  "badge-check": BadgeCheck,
-  headset: Headset,
-  package: Package,
-  "refresh-cw": RefreshCw,
-} as const;
+import { motion } from "framer-motion";
+import type { TrustBarModule } from "@/lib/modules/trust-bar";
+import {
+  getAlignmentClass,
+  TRUST_BAR_ICON_MAP,
+  TrustIconBadge,
+  trustItemSurfaceClassName,
+  useTrustMotion,
+} from "./trust-bar-shared";
 
 /**
  * TrustBar Rail Denso — scroll horizontal en mobile, grid en desktop.
@@ -28,45 +17,49 @@ const ICON_MAP = {
 export function TrustBarRailDense({ module }: { module: TrustBarModule }) {
   const { content, id } = module;
   const { items, alignment = "center" } = content;
+  const { reduceMotion, containerVariants, itemVariants } = useTrustMotion();
 
   return (
     <section
       aria-label="Ventajas y beneficios"
       data-template="trust-bar-rail-dense"
-      className="border-y border-border bg-panel py-4"
+      className="bg-panel py-3"
     >
       <div className="mx-auto max-w-screen-xl px-4">
-        <ul
-          className={`flex gap-4 overflow-x-auto pb-1 scrollbar-none sm:flex-wrap sm:overflow-visible sm:pb-0 ${
-            alignment === "center" ? "sm:justify-center" : "sm:justify-start"
-          }`}
+        <motion.ul
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.35 }}
+          variants={containerVariants}
+          className={`flex gap-3 overflow-x-auto pb-1 scrollbar-none sm:flex-wrap sm:overflow-visible sm:pb-0 ${getAlignmentClass(
+            alignment,
+          )}`}
           aria-label="Lista de ventajas"
         >
           {items.map((item, index) => {
-            const Icon = ICON_MAP[item.icon];
+            const Icon = TRUST_BAR_ICON_MAP[item.icon];
             return (
-              <li
+              <motion.li
                 key={`${id}-rail-${index}`}
-                className="flex shrink-0 items-center gap-2 rounded-lg bg-background px-3 py-2 sm:shrink"
+                variants={itemVariants}
+                {...(!reduceMotion ? { whileHover: { y: -1 } } : {})}
+                className={`${trustItemSurfaceClassName(true)} flex min-w-[224px] shrink-0 items-start gap-3 px-3.5 py-3 sm:min-w-[208px] sm:shrink`}
               >
-                <div
-                  aria-hidden="true"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary"
-                >
-                  <Icon className="size-4" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="whitespace-nowrap text-xs font-semibold text-foreground">
+                <TrustIconBadge icon={Icon} compact />
+                <div className="min-w-0 space-y-0.5">
+                  <span className="block truncate text-[13px] font-semibold leading-4 tracking-[-0.01em] text-foreground">
                     {item.title}
                   </span>
                   {item.subtitle ? (
-                    <span className="whitespace-nowrap text-xs text-muted">{item.subtitle}</span>
+                    <span className="block truncate text-[11.5px] leading-4 text-muted">
+                      {item.subtitle}
+                    </span>
                   ) : null}
                 </div>
-              </li>
+              </motion.li>
             );
           })}
-        </ul>
+        </motion.ul>
       </div>
     </section>
   );

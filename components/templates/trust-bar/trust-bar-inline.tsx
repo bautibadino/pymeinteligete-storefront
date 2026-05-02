@@ -1,25 +1,14 @@
-import {
-  Truck,
-  Shield,
-  CreditCard,
-  Clock,
-  BadgeCheck,
-  Headset,
-  Package,
-  RefreshCw,
-} from "lucide-react";
-import type { TrustBarModule } from "@/lib/modules/trust-bar";
+"use client";
 
-const ICON_MAP = {
-  truck: Truck,
-  shield: Shield,
-  "credit-card": CreditCard,
-  clock: Clock,
-  "badge-check": BadgeCheck,
-  headset: Headset,
-  package: Package,
-  "refresh-cw": RefreshCw,
-} as const;
+import { motion } from "framer-motion";
+import type { TrustBarModule } from "@/lib/modules/trust-bar";
+import {
+  getAlignmentClass,
+  TRUST_BAR_ICON_MAP,
+  TrustIconBadge,
+  trustItemSurfaceClassName,
+  useTrustMotion,
+} from "./trust-bar-shared";
 
 /**
  * TrustBar Inline — 3-4 items horizontales con ícono, título y subtítulo.
@@ -28,43 +17,49 @@ const ICON_MAP = {
 export function TrustBarInline({ module }: { module: TrustBarModule }) {
   const { content, id } = module;
   const { items, alignment = "center" } = content;
+  const { reduceMotion, containerVariants, itemVariants } = useTrustMotion();
 
   return (
     <section
       aria-label="Ventajas y beneficios"
       data-template="trust-bar-inline"
-      className="border-y border-border bg-panel py-6"
+      className="bg-panel py-4"
     >
-      <div
-        className={`mx-auto flex max-w-screen-xl flex-col gap-6 px-4 sm:flex-row sm:flex-wrap sm:gap-4 ${
-          alignment === "center" ? "sm:justify-center" : "sm:justify-start"
-        }`}
+      <motion.ul
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.35 }}
+        variants={containerVariants}
+        className={`mx-auto grid max-w-screen-xl gap-3 px-4 sm:grid-cols-2 lg:grid-cols-3 ${getAlignmentClass(
+          alignment,
+        )}`}
       >
         {items.map((item, index) => {
-          const Icon = ICON_MAP[item.icon];
+          const Icon = TRUST_BAR_ICON_MAP[item.icon];
           return (
-            <div
+            <motion.li
               key={`${id}-item-${index}`}
-              className="flex items-start gap-3 sm:flex-1 sm:basis-40"
+              variants={itemVariants}
+              {...(!reduceMotion ? { whileHover: { y: -1 } } : {})}
+              className={`${trustItemSurfaceClassName()} px-4 py-3`}
             >
-              <div
-                aria-hidden="true"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary"
-              >
-                <Icon className="size-5" />
+              <div className="flex items-start gap-3">
+                <TrustIconBadge icon={Icon} />
+                <div className="min-w-0 space-y-1">
+                  <span className="block text-[15px] font-semibold leading-[1.15] tracking-[-0.01em] text-foreground">
+                    {item.title}
+                  </span>
+                  {item.subtitle ? (
+                    <span className="block text-[12.5px] leading-5 text-muted">
+                      {item.subtitle}
+                    </span>
+                  ) : null}
+                </div>
               </div>
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-semibold leading-snug text-foreground">
-                  {item.title}
-                </span>
-                {item.subtitle ? (
-                  <span className="text-xs leading-relaxed text-muted">{item.subtitle}</span>
-                ) : null}
-              </div>
-            </div>
+            </motion.li>
           );
         })}
-      </div>
+      </motion.ul>
     </section>
   );
 }

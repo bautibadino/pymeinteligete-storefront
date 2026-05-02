@@ -19,6 +19,7 @@ export const HERO_TEMPLATE_IDS: readonly HeroTemplateId[] = [
   "workshop",
   "editorial",
   "commerce",
+  "button-overlay",
 ];
 
 export const DEFAULT_HERO_TEMPLATE_ID: HeroTemplateId = "split";
@@ -65,6 +66,13 @@ export const HERO_TEMPLATE_DESCRIPTORS: Record<HeroTemplateId, TemplateDescripto
       "tiendas con buscador de productos",
     ],
     thumbnailUrl: "/template-thumbnails/hero-commerce.svg",
+  },
+  "button-overlay": {
+    id: "button-overlay",
+    label: "Botón sobre imagen",
+    description: "Hero full-bleed con un solo botón superpuesto, pensado para piezas que ya traen el copy dentro de la imagen.",
+    bestFor: ["banners con copy embebido", "campañas visuales", "portadas con una sola acción clara"],
+    thumbnailUrl: "/template-thumbnails/hero-workshop.svg",
   },
 };
 
@@ -119,6 +127,14 @@ export const HERO_CONTENT_SCHEMAS = {
     searchPlaceholder: z.string().optional(),
     enableSearch: z.boolean().optional(),
   }),
+  "button-overlay": z.object({
+    title: z.string().optional(),
+    imageUrl: z.string(),
+    imageAlt: z.string().optional(),
+    overlayOpacity: z.number().min(0).max(100).optional().default(28),
+    primaryCta: CtaSchema,
+    buttonPosition: z.enum(["left", "right"]).optional().default("left"),
+  }),
 } as const;
 
 export type HeroContentSchemas = typeof HERO_CONTENT_SCHEMAS;
@@ -126,6 +142,7 @@ export type HeroCommerceContent = z.infer<HeroContentSchemas["commerce"]>;
 export type HeroSplitContent = z.infer<HeroContentSchemas["split"]>;
 export type HeroWorkshopContent = z.infer<HeroContentSchemas["workshop"]>;
 export type HeroEditorialContent = z.infer<HeroContentSchemas["editorial"]>;
+export type HeroButtonOverlayContent = z.infer<HeroContentSchemas["button-overlay"]>;
 
 type DefaultContent<T extends HeroTemplateId> = z.infer<HeroContentSchemas[T]>;
 
@@ -133,9 +150,10 @@ export function defaultHeroContent(variant: "split"): DefaultContent<"split">;
 export function defaultHeroContent(variant: "workshop"): DefaultContent<"workshop">;
 export function defaultHeroContent(variant: "editorial"): DefaultContent<"editorial">;
 export function defaultHeroContent(variant: "commerce"): DefaultContent<"commerce">;
+export function defaultHeroContent(variant: "button-overlay"): DefaultContent<"button-overlay">;
 export function defaultHeroContent(
   variant: HeroTemplateId,
-): DefaultContent<"split"> | DefaultContent<"workshop"> | DefaultContent<"editorial"> | DefaultContent<"commerce"> {
+): DefaultContent<"split"> | DefaultContent<"workshop"> | DefaultContent<"editorial"> | DefaultContent<"commerce"> | DefaultContent<"button-overlay"> {
   switch (variant) {
     case "split":
       return {
@@ -181,6 +199,15 @@ export function defaultHeroContent(
         secondaryCta: { label: "Contactar", href: "/contacto" },
         searchPlaceholder: "Buscá tu producto...",
         enableSearch: false,
+      };
+    case "button-overlay":
+      return {
+        title: undefined,
+        imageUrl: "",
+        imageAlt: "Portada de campaña",
+        overlayOpacity: 28,
+        primaryCta: { label: "Ver más", href: "/catalogo", variant: "primary" },
+        buttonPosition: "left",
       };
   }
 }
