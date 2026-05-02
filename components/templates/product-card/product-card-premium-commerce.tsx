@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 
 import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
+import { ProductCardMediaFrame } from "@/components/templates/product-card/product-card-media-frame";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { themeTypographyStyles } from "@/lib/theme";
@@ -67,7 +68,7 @@ export function ProductCardPremiumCommerce({
   return (
     <article
       aria-label={name}
-      className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-panel shadow-tenant transition-shadow hover:shadow-md"
+      className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-white shadow-tenant transition-shadow hover:shadow-md"
       data-template="product-card-premium-commerce"
     >
       {/* Badges superiores */}
@@ -87,21 +88,13 @@ export function ProductCardPremiumCommerce({
 
       {/* Imagen */}
       <Link href={href as Route} className="contents" tabIndex={-1} aria-hidden="true">
-        <div className="relative aspect-square overflow-hidden bg-panel-strong">
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={name}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              loading="lazy"
-            />
-          ) : (
-            <div
-              aria-hidden="true"
-              className="flex h-full w-full bg-gradient-to-br from-primary-soft to-accent-soft"
-            />
-          )}
-
+        <ProductCardMediaFrame
+          imageUrl={imageUrl}
+          alt={name}
+          fit="contain"
+          frameClassName="aspect-square"
+          imageClassName="p-3.5 group-hover:scale-[1.02]"
+        >
           {showStockBadge ? (
             <ProductCardStockBadge
               stock={stock}
@@ -109,7 +102,7 @@ export function ProductCardPremiumCommerce({
               className="absolute bottom-2 left-2 z-10 backdrop-blur-sm"
             />
           ) : null}
-        </div>
+        </ProductCardMediaFrame>
       </Link>
 
       {/* Contenido */}
@@ -139,22 +132,23 @@ export function ProductCardPremiumCommerce({
               {compareAtPrice.formatted}
             </span>
           ) : null}
+        </div>
 
+        <div data-price-row="final" className="flex flex-wrap items-center gap-2">
+          <p className="text-lg font-bold leading-none text-foreground">
+            {price.formatted}
+          </p>
           {showCashDiscount && cashDiscount ? (
             <span
+              data-discount-badge="cash-discount"
               className={themeTypographyStyles.label(
-                "rounded-sm bg-primary-soft px-1.5 py-0.5 text-[10px] text-primary",
+                "rounded-full bg-primary-soft px-2 py-0.5 text-[10px] text-slate-950",
               )}
             >
               {cashDiscount.percent}% OFF contado
             </span>
           ) : null}
         </div>
-
-        {/* Precio final */}
-        <p className="text-lg font-bold leading-none text-foreground">
-          {price.formatted}
-        </p>
 
         {/* Cuotas */}
         {showInstallments && installments ? (

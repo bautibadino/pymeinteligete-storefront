@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
+import { ProductCardMediaFrame } from "@/components/templates/product-card/product-card-media-frame";
 import { ProductCardStockBadge } from "@/components/templates/product-card/product-card-stock-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,7 +65,7 @@ export function ProductCardSpotlightCommerce({
       aria-label={name}
       className={cn(
         "group relative flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-border/70",
-        "bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,255,255,0.9))] shadow-[0_24px_80px_-40px_rgba(15,23,42,0.55)]",
+        "bg-white shadow-[0_24px_80px_-40px_rgba(15,23,42,0.55)]",
         "transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_30px_90px_-40px_rgba(15,23,42,0.65)]",
       )}
       data-template="product-card-spotlight-commerce"
@@ -75,21 +76,14 @@ export function ProductCardSpotlightCommerce({
       />
 
       <Link href={href as Route} className="contents" tabIndex={-1} aria-hidden="true">
-        <div className="relative aspect-[4/4.8] overflow-hidden bg-panel-strong">
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={name}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-              loading="lazy"
-            />
-          ) : (
-            <div
-              aria-hidden="true"
-              className="h-full w-full bg-gradient-to-br from-primary-soft via-panel-strong to-accent-soft"
-            />
-          )}
-
+        <ProductCardMediaFrame
+          imageUrl={imageUrl}
+          alt={name}
+          fit="contain"
+          frameClassName="aspect-[4/4.8]"
+          imageClassName="p-5 transition-transform duration-500 group-hover:scale-[1.02]"
+          placeholderClassName="bg-gradient-to-br from-primary-soft via-panel-strong to-accent-soft"
+        >
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/18 via-slate-950/0 to-white/10" />
 
           {renderedBadges.length > 0 ? (
@@ -114,7 +108,7 @@ export function ProductCardSpotlightCommerce({
               className="absolute bottom-4 left-4 z-10 border-white/30 bg-white/85 shadow-sm backdrop-blur-md"
             />
           ) : null}
-        </div>
+        </ProductCardMediaFrame>
       </Link>
 
       <div className="relative flex flex-1 flex-col gap-4 px-5 pb-5 pt-4">
@@ -141,20 +135,24 @@ export function ProductCardSpotlightCommerce({
             {compareAtPrice ? (
               <span className="text-sm text-muted line-through">{compareAtPrice.formatted}</span>
             ) : null}
-
-            {showCashDiscount && cashDiscount ? (
-              <Badge variant="soft" className="text-[11px]">
-                {cashDiscount.percent}% OFF contado
-              </Badge>
-            ) : null}
           </div>
 
           <div className="mt-3 flex items-end justify-between gap-3">
-            <div>
+            <div className="space-y-1.5">
               <p className="text-[11px] uppercase tracking-[0.22em] text-muted">Precio final</p>
-              <p className="text-2xl font-semibold leading-none text-foreground">
-                {price.formatted}
-              </p>
+              <div data-price-row="final" className="flex flex-wrap items-center gap-2">
+                <p className="text-2xl font-semibold leading-none text-foreground">
+                  {price.formatted}
+                </p>
+                {showCashDiscount && cashDiscount ? (
+                  <span
+                    data-discount-badge="cash-discount"
+                    className="inline-flex items-center rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-950"
+                  >
+                    {cashDiscount.percent}% OFF contado
+                  </span>
+                ) : null}
+              </div>
             </div>
 
             {showInstallments && installments ? (
