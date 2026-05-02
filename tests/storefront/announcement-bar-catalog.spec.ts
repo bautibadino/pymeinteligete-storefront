@@ -1,5 +1,10 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { AnnouncementBarRotating } from "@/components/templates/announcement-bar/announcement-bar-rotating";
+import { AnnouncementBarStatic } from "@/components/templates/announcement-bar/announcement-bar-static";
+import type { AnnouncementBarModule } from "@/lib/modules/announcement-bar";
 import {
   ANNOUNCEMENT_BAR_TEMPLATE_DESCRIPTORS,
   ANNOUNCEMENT_BAR_TEMPLATE_IDS,
@@ -8,6 +13,15 @@ import {
   isAnnouncementBarTemplateId,
   resolveAnnouncementBarTemplateId,
 } from "@/lib/templates/announcement-bar-catalog";
+
+function renderHtml(module: AnnouncementBarModule): string {
+  const component =
+    module.variant === "rotating"
+      ? createElement(AnnouncementBarRotating, { module })
+      : createElement(AnnouncementBarStatic, { module });
+
+  return renderToStaticMarkup(component).replaceAll("&amp;", "&");
+}
 
 describe("Announcement bar catalog — template IDs", () => {
   it("expone exactamente 5 variantes en el orden correcto", () => {
@@ -231,5 +245,36 @@ describe("contentSchema — validación Zod por variante", () => {
       items: Array.from({ length: 6 }, (_, i) => ({ icon: "truck", label: `Item ${i}` })),
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("announcement bar templates — layout mobile", () => {
+  it("static permite wrap real y no clippea verticalmente el mensaje", () => {
+    const html = renderHtml({
+      id: "ann-static",
+      type: "announcementBar",
+      enabled: true,
+      order: 0,
+      variant: "static",
+      message: "Envío 100% gratis a todo el país",
+    });
+
+    expect(html).toContain("overflow-visible");
+    expect(html).toContain("leading-snug");
+  });
+
+  it("rotating usa una ventana un poco más alta para no cortar texto en mobile", () => {
+    const html = renderHtml({
+      id: "ann-rotating",
+      type: "announcementBar",
+      enabled: true,
+      order: 0,
+      variant: "rotating",
+      messages: ["Envío 100% gratis", "6 cuotas sin interés"],
+    });
+
+    expect(html).toContain("h-10");
+    expect(html).toContain("sm:h-7");
+    expect(html).toContain("leading-snug");
   });
 });

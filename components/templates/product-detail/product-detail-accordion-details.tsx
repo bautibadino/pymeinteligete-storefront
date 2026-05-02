@@ -35,18 +35,20 @@ export function ProductDetailAccordionDetails({ module }: { module: ProductDetai
         {showBreadcrumbs ? <ProductDetailBreadcrumbs productName={product.name} /> : null}
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(340px,0.92fr)] lg:items-start">
-          <ProductImageGallery
-            images={product.images}
-            productName={product.name}
-            aspectClassName="aspect-[4/5] md:aspect-square"
-          />
-
-          <div className="lg:sticky lg:top-24">
+          <div className="order-1 lg:order-2 lg:sticky lg:top-24">
             <ProductDetailPurchaseCard
               product={product}
               mainImage={mainImage}
               description={product.description}
               commercialData={commercialData}
+            />
+          </div>
+
+          <div className="order-2 lg:order-1">
+            <ProductImageGallery
+              images={product.images}
+              productName={product.name}
+              aspectClassName="aspect-[4/5] md:aspect-square"
             />
           </div>
         </div>

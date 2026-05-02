@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Search, User, Menu } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 
 import { HeaderCartButton } from "@/components/storefront/cart/header-cart-button";
 import type { HeaderModule } from "@/lib/modules/header";
@@ -25,7 +25,6 @@ export function HeaderStickyCompact({ module }: { module: HeaderModule }) {
     showSearch = true,
     searchPlaceholder = "Buscar...",
     showCart = true,
-    showAccount = false,
   } = module;
 
   return (
@@ -75,10 +74,10 @@ export function HeaderStickyCompact({ module }: { module: HeaderModule }) {
             <button
               type="button"
               aria-label={searchPlaceholder}
-              className="flex flex-1 items-center gap-2 rounded-md border border-border bg-panel px-3 py-1.5 text-sm text-muted transition-colors hover:border-primary"
+              className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-border bg-panel px-3 py-1.5 text-sm text-muted transition-colors hover:border-primary"
             >
               <Search className="size-4 shrink-0" aria-hidden="true" />
-              <span className="hidden sm:inline">{searchPlaceholder}</span>
+              <span className="truncate">{searchPlaceholder}</span>
             </button>
           ) : (
             <div className="flex-1" />
@@ -86,15 +85,6 @@ export function HeaderStickyCompact({ module }: { module: HeaderModule }) {
 
           {/* Actions */}
           <div className="flex shrink-0 items-center gap-1">
-            {showAccount ? (
-              <button
-                type="button"
-                aria-label="Mi cuenta"
-                className="hidden rounded-md p-1.5 text-muted transition-colors hover:bg-panel hover:text-foreground sm:block"
-              >
-                <User className="size-5" aria-hidden="true" />
-              </button>
-            ) : null}
             {showCart ? (
               <HeaderCartButton className="p-1.5" />
             ) : null}

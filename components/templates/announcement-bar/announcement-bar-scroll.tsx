@@ -57,14 +57,14 @@ export function AnnouncementBarScroll({ module }: { module: AnnouncementBarModul
       role="region"
       ariaLabel="Anuncios en desplazamiento"
       dataTemplate="announcement-bar-scroll"
-      contentClassName="justify-center text-center"
+      contentClassName="justify-center py-3 text-center"
     >
-      <div className="relative mx-auto h-6 w-full max-w-3xl overflow-hidden">
+      <div className="relative mx-auto h-10 w-full max-w-3xl overflow-hidden sm:h-7">
         {messages.map((msg, idx) => (
           <span
             key={`${msg}-${idx}`}
             className={cn(
-              "absolute inset-0 flex w-full items-center justify-center px-4 text-center text-sm font-medium leading-tight transition-all duration-500 ease-out sm:text-[0.95rem]",
+              "absolute inset-0 flex w-full items-center justify-center px-3 text-center text-sm font-medium leading-snug transition-all duration-500 ease-out sm:px-4 sm:text-[0.95rem]",
               reducedMotion ? undefined : "motion-safe:animate-in motion-safe:fade-in",
             )}
             style={{

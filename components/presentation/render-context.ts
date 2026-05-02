@@ -65,6 +65,14 @@ function readString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+function normalizeComparableText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}+/gu, "")
+    .toLowerCase()
+    .trim();
+}
+
 function readArray(value: unknown): unknown[] | undefined {
   return Array.isArray(value) ? value : undefined;
 }
@@ -199,6 +207,46 @@ function pushUniqueSpecification(
 
   seen.add(key);
   specifications.push({ label: normalizedLabel, value: normalizedValue });
+}
+
+const PRIVATE_SPECIFICATION_LABELS = new Set([
+  "peso",
+  "peso neto",
+  "peso bruto",
+  "dimensiones",
+  "dimension",
+  "medidas",
+  "medidas del paquete",
+  "dimensiones del paquete",
+  "tamano del paquete",
+  "tamano",
+]);
+
+const PRIVATE_SPECIFICATION_FIELDS = new Set([
+  "weight",
+  "packageweight",
+  "shippingweight",
+  "peso",
+  "pesoneto",
+  "pesobruto",
+  "dimensions",
+  "dimension",
+  "packagedimensions",
+  "shippingdimensions",
+  "dimensiones",
+  "medidas",
+  "tamano",
+  "size",
+]);
+
+function shouldHideSpecification(label: string | undefined, fieldName?: string | undefined): boolean {
+  const normalizedLabel = label ? normalizeComparableText(label) : "";
+  const normalizedFieldName = fieldName ? normalizeComparableText(fieldName).replace(/[\s_-]+/g, "") : "";
+
+  return (
+    (normalizedLabel.length > 0 && PRIVATE_SPECIFICATION_LABELS.has(normalizedLabel)) ||
+    (normalizedFieldName.length > 0 && PRIVATE_SPECIFICATION_FIELDS.has(normalizedFieldName))
+  );
 }
 
 function readProductSlug(product: ProductRecord): string | undefined {
@@ -652,10 +700,17 @@ function readSpecifications(product: ProductRecord): ProductDetailSpecification[
 
     for (const entry of source) {
       if (!isRecord(entry)) continue;
+      const label = readStringFromRecord(entry, ["label", "name", "key", "title"]);
+      const fieldName = readStringFromRecord(entry, ["fieldName", "key", "name", "code"]);
+
+      if (shouldHideSpecification(label, fieldName)) {
+        continue;
+      }
+
       pushUniqueSpecification(
         specifications,
         seen,
-        readStringFromRecord(entry, ["label", "name", "key", "title"]),
+        label,
         normalizeSpecificationValue(entry.value ?? entry.values ?? entry.text),
       );
     }
@@ -674,29 +729,18 @@ function readSpecifications(product: ProductRecord): ProductDetailSpecification[
     if (!source) continue;
 
     for (const [fieldName, rawValue] of Object.entries(source)) {
+      const label = definitionLabels.get(fieldName) ?? fieldName;
+
+      if (shouldHideSpecification(label, fieldName)) {
+        continue;
+      }
+
       pushUniqueSpecification(
         specifications,
         seen,
-        definitionLabels.get(fieldName) ?? fieldName,
+        label,
         normalizeSpecificationValue(rawValue),
       );
-    }
-  }
-
-  const weight = readNumber(product.weight);
-  if (weight !== undefined) {
-    pushUniqueSpecification(specifications, seen, "Peso", `${weight} kg`);
-  }
-
-  const dimensions = readRecord(product.dimensions);
-  if (dimensions) {
-    const length = readNumber(dimensions.length);
-    const width = readNumber(dimensions.width);
-    const height = readNumber(dimensions.height);
-    const parts = [length, width, height].filter((value): value is number => value !== undefined);
-
-    if (parts.length > 0) {
-      pushUniqueSpecification(specifications, seen, "Dimensiones", `${parts.join(" x ")} cm`);
     }
   }
 

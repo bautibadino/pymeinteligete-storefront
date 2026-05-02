@@ -49,7 +49,7 @@ export function ProductDetailCardsFeatures({ module }: { module: ProductDetailMo
         {showBreadcrumbs ? <ProductDetailBreadcrumbs productName={product.name} /> : null}
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:items-start">
-          <div className="grid gap-5">
+          <div className="order-2 grid gap-5 lg:order-1">
             <ProductImageGallery
               images={product.images}
               productName={product.name}
@@ -57,7 +57,7 @@ export function ProductDetailCardsFeatures({ module }: { module: ProductDetailMo
               imageFit="cover"
             />
 
-            <div className={productDetailCardClassName("p-5 md:p-6")}>
+            <div className={productDetailCardClassName("hidden p-5 md:p-6 lg:block")}>
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                 <div className="grid gap-3">
                   {product.brand ? (
@@ -77,7 +77,7 @@ export function ProductDetailCardsFeatures({ module }: { module: ProductDetailMo
             </div>
           </div>
 
-          <div className="lg:sticky lg:top-24">
+          <div className="order-1 lg:order-2 lg:sticky lg:top-24">
             <ProductDetailPurchaseCard
               product={product}
               mainImage={mainImage}

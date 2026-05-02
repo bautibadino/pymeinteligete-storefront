@@ -21,9 +21,10 @@ export function AnnouncementBarStatic({ module }: { module: AnnouncementBarModul
       role="region"
       ariaLabel="Anuncio destacado"
       dataTemplate="announcement-bar-static"
-      contentClassName="justify-center gap-3 text-center sm:pr-28"
+      className="overflow-visible"
+      contentClassName="justify-center gap-x-3 gap-y-1.5 py-3 text-center sm:flex-nowrap sm:pr-28"
     >
-      <span className="max-w-3xl text-sm font-medium leading-tight sm:text-[0.95rem]">
+      <span className="max-w-3xl text-sm font-medium leading-snug sm:text-[0.95rem]">
         {message}
       </span>
 
@@ -31,7 +32,7 @@ export function AnnouncementBarStatic({ module }: { module: AnnouncementBarModul
         <Link
           href={cta.href as Route}
           className={cn(
-            "inline-flex min-h-9 shrink-0 items-center justify-center px-2 py-1 text-xs font-semibold underline-offset-4 transition-opacity duration-200 hover:underline hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent sm:absolute sm:right-5 sm:top-1/2 sm:-translate-y-1/2",
+            "inline-flex min-h-9 w-fit shrink-0 items-center justify-center px-2 py-1 text-xs font-semibold underline-offset-4 transition-opacity duration-200 hover:underline hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent sm:absolute sm:right-5 sm:top-1/2 sm:-translate-y-1/2",
             cta.variant === "link" ? "underline-offset-4 hover:underline" : undefined,
           )}
           style={

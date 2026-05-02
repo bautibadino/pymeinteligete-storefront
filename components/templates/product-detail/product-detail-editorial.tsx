@@ -30,6 +30,15 @@ export function ProductDetailEditorial({ module }: { module: ProductDetailModule
   return (
     <ProductDetailShell>
       <div data-template="product-detail-editorial" className="grid gap-6">
+        <div className="lg:hidden">
+          <ProductDetailPurchaseCard
+            product={product}
+            mainImage={mainImage}
+            description={undefined}
+            commercialData={commercialData}
+          />
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.18fr)_minmax(320px,0.82fr)] lg:items-end">
           <ProductImageGallery
             images={product.images}
@@ -38,7 +47,7 @@ export function ProductDetailEditorial({ module }: { module: ProductDetailModule
             imageFit="cover"
           />
 
-          <div className={productDetailCardClassName("grid gap-5 p-6 md:p-8")}>
+          <div className={productDetailCardClassName("hidden gap-5 p-6 md:p-8 lg:grid")}>
             {product.brand ? (
               <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/54">
                 {product.brand}
@@ -72,7 +81,7 @@ export function ProductDetailEditorial({ module }: { module: ProductDetailModule
             </p>
           </div>
 
-          <div className="lg:sticky lg:top-24">
+          <div className="hidden lg:block lg:sticky lg:top-24">
             <ProductDetailPurchaseCard
               product={product}
               mainImage={mainImage}

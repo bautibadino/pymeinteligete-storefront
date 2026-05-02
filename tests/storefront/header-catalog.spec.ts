@@ -50,8 +50,8 @@ describe("Header template catalog — IDs y constantes", () => {
     ]);
   });
 
-  it("el default es centered-logo", () => {
-    expect(DEFAULT_HEADER_TEMPLATE_ID).toBe("centered-logo");
+  it("el default es left-logo-search", () => {
+    expect(DEFAULT_HEADER_TEMPLATE_ID).toBe("left-logo-search");
   });
 
   it("cada id del array aparece como clave en DESCRIPTORS", () => {
@@ -247,5 +247,16 @@ describe("HeaderLeftLogoSearch", () => {
     expect(html).toContain("relative z-20 isolate w-full");
     expect(html).toContain("pointer-events-auto relative z-10 flex flex-1 items-center");
     expect(html).toContain("pointer-events-auto");
+  });
+
+  it("no renderiza acceso de cuenta aunque el contenido legacy lo pida", () => {
+    const html = renderHtml(
+      buildHeaderModule({
+        variant: "left-logo-search",
+        showAccount: true,
+      }),
+    );
+
+    expect(html).not.toContain("Mi cuenta");
   });
 });

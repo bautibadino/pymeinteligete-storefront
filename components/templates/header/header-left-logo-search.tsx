@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Search, User } from "lucide-react";
+import { Search } from "lucide-react";
 
 import { HeaderCartButton } from "@/components/storefront/cart/header-cart-button";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,6 @@ export function HeaderLeftLogoSearch({ module }: { module: HeaderModule }) {
     showSearch = true,
     searchPlaceholder = "Buscar productos...",
     showCart = true,
-    showAccount = false,
     topBarLinks = [],
   } = module;
 
@@ -56,10 +55,60 @@ export function HeaderLeftLogoSearch({ module }: { module: HeaderModule }) {
         </div>
       ) : null}
 
-      {/* Main row: logo | search bar | actions */}
       <div className="mx-auto max-w-content px-4">
-        <div className="flex items-center gap-4 py-4">
-          {/* Logo */}
+        <div className="py-3 sm:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <Link href={logoHref as Route} aria-label="Inicio" className="shrink-0">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={logoAlt}
+                  className="h-9 w-auto object-contain"
+                />
+              ) : (
+                <span
+                  className={themeTypographyStyles.brand("text-lg font-bold text-foreground")}
+                >
+                  {logoAlt}
+                </span>
+              )}
+            </Link>
+
+            {showCart ? (
+              <div className="flex shrink-0 items-center">
+                <HeaderCartButton />
+              </div>
+            ) : null}
+          </div>
+
+          {showSearch ? (
+            <form
+              action="/catalogo"
+              role="search"
+              className="pointer-events-auto relative z-10 mt-3 flex items-center"
+            >
+              <label className="sr-only" htmlFor={`${id}-search-mobile`}>
+                {searchPlaceholder}
+              </label>
+              <div className="flex w-full items-center gap-2 rounded-md border border-border bg-panel px-3 py-2 shadow-sm transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                <Search className="size-4 shrink-0 text-muted" aria-hidden="true" />
+                <Input
+                  id={`${id}-search-mobile`}
+                  name="search"
+                  type="search"
+                  placeholder={searchPlaceholder}
+                  enterKeyHint="search"
+                  className={themeTypographyStyles.label("pointer-events-auto h-9 min-w-0 flex-1 border-0 bg-transparent px-0 py-0 text-sm text-foreground shadow-none ring-offset-transparent placeholder:text-muted focus-visible:ring-0 focus-visible:ring-offset-0 normal-case tracking-[0.02em]")}
+                />
+                <Button type="submit" size="sm" className="shrink-0 pointer-events-auto">
+                  Buscar
+                </Button>
+              </div>
+            </form>
+          ) : null}
+        </div>
+
+        <div className="hidden items-center gap-4 py-4 sm:flex">
           <Link href={logoHref as Route} aria-label="Inicio" className="shrink-0">
             {logoUrl ? (
               <img
@@ -74,31 +123,26 @@ export function HeaderLeftLogoSearch({ module }: { module: HeaderModule }) {
             )}
           </Link>
 
-          {/* Search bar — ocupa el espacio central */}
           {showSearch ? (
             <form
               action="/catalogo"
               role="search"
               className="pointer-events-auto relative z-10 flex flex-1 items-center"
             >
-              <label className="sr-only" htmlFor={`${id}-search`}>
+              <label className="sr-only" htmlFor={`${id}-search-desktop`}>
                 {searchPlaceholder}
               </label>
               <div className="flex w-full items-center gap-2 rounded-md border border-border bg-panel px-3 py-2 shadow-sm transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
                 <Search className="size-4 shrink-0 text-muted" aria-hidden="true" />
                 <Input
-                  id={`${id}-search`}
+                  id={`${id}-search-desktop`}
                   name="search"
                   type="search"
                   placeholder={searchPlaceholder}
                   enterKeyHint="search"
                   className={themeTypographyStyles.label("pointer-events-auto h-9 min-w-0 flex-1 border-0 bg-transparent px-0 py-0 text-foreground shadow-none ring-offset-transparent placeholder:text-muted focus-visible:ring-0 focus-visible:ring-offset-0 normal-case tracking-[0.02em]")}
                 />
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="shrink-0 pointer-events-auto"
-                >
+                <Button type="submit" size="sm" className="shrink-0 pointer-events-auto">
                   Buscar
                 </Button>
               </div>
@@ -107,27 +151,16 @@ export function HeaderLeftLogoSearch({ module }: { module: HeaderModule }) {
             <div className="flex-1" />
           )}
 
-          {/* Actions */}
-          <div className="flex shrink-0 items-center gap-1">
-            {showAccount ? (
-              <button
-                type="button"
-                aria-label="Mi cuenta"
-                className="rounded-md p-2 text-muted transition-colors hover:bg-panel hover:text-foreground"
-              >
-                <User className="size-5" aria-hidden="true" />
-              </button>
-            ) : null}
-            {showCart ? (
+          {showCart ? (
+            <div className="flex shrink-0 items-center gap-1">
               <HeaderCartButton />
-            ) : null}
-          </div>
+            </div>
+          ) : null}
         </div>
 
-        {/* Navigation row */}
         {navLinks.length > 0 ? (
-          <nav aria-label="Navegación principal">
-            <ul className="flex items-center gap-1 border-t border-border py-2">
+          <nav aria-label="Navegación principal" className="border-t border-border">
+            <ul className="flex items-center gap-1 overflow-x-auto py-2 whitespace-nowrap">
               {navLinks.map((link) => (
                 <li key={link.href}>
                   <Link

@@ -623,6 +623,21 @@ describe("presentation renderer logic", () => {
     expect(module.logoAlt).toBe("Alt editable");
   });
 
+  it("apaga showAccount en storefront aunque llegue activado desde contenido legacy", () => {
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "header",
+        variant: "left-logo-search",
+        content: {
+          showAccount: true,
+        },
+      }),
+      {},
+    ) as { showAccount?: boolean };
+
+    expect(module.showAccount).toBe(false);
+  });
+
   it("ignora logoUrl legacy y usa branding del bootstrap para footer", () => {
     const bootstrap = {
       tenant: { tenantSlug: "tenant-demo", status: "active" },
@@ -868,12 +883,16 @@ describe("presentation renderer logic", () => {
           dynamicAttributes: {
             season: "Verano",
             loadIndex: "91",
+            weight: "5.04 kg",
+            dimensions: "53.3 x 14.5 x 53.3 cm",
           },
           categoryId: {
             name: "Neumáticos",
             attributeDefinitions: [
               { fieldName: "season", displayLabel: "Temporada" },
               { fieldName: "loadIndex", displayLabel: "Índice de carga" },
+              { fieldName: "weight", displayLabel: "Peso" },
+              { fieldName: "dimensions", displayLabel: "Dimensiones" },
             ],
           },
         }),
@@ -913,6 +932,12 @@ describe("presentation renderer logic", () => {
       expect.arrayContaining([
         { label: "Temporada", value: "Verano" },
         { label: "Índice de carga", value: "91" },
+      ]),
+    );
+    expect(module.product?.specifications).not.toEqual(
+      expect.arrayContaining([
+        { label: "Peso", value: "5.04 kg" },
+        { label: "Dimensiones", value: "53.3 x 14.5 x 53.3 cm" },
       ]),
     );
   });

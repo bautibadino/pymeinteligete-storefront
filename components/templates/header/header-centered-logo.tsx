@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Search, User } from "lucide-react";
+import { Search } from "lucide-react";
 
 import { HeaderCartButton } from "@/components/storefront/cart/header-cart-button";
 import type { HeaderModule } from "@/lib/modules/header";
@@ -24,7 +24,6 @@ export function HeaderCenteredLogo({ module }: { module: HeaderModule }) {
     showSearch = true,
     searchPlaceholder = "Buscar productos...",
     showCart = true,
-    showAccount = false,
     topBarLinks = [],
   } = module;
 
@@ -52,24 +51,21 @@ export function HeaderCenteredLogo({ module }: { module: HeaderModule }) {
         </div>
       ) : null}
 
-      {/* Main row: search left | logo center | cart right */}
       <div className="mx-auto max-w-content px-4">
-        <div className="grid grid-cols-3 items-center py-4">
-          {/* Left: search placeholder */}
-          <div className="flex items-center justify-start">
+        <div className="flex items-center justify-between gap-3 py-3 sm:hidden">
+          <div className="flex min-w-0 flex-1 items-center justify-start">
             {showSearch ? (
               <button
                 type="button"
                 aria-label={searchPlaceholder}
-                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted transition-colors hover:bg-panel hover:text-foreground"
+                className="flex min-w-0 items-center gap-2 rounded-md px-3 py-2 text-sm text-muted transition-colors hover:bg-panel hover:text-foreground"
               >
-                <Search className="size-4" aria-hidden="true" />
-                <span className="hidden sm:inline">{searchPlaceholder}</span>
+                <Search className="size-4 shrink-0" aria-hidden="true" />
+                <span className="truncate">Buscar</span>
               </button>
             ) : null}
           </div>
 
-          {/* Center: logo */}
           <div className="flex items-center justify-center">
             <Link
               href={logoHref as Route}
@@ -90,27 +86,51 @@ export function HeaderCenteredLogo({ module }: { module: HeaderModule }) {
             </Link>
           </div>
 
-          {/* Right: account + cart */}
-          <div className="flex items-center justify-end gap-1">
-            {showAccount ? (
-              <button
-                type="button"
-                aria-label="Mi cuenta"
-                className="rounded-md p-2 text-muted transition-colors hover:bg-panel hover:text-foreground"
-              >
-                <User className="size-5" aria-hidden="true" />
-              </button>
-            ) : null}
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
             {showCart ? (
               <HeaderCartButton />
             ) : null}
           </div>
         </div>
 
-        {/* Navigation row */}
+        <div className="hidden grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center py-4 sm:grid">
+          <div className="flex min-w-0 items-center justify-start">
+            {showSearch ? (
+              <button
+                type="button"
+                aria-label={searchPlaceholder}
+                className="flex min-w-0 items-center gap-2 rounded-md px-3 py-2 text-sm text-muted transition-colors hover:bg-panel hover:text-foreground"
+              >
+                <Search className="size-4 shrink-0" aria-hidden="true" />
+                <span className="truncate">{searchPlaceholder}</span>
+              </button>
+            ) : null}
+          </div>
+
+          <div className="flex items-center justify-center">
+            <Link href={logoHref as Route} aria-label="Inicio" className="block">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={logoAlt}
+                  className="h-10 w-auto object-contain"
+                />
+              ) : (
+                <span className="font-heading text-xl font-bold text-foreground">
+                  {logoAlt}
+                </span>
+              )}
+            </Link>
+          </div>
+
+          <div className="flex items-center justify-end gap-1">
+            {showCart ? <HeaderCartButton /> : null}
+          </div>
+        </div>
+
         {navLinks.length > 0 ? (
-          <nav aria-label="Navegación principal">
-            <ul className="flex items-center justify-center gap-1 border-t border-border py-2">
+          <nav aria-label="Navegación principal" className="border-t border-border">
+            <ul className="flex items-center justify-start gap-1 overflow-x-auto py-2 whitespace-nowrap sm:justify-center">
               {navLinks.map((link) => (
                 <li key={link.href}>
                   <Link

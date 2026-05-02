@@ -28,7 +28,7 @@ export const HEADER_TEMPLATE_IDS: readonly HeaderTemplateId[] = [
   "minimal",
 ];
 
-export const DEFAULT_HEADER_TEMPLATE_ID: HeaderTemplateId = "centered-logo";
+export const DEFAULT_HEADER_TEMPLATE_ID: HeaderTemplateId = "left-logo-search";
 
 // ---------------------------------------------------------------------------
 // Descriptors (para el editor / endpoints de descubrimiento)
@@ -48,39 +48,39 @@ export const HEADER_TEMPLATE_DESCRIPTORS: Record<
 > = {
   "centered-logo": {
     id: "centered-logo",
-    label: "Logo Centrado",
+    label: "Marca Centrada",
     description:
-      "Logo centrado en la primera fila, navegación debajo, carrito y búsqueda en los extremos.",
-    bestFor: ["boutique", "marcas premium", "tiendas editoriales", "lifestyle"],
+      "Header con marca al centro, acciones livianas arriba y navegación debajo. Más identidad que densidad.",
+    bestFor: ["boutique", "marcas con foco visual", "catálogos curados", "lifestyle"],
     thumbnailUrl: "/template-thumbnails/header-centered-logo.svg",
   },
   "left-logo-search": {
     id: "left-logo-search",
-    label: "Logo + Búsqueda",
+    label: "Search-First",
     description:
-      "Logo a la izquierda, buscador grande centrado, carrito a la derecha y navegación debajo. Paridad BYM.",
+      "Logo a la izquierda, buscador protagonista y carrito limpio. El más comercial para ecommerce real.",
     bestFor: [
       "tiendas mayoristas",
-      "lubricentros",
-      "ferreterías",
+      "repuestos",
+      "cubiertas",
       "catálogos grandes",
     ],
     thumbnailUrl: "/template-thumbnails/header-left-logo-search.svg",
   },
   "sticky-compact": {
     id: "sticky-compact",
-    label: "Sticky Compacto",
+    label: "Compacto Sticky",
     description:
-      "Header compacto que se pega al top al hacer scroll. Logo + búsqueda inline + carrito.",
+      "Header bajo y siempre accesible, pensado para mobile y scroll largo sin perder búsqueda ni carrito.",
     bestFor: ["mobile-first", "tiendas con catálogo largo", "experiencia fluida"],
     thumbnailUrl: "/template-thumbnails/header-sticky-compact.svg",
   },
   minimal: {
     id: "minimal",
-    label: "Minimal",
+    label: "Minimal Campaña",
     description:
-      "Solo logo y carrito. Sin navegación ni buscador. Ultra-limpio.",
-    bestFor: ["landing pages", "marcas de autor", "one-product stores"],
+      "Solo logo y carrito. Sin ruido de navegación ni búsqueda, para campañas o landing de foco corto.",
+    bestFor: ["landing pages", "campañas", "one-product stores"],
     thumbnailUrl: "/template-thumbnails/header-minimal.svg",
   },
 };

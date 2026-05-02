@@ -60,6 +60,32 @@ function resolveFooterColumns(context?: PresentationRenderContext) {
   ];
 }
 
+function adaptHeaderSection(
+  section: SectionInstance<"header">,
+  content: Record<string, unknown>,
+  context?: PresentationRenderContext,
+) {
+  const showSearchByDefault = section.variant !== "minimal";
+
+  return {
+    id: section.id,
+    type: section.type,
+    variant: section.variant,
+    ...content,
+    logoUrl: context?.bootstrap?.branding?.logoUrl,
+    logoHref: "/",
+    logoAlt: readString(content.logoAlt) ?? resolveStoreName(context),
+    navLinks: readArray(content.navLinks) ?? resolveHeaderLinks(context),
+    showSearch:
+      typeof content.showSearch === "boolean" ? content.showSearch : showSearchByDefault,
+    searchPlaceholder: readString(content.searchPlaceholder) ?? "Buscar productos...",
+    showCart: typeof content.showCart === "boolean" ? content.showCart : true,
+    // El storefront público no expone cuenta/login todavía.
+    showAccount: false,
+    topBarLinks: readArray(content.topBarLinks) ?? [],
+  };
+}
+
 export function adaptSectionToModule(
   section: SectionInstance,
   context?: PresentationRenderContext,
@@ -170,17 +196,7 @@ export function adaptSectionToModule(
     }
 
     case "header":
-      return {
-        ...base,
-        ...content,
-        logoUrl: context?.bootstrap?.branding?.logoUrl,
-        logoHref: "/",
-        logoAlt: readString(content.logoAlt) ?? resolveStoreName(context),
-        navLinks: readArray(content.navLinks) ?? resolveHeaderLinks(context),
-        showSearch: typeof content.showSearch === "boolean" ? content.showSearch : true,
-        searchPlaceholder: readString(content.searchPlaceholder) ?? "Buscar productos...",
-        showCart: typeof content.showCart === "boolean" ? content.showCart : true,
-      };
+      return adaptHeaderSection(section as SectionInstance<"header">, content, context);
 
     case "footer": {
       const storeName = resolveStoreName(context);
