@@ -1,25 +1,13 @@
-import {
-  Truck,
-  Shield,
-  CreditCard,
-  Clock,
-  BadgeCheck,
-  Headset,
-  Package,
-  RefreshCw,
-} from "lucide-react";
-import type { TrustBarModule } from "@/lib/modules/trust-bar";
+"use client";
 
-const ICON_MAP = {
-  truck: Truck,
-  shield: Shield,
-  "credit-card": CreditCard,
-  clock: Clock,
-  "badge-check": BadgeCheck,
-  headset: Headset,
-  package: Package,
-  "refresh-cw": RefreshCw,
-} as const;
+import { motion } from "framer-motion";
+import type { TrustBarModule } from "@/lib/modules/trust-bar";
+import {
+  TRUST_BAR_ICON_MAP,
+  TrustIconBadge,
+  trustItemSurfaceClassName,
+  useTrustMotion,
+} from "./trust-bar-shared";
 
 /**
  * TrustBar Stacked Cards — 3 cards con sombra y presencia visual destacada.
@@ -27,44 +15,56 @@ const ICON_MAP = {
  */
 export function TrustBarStackedCards({ module }: { module: TrustBarModule }) {
   const { content, id } = module;
-  const { items, alignment = "center" } = content;
+  const { items } = content;
+  const { reduceMotion, containerVariants, itemVariants } = useTrustMotion();
 
   return (
     <section
       aria-label="Ventajas y beneficios"
       data-template="trust-bar-stacked-cards"
-      className="bg-background py-10"
+      className="bg-background py-6"
     >
-      <div
-        className={`mx-auto grid max-w-screen-xl gap-4 px-4 sm:grid-cols-2 lg:grid-cols-3 ${
-          alignment === "center" ? "" : "lg:mr-auto"
-        }`}
+      <motion.ul
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.35 }}
+        variants={containerVariants}
+        className="mx-auto grid max-w-screen-xl gap-4 px-4 sm:grid-cols-2 lg:grid-cols-3"
       >
         {items.map((item, index) => {
-          const Icon = ICON_MAP[item.icon];
+          const Icon = TRUST_BAR_ICON_MAP[item.icon];
           return (
-            <div
+            <motion.li
               key={`${id}-card-${index}`}
-              className="flex flex-col items-start gap-3 rounded-xl border border-border bg-panel p-6 shadow-tenant transition-shadow hover:shadow-md"
+              variants={itemVariants}
+              {...(!reduceMotion ? { whileHover: { y: -2 } } : {})}
             >
-              <div
-                aria-hidden="true"
-                className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft text-primary"
+              <article
+                className={`${trustItemSurfaceClassName()} h-full min-h-[132px] px-4 py-4`}
               >
-                <Icon className="size-6" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-base font-semibold leading-snug text-foreground">
-                  {item.title}
-                </span>
-                {item.subtitle ? (
-                  <span className="text-sm leading-relaxed text-muted">{item.subtitle}</span>
-                ) : null}
-              </div>
-            </div>
+                <div className="flex h-full flex-col gap-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <TrustIconBadge icon={Icon} />
+                    <span className="rounded-full border border-border/60 bg-white/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
+                      Beneficio
+                    </span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="block text-[15px] font-semibold leading-[1.15] tracking-[-0.01em] text-foreground">
+                      {item.title}
+                    </span>
+                    {item.subtitle ? (
+                      <span className="block text-[12.5px] leading-5 text-muted">
+                        {item.subtitle}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </article>
+            </motion.li>
           );
         })}
-      </div>
+      </motion.ul>
     </section>
   );
 }
