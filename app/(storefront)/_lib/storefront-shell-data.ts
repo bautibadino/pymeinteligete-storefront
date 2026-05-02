@@ -39,6 +39,7 @@ type CatalogExperience = BootstrapExperience & {
 type ProductExperience = BootstrapExperience & {
   product: StorefrontProductDetail | null;
   relatedProducts: StorefrontCatalog["products"];
+  paymentMethods: StorefrontPaymentMethods | null;
 };
 
 type CheckoutExperience = BootstrapExperience & {
@@ -206,8 +207,41 @@ export async function loadProductExperience(slug: string): Promise<ProductExperi
       ...base,
       product: null,
       relatedProducts: [],
+      paymentMethods: null,
     };
   }
+
+  const paymentMethodsPromise = (async (): Promise<{
+    paymentMethods: StorefrontPaymentMethods | null;
+    issues: FetchIssue[];
+  }> => {
+    if (!canFetchPaymentMethods(base.bootstrap?.tenant.status ?? null)) {
+      return {
+        paymentMethods: null,
+        issues: [],
+      };
+    }
+
+    try {
+      const paymentMethods = await getPaymentMethods(base.runtime.context);
+
+      return {
+        paymentMethods,
+        issues: [],
+      };
+    } catch (error) {
+      return {
+        paymentMethods: null,
+        issues: [
+          normalizeApiError(
+            error,
+            "payment-methods",
+            "No se pudieron recuperar los métodos de pago visibles.",
+          ),
+        ],
+      };
+    }
+  })();
 
   try {
     const product = await getProduct(base.runtime.context, slug);
@@ -248,18 +282,26 @@ export async function loadProductExperience(slug: string): Promise<ProductExperi
       }
     }
 
+    const paymentMethodsResult = await paymentMethodsPromise;
+
     return {
       ...base,
       product,
       relatedProducts,
+      paymentMethods: paymentMethodsResult.paymentMethods,
+      issues: [...base.issues, ...paymentMethodsResult.issues],
     };
   } catch (error) {
+    const paymentMethodsResult = await paymentMethodsPromise;
+
     return {
       ...base,
       product: null,
       relatedProducts: [],
+      paymentMethods: paymentMethodsResult.paymentMethods,
       issues: [
         ...base.issues,
+        ...paymentMethodsResult.issues,
         normalizeApiError(error, "product", "No se pudo recuperar el detalle del producto."),
       ],
     };

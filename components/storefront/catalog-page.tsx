@@ -9,6 +9,7 @@ import {
 import { mapCatalogProductsToCardData } from "@/components/presentation/render-context";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
 import { shouldUsePresentation } from "@/lib/presentation/render-utils";
+import type { StorefrontPagination } from "@/lib/types/storefront";
 import type {
   StorefrontBootstrap,
   StorefrontCatalogQuery,
@@ -20,6 +21,7 @@ type CatalogPageContentProps = {
   bootstrap: StorefrontBootstrap | null;
   categories: StorefrontCategory[];
   host: string;
+  pagination?: StorefrontPagination | undefined;
   previewToken?: string | null | undefined;
   products: StorefrontCatalogProduct[];
   query: StorefrontCatalogQuery;
@@ -38,6 +40,7 @@ const ACTIVE_FILTER_LABELS: Partial<Record<keyof StorefrontCatalogQuery, string>
 };
 
 const DEFAULT_PUBLIC_FILTERS = {
+  search: true,
   brand: true,
   category: true,
   availability: true,
@@ -88,6 +91,7 @@ export function CatalogPageContent({
   bootstrap,
   categories,
   host,
+  pagination,
   previewToken,
   products,
   query,
@@ -95,6 +99,7 @@ export function CatalogPageContent({
 }: CatalogPageContentProps) {
   const normalizedProducts = mapCatalogProductsToCardData(products, products.length, bootstrap);
   const renderedProductsCount = normalizedProducts.length;
+  const totalResults = pagination?.total ?? renderedProductsCount;
   const activeFilters = buildActiveFilters(query, selectedCategory);
   const hasPreview = Boolean(previewToken);
   const usePresentation = shouldUsePresentation(bootstrap?.presentation, "catalog");
@@ -153,9 +158,9 @@ export function CatalogPageContent({
           </div>
 
           <div className="grid min-h-20 min-w-28 place-items-center rounded-[calc(var(--radius-lg)-2px)] border border-border bg-[color:var(--surface-muted)] px-4 py-3 text-center">
-            <strong className="text-2xl leading-none text-foreground">{renderedProductsCount}</strong>
+            <strong className="text-2xl leading-none text-foreground">{totalResults}</strong>
             <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              {renderedProductsCount === 1 ? "producto" : "productos"}
+              {totalResults === 1 ? "producto" : "productos"}
             </span>
           </div>
         </CardContent>
@@ -197,7 +202,7 @@ export function CatalogPageContent({
             </section>
           ) : null}
 
-          <CatalogToolbar count={renderedProductsCount} density="compact" />
+          <CatalogToolbar count={totalResults} density="compact" />
 
           <CatalogGrid
             bootstrap={bootstrap}

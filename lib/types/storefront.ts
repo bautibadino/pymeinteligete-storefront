@@ -269,10 +269,105 @@ export interface StorefrontCatalogQuery extends StorefrontQueryParams {
   onlyImmediate?: boolean;
 }
 
+export interface StorefrontImageAsset {
+  url?: string;
+  src?: string;
+  imageUrl?: string;
+  alt?: string;
+  key?: string;
+}
+
+export type StorefrontImageSource = string | StorefrontImageAsset;
+
 export interface StorefrontPrice {
   amount: number;
   currency: string;
   compareAt?: number;
+  compareAtPrice?: number;
+  discountedAmount?: number;
+  discountedPrice?: number;
+  value?: number;
+}
+
+export interface StorefrontBrandReference {
+  name?: string;
+  label?: string;
+  slug?: string;
+  logo?: StorefrontImageAsset;
+}
+
+export interface StorefrontAttributeDefinition {
+  fieldName: string;
+  displayLabel?: string;
+  label?: string;
+  fieldType?: string;
+  options?: Array<{ label?: string; value?: string }>;
+  icon?: string;
+}
+
+export interface StorefrontCategoryReference {
+  categoryId?: string;
+  id?: string;
+  slug?: string;
+  name?: string;
+  label?: string;
+  attributeDefinitions?: StorefrontAttributeDefinition[];
+}
+
+export interface StorefrontInstallmentsData {
+  enabled?: boolean;
+  count?: number;
+  amount?: number;
+  value?: number;
+  formatted?: string;
+  label?: string;
+  interestFree?: boolean;
+}
+
+export interface StorefrontDiscountData {
+  percentage?: number;
+  percent?: number;
+  value?: number;
+  label?: string;
+  formatted?: string;
+}
+
+export interface StorefrontBadgeData {
+  label?: string;
+  text?: string;
+  title?: string;
+  name?: string;
+  tone?: string;
+  variant?: string;
+  type?: string;
+}
+
+export interface StorefrontDeliveryInfo {
+  freeShipping?: boolean;
+  dispatchType?: string;
+  dispatchLabel?: string;
+  label?: string;
+  message?: string;
+  badges?: StorefrontBadgeData[];
+}
+
+export interface StorefrontCommercialInfo {
+  compareAt?: number;
+  compareAtPrice?: number;
+  installments?: StorefrontInstallmentsData;
+  discountedPrice?: number;
+  bestDiscount?: StorefrontDiscountData;
+  cashDiscount?: StorefrontDiscountData;
+  badges?: StorefrontBadgeData[];
+}
+
+export interface StorefrontSpecificationEntry {
+  label?: string;
+  name?: string;
+  key?: string;
+  title?: string;
+  value?: string | number | boolean | null;
+  values?: Array<string | number | boolean | null>;
 }
 
 export interface StorefrontCatalogProduct {
@@ -282,13 +377,24 @@ export interface StorefrontCatalogProduct {
   name: string;
   description?: string;
   imageUrl?: string;
-  images?: string[];
+  images?: StorefrontImageSource[];
   brand?: string;
+  brandId?: StorefrontBrandReference;
   category?: string;
+  categoryId?: StorefrontCategoryReference;
   price?: StorefrontPrice;
   availability?: unknown;
+  stock?: number;
+  inStock?: boolean;
   freeShipping?: boolean;
   dispatchType?: string;
+  ecommerceSlug?: string;
+  discountedPrice?: number;
+  bestDiscount?: StorefrontDiscountData;
+  installments?: StorefrontInstallmentsData;
+  badges?: StorefrontBadgeData[];
+  deliveryInfo?: StorefrontDeliveryInfo;
+  commercialInfo?: StorefrontCommercialInfo;
 }
 
 export interface StorefrontPagination {
@@ -326,14 +432,42 @@ export interface StorefrontProductDetail {
   sku?: string;
   name: string;
   description?: string;
-  images?: string[];
+  images?: StorefrontImageSource[];
+  imageUrl?: string;
   category?: string;
+  categoryId?: StorefrontCategoryReference;
   brand?: string;
+  brandId?: StorefrontBrandReference;
   price?: StorefrontPrice;
   availability?: unknown;
+  stock?: number;
+  inStock?: boolean;
+  stockByBranch?: Array<{
+    branchId?: string;
+    branchName?: string;
+    stock?: number;
+  }>;
   freeShipping?: boolean;
-  deliveryInfo?: unknown;
-  commercialInfo?: unknown;
+  dispatchType?: string;
+  ecommerceSlug?: string;
+  discountedPrice?: number;
+  bestDiscount?: StorefrontDiscountData;
+  installments?: StorefrontInstallmentsData;
+  badges?: StorefrontBadgeData[];
+  specifications?: StorefrontSpecificationEntry[];
+  specs?: StorefrontSpecificationEntry[];
+  dynamicAttributes?: Record<string, unknown>;
+  typeSpecificAttributes?: Record<string, unknown>;
+  weight?: number;
+  dimensions?: {
+    length?: number;
+    width?: number;
+    height?: number;
+  };
+  deliveryInfo?: StorefrontDeliveryInfo;
+  commercialInfo?: StorefrontCommercialInfo;
+  equivalents?: Array<Record<string, unknown>>;
+  relatedProducts?: Array<Record<string, unknown>>;
 }
 
 // ─────────────────────────────────────────────────────────────

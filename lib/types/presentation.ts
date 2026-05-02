@@ -1,6 +1,6 @@
 export type PresentationVersion = 1;
 
-export type ThemePreset = "industrialWarm" | "minimalClean" | "editorialDark";
+export type ThemePreset = "industrialWarm" | "minimalClean" | "editorialDark" | "tyreshop";
 
 export interface ThemePaletteTone {
   solid?: string;

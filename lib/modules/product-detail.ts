@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { StorefrontPaymentMethod } from "@/lib/storefront-api";
 
 /**
  * Tipos del módulo ProductDetail — sistema builder (Ola 2).
@@ -37,6 +38,16 @@ export const ProductDetailContentSchema = z.object({
 });
 
 export type ProductDetailContent = z.infer<typeof ProductDetailContentSchema>;
+
+/**
+ * Señales runtime del canal inyectadas server-side para la UI del PDP.
+ * No forman parte del schema editable del editor.
+ */
+export interface ProductDetailRuntimeContent {
+  paymentMethods?: StorefrontPaymentMethod[];
+  shippingMessage?: string;
+  reviewsEnabled?: boolean;
+}
 
 // ---------------------------------------------------------------------------
 // Data interfaces (producto real — proviene de la API, no del editor)
@@ -80,6 +91,11 @@ export interface ProductDetailStock {
   label?: string;
 }
 
+export interface ProductDetailDispatch {
+  type: string;
+  label: string;
+}
+
 /**
  * Datos del producto que cada variante de ficha consume.
  * Provienen de la API del producto (no del contentSchema del módulo).
@@ -97,6 +113,8 @@ export interface ProductDetailData {
   installments?: ProductDetailInstallments;
   cashDiscount?: ProductDetailCashDiscount;
   stock?: ProductDetailStock;
+  freeShipping?: boolean;
+  dispatch?: ProductDetailDispatch;
   badges?: ProductDetailBadge[];
   specifications?: ProductDetailSpecification[];
   href: string;
@@ -116,7 +134,7 @@ export interface ProductDetailModule {
   id: string;
   type: "productDetail";
   variant: ProductDetailVariant;
-  content: ProductDetailContent;
+  content: ProductDetailContent & ProductDetailRuntimeContent;
   /** Datos del producto actual. TODO: fetch real. */
   product?: ProductDetailData;
   /** Productos relacionados para el bloque "relacionados". TODO: fetch real. */

@@ -116,7 +116,7 @@ describe("catalog layout shared layer", () => {
   it("refleja parámetros públicos activos en filtros en lugar de placeholders decorativos", () => {
     setCurrentUrl(
       "/catalogo",
-      "brand=Michelin&minPrice=1000&maxPrice=5000&availability=inmediata",
+      "search=aceite&brand=Michelin&minPrice=1000&maxPrice=5000&availability=inmediata",
     );
 
     const html = renderHtml(
@@ -130,11 +130,13 @@ describe("catalog layout shared layer", () => {
       }),
     );
 
+    expect(html).toContain("Búsqueda");
+    expect(html).toContain("aceite");
     expect(html).toContain("Michelin");
     expect(html).toContain("1000");
     expect(html).toContain("5000");
     expect(html).toContain("Inmediata");
-    expect(html).toContain('href="/catalogo?minPrice=1000&maxPrice=5000&availability=inmediata"');
+    expect(html).toContain('href="/catalogo?search=aceite&minPrice=1000&maxPrice=5000&availability=inmediata"');
     expect(html).not.toContain("Opción A");
   });
 
@@ -177,6 +179,23 @@ describe("catalog layout shared layer", () => {
     expect(html).toContain("Entrega inmediata");
     expect(html).toContain("Buscar categoría...");
     expect(html).not.toContain("No hay filtros activos.");
+  });
+
+  it("muestra el nombre de la categoría seleccionada en filtros aplicados cuando la query usa categoryId", () => {
+    setCurrentUrl("/catalogo", "categoryId=cat-auto");
+
+    const html = renderHtml(
+      createElement(FilterSidebar, {
+        activeFilters: {
+          category: true,
+        },
+        categories: createCategories(),
+      }),
+    );
+
+    expect(html).toContain("Categoría");
+    expect(html).toContain('<span>Auto</span>');
+    expect(html).not.toContain(">cat-auto<");
   });
 
   it("usa la página pública actual para construir la navegación del paginado clásico", () => {

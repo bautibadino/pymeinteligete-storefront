@@ -4,6 +4,7 @@ import { CatalogPageContent } from "@/components/storefront/catalog-page";
 import { buildTenantMetadata, getTenantSeoRequestContext, resolveTenantSeoSnapshotByRequest } from "@/lib/seo";
 import { parseCatalogSearchParams } from "@/lib/presentation/catalog-routing";
 import { getCategories } from "@/lib/storefront-api";
+import type { StorefrontPagination } from "@/lib/types/storefront";
 
 type CatalogPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -51,12 +52,14 @@ export async function generateMetadata({ searchParams }: CatalogPageProps): Prom
 export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
   const resolvedSearchParams = await searchParams;
   const routeData = await loadCatalogRouteData(resolvedSearchParams);
+  const pagination: StorefrontPagination | undefined = routeData.experience.catalog?.pagination;
 
   return (
     <CatalogPageContent
       bootstrap={routeData.experience.bootstrap}
       categories={routeData.categories}
       host={routeData.experience.runtime.context.host}
+      pagination={pagination}
       previewToken={routeData.experience.runtime.context.previewToken}
       products={routeData.experience.catalog?.products ?? []}
       query={routeData.query}

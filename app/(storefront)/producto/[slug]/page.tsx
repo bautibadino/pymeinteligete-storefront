@@ -9,7 +9,10 @@ import { PresentationRenderer } from "@/components/presentation/PresentationRend
 import { PreviewBridge } from "@/components/presentation/PreviewBridge";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
 import { mapCatalogProductToCardData } from "@/components/presentation/render-context";
-import { buildProductPresentationContext } from "@/app/(storefront)/producto/_lib/presentation-context";
+import {
+  buildProductPresentationContext,
+  hydrateProductPresentationWithRuntimeSignals,
+} from "@/app/(storefront)/producto/_lib/presentation-context";
 import { shouldUsePresentation } from "@/lib/presentation/render-utils";
 import {
   buildTenantMetadata,
@@ -68,15 +71,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
   const experience = await loadProductExperience(slug);
   const hasPreview = Boolean(experience.runtime.context.previewToken);
+  const hydratedPresentation = hydrateProductPresentationWithRuntimeSignals(
+    experience.bootstrap?.presentation,
+    experience,
+  );
 
-  const usePresentation = shouldUsePresentation(experience.bootstrap?.presentation, "product");
+  const usePresentation = shouldUsePresentation(hydratedPresentation ?? undefined, "product");
 
   if (usePresentation) {
     return (
       <Fragment>
         {hasPreview ? <PreviewBridge /> : null}
         <PresentationRenderer
-          presentation={experience.bootstrap!.presentation!}
+          presentation={hydratedPresentation!}
           page="product"
           includeGlobals={false}
           context={buildProductPresentationContext(experience)}

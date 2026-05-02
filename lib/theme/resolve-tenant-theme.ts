@@ -1,6 +1,6 @@
 import type { StorefrontBootstrap } from "@/lib/storefront-api";
 
-export type ThemePreset = "industrialWarm" | "minimalClean" | "editorialDark";
+export type ThemePreset = "industrialWarm" | "minimalClean" | "editorialDark" | "tyreshop";
 
 export type TenantTheme = {
   preset: ThemePreset;
@@ -310,6 +310,52 @@ export const THEME_PRESETS: Record<ThemePreset, TenantTheme> = {
     shadow: "0 30px 90px rgba(0, 0, 0, 0.28)",
     contentWidth: "1220px",
   },
+  tyreshop: {
+    preset: "tyreshop",
+    name: "Tyreshop BYM",
+    colors: {
+      background: "#f7f7f4",
+      paper: "rgba(255, 255, 255, 0.96)",
+      panel: "#ffffff",
+      panelStrong: "#fffdf2",
+      text: "#000000",
+      muted: "#4d4d4d",
+      border: "rgba(0, 0, 0, 0.12)",
+      primary: "#ffde01",
+      primaryContrast: "#000000",
+      primarySoft: "rgba(255, 222, 1, 0.22)",
+      accent: "#34495e",
+      accentSoft: "rgba(52, 73, 94, 0.14)",
+      success: "#1f7a4d",
+      successSoft: "rgba(31, 122, 77, 0.14)",
+      warning: "#c27b00",
+      warningSoft: "rgba(194, 123, 0, 0.16)",
+      draft: "#5f6f85",
+      draftSoft: "rgba(95, 111, 133, 0.14)",
+      danger: "#9b2f2f",
+      dangerSoft: "rgba(155, 47, 47, 0.12)",
+    },
+    controls: {
+      surfaceMuted: "rgba(255, 255, 255, 0.72)",
+      surfaceRaised: "rgba(255, 255, 255, 0.98)",
+      surfaceOverlay: "rgba(255, 255, 255, 0.88)",
+      focusRing: "rgba(255, 222, 1, 0.34)",
+    },
+    typography: {
+      heading: '"Avenir Next Condensed", "Arial Narrow", "Avenir Next", sans-serif',
+      body: '"Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif',
+      accent: '"Avenir Next Condensed", "Arial Narrow", "Avenir Next", sans-serif',
+      mono: '"SFMono-Regular", "SF Mono", "Roboto Mono", monospace',
+    },
+    radii: {
+      medium: "12px",
+      large: "18px",
+      xlarge: "28px",
+      pill: "999px",
+    },
+    shadow: "0 18px 48px rgba(0, 0, 0, 0.08)",
+    contentWidth: "1200px",
+  },
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -317,7 +363,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isThemePreset(value: unknown): value is ThemePreset {
-  return value === "industrialWarm" || value === "minimalClean" || value === "editorialDark";
+  return value === "industrialWarm" || value === "minimalClean" || value === "editorialDark" || value === "tyreshop";
 }
 
 function readString(value: unknown): string | undefined {

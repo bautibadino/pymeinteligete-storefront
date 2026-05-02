@@ -1,5 +1,14 @@
-import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
 import type { ProductDetailModule } from "@/lib/modules/product-detail";
+import { ProductImageGallery } from "@/components/templates/product-detail/product-detail-showcase-client";
+import {
+  ProductDetailBadgeGroup,
+  ProductDetailEmptyState,
+  ProductDetailPriceStack,
+  ProductDetailPurchaseCard,
+  ProductDetailShell,
+  productDetailCardClassName,
+  resolveProductDetailCommercialData,
+} from "@/components/templates/product-detail/product-detail-primitives";
 
 /**
  * ProductDetail Editorial — imagen hero grande + título + descripción prosa + CTA flotante.
@@ -9,73 +18,70 @@ import type { ProductDetailModule } from "@/lib/modules/product-detail";
  * TODO: reemplazar por fetch server-side desde la API del producto.
  */
 export function ProductDetailEditorial({ module }: { module: ProductDetailModule }) {
-  const { product } = module;
+  const { content, product } = module;
 
   if (!product) {
-    return (
-      <section className="py-12" data-template="product-detail-editorial">
-        <div className="mx-auto max-w-7xl px-4">
-          <p className="text-muted">Producto no disponible</p>
-        </div>
-      </section>
-    );
+    return <ProductDetailEmptyState />;
   }
 
   const mainImage = product.images[0];
-  const isAvailable = product.stock === undefined || product.stock.available;
+  const commercialData = resolveProductDetailCommercialData(content);
 
   return (
-    <section className="relative" data-template="product-detail-editorial">
-      {/* Hero image */}
-      <div className="relative aspect-[16/9] w-full overflow-hidden md:aspect-[21/9]">
-        {mainImage ? (
-          <img
-            src={mainImage.url}
-            alt={mainImage.alt ?? product.name}
-            className="h-full w-full object-cover"
-            loading="eager"
+    <ProductDetailShell>
+      <div data-template="product-detail-editorial" className="grid gap-6">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.18fr)_minmax(320px,0.82fr)] lg:items-end">
+          <ProductImageGallery
+            images={product.images}
+            productName={product.name}
+            aspectClassName="aspect-[5/4] md:aspect-[16/10]"
+            imageFit="cover"
           />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-soft to-accent-soft" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-      </div>
 
-      {/* Floating content */}
-      <div className="relative mx-auto -mt-24 max-w-3xl px-4 md:-mt-32">
-        <div className="rounded-xl border border-border bg-panel p-6 shadow-tenant md:p-10">
-          {product.brand ? (
-            <span className="mb-3 block text-xs font-medium uppercase tracking-wider text-muted">
-              {product.brand}
-            </span>
-          ) : null}
-          <h1 className="mb-4 font-heading text-3xl font-semibold text-foreground md:text-5xl">
-            {product.name}
-          </h1>
-          <p className="mb-6 text-2xl font-bold text-foreground">
-            {product.price.formatted}
-          </p>
+          <div className={productDetailCardClassName("grid gap-5 p-6 md:p-8")}>
+            {product.brand ? (
+              <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/54">
+                {product.brand}
+              </span>
+            ) : null}
 
-          {product.description ? (
-            <p className="mb-8 leading-relaxed text-muted">{product.description}</p>
-          ) : null}
+            <div className="grid gap-4">
+              <h1 className="font-heading text-4xl font-semibold leading-[0.94] tracking-[-0.05em] text-white md:text-6xl">
+                {product.name}
+              </h1>
+              <ProductDetailBadgeGroup badges={product.badges} />
+            </div>
 
-          <AddToCartButton
-            item={{
-              productId: product.id,
-              slug: product.slug,
-              name: product.name,
-              href: product.href,
-              price: product.price,
-              ...(product.brand ? { brand: product.brand } : {}),
-              ...(mainImage?.url ? { imageUrl: mainImage.url } : {}),
-            }}
-            size="lg"
-            disabled={!isAvailable}
-            unavailableLabel="No disponible"
-          />
+            <ProductDetailPriceStack product={product} />
+
+            <p className="max-w-[48ch] text-sm leading-7 text-white/68 md:text-base">
+              {product.description ??
+                "La narrativa editorial de este producto todavía no fue publicada."}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.42fr)] lg:items-start">
+          <div className={productDetailCardClassName("p-6 md:p-8")}>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/44">
+              Edición curada
+            </p>
+            <p className="mt-4 max-w-[64ch] text-base leading-8 text-white/74 md:text-lg">
+              {product.description ??
+                "Este espacio queda reservado para una narrativa más extensa cuando el storefront publique contenido editorial específico para la ficha."}
+            </p>
+          </div>
+
+          <div className="lg:sticky lg:top-24">
+            <ProductDetailPurchaseCard
+              product={product}
+              mainImage={mainImage}
+              description={undefined}
+              commercialData={commercialData}
+            />
+          </div>
         </div>
       </div>
-    </section>
+    </ProductDetailShell>
   );
 }

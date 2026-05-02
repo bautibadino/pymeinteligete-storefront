@@ -10,7 +10,11 @@ import type {
   ProductCardData,
   ProductCardInstallments,
 } from "@/lib/templates/product-card-catalog";
-import type { ProductDetailData } from "@/lib/modules/product-detail";
+import type {
+  ProductDetailData,
+  ProductDetailImage,
+  ProductDetailSpecification,
+} from "@/lib/modules/product-detail";
 import { buildCategoryCatalogHref as buildCategoryCatalogHrefInternal } from "@/lib/presentation/catalog-routing";
 import type { ProductGridSource } from "@/lib/modules/product-grid";
 import type { CategoryTileItem } from "@/lib/modules/category-tile";
@@ -25,8 +29,13 @@ export type PresentationRenderContext = {
   paymentMethods?: StorefrontPaymentMethod[];
 };
 
-type ProductRecord = StorefrontCatalogProduct & Record<string, unknown>;
+type ProductRecord = Record<string, unknown>;
 type ProductPaymentContext = Pick<StorefrontBootstrap, "commerce"> | null | undefined;
+
+const DISPATCH_LABELS: Record<string, string> = {
+  IMMEDIATE: "Despacho inmediato",
+  DELAYED_72H: "Despacho 72 hs",
+};
 
 function formatMoney(amount: number | undefined, currency = "ARS"): string {
   if (typeof amount !== "number" || !Number.isFinite(amount)) {
@@ -56,10 +65,27 @@ function readString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+function readArray(value: unknown): unknown[] | undefined {
+  return Array.isArray(value) ? value : undefined;
+}
+
+function readRecord(value: unknown): Record<string, unknown> | undefined {
+  return isRecord(value) ? value : undefined;
+}
+
 function readStringFromRecord(record: Record<string, unknown>, keys: string[]): string | undefined {
   for (const key of keys) {
     const value = readString(record[key]);
     if (value) return value;
+  }
+
+  return undefined;
+}
+
+function readNumberFromRecord(record: Record<string, unknown>, keys: string[]): number | undefined {
+  for (const key of keys) {
+    const value = readNumber(record[key]);
+    if (value !== undefined) return value;
   }
 
   return undefined;
@@ -79,21 +105,100 @@ function readNestedString(record: Record<string, unknown>, key: string, nestedKe
   return undefined;
 }
 
-function readProductImages(product: ProductRecord): string | undefined {
-  const directImage = readString(product.imageUrl);
-  if (directImage) return directImage;
-
-  if (Array.isArray(product.images)) {
-    for (const image of product.images) {
-      if (typeof image === "string" && image.trim()) return image.trim();
-      if (isRecord(image)) {
-        const url = readStringFromRecord(image, ["url", "src", "imageUrl"]);
-        if (url) return url;
-      }
-    }
+function readNestedRecord(record: Record<string, unknown>, keys: string[]): Record<string, unknown> | undefined {
+  for (const key of keys) {
+    const value = readRecord(record[key]);
+    if (value) return value;
   }
 
   return undefined;
+}
+
+function normalizeBadgeTone(value: string | undefined): ProductCardBadge["tone"] {
+  switch (value?.toLowerCase()) {
+    case "success":
+    case "positive":
+    case "green":
+      return "success";
+    case "warning":
+    case "alert":
+    case "yellow":
+      return "warning";
+    case "accent":
+    case "primary":
+    case "promo":
+      return "accent";
+    default:
+      return "info";
+  }
+}
+
+function normalizeSpecificationValue(value: unknown): string | undefined {
+  if (typeof value === "boolean") {
+    return value ? "Sí" : "No";
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  if (typeof value === "string") {
+    return readString(value);
+  }
+
+  if (Array.isArray(value)) {
+    const values = value
+      .map((entry) => normalizeSpecificationValue(entry))
+      .filter((entry): entry is string => Boolean(entry));
+
+    return values.length > 0 ? values.join(", ") : undefined;
+  }
+
+  if (isRecord(value)) {
+    return readStringFromRecord(value, ["value", "label", "name", "title", "text"]);
+  }
+
+  return undefined;
+}
+
+function pushUniqueBadge(
+  badges: ProductCardBadge[],
+  seen: Set<string>,
+  badge: ProductCardBadge | undefined,
+): void {
+  if (!badge?.label) {
+    return;
+  }
+
+  const key = badge.label.toLowerCase();
+  if (seen.has(key)) {
+    return;
+  }
+
+  seen.add(key);
+  badges.push(badge);
+}
+
+function pushUniqueSpecification(
+  specifications: ProductDetailSpecification[],
+  seen: Set<string>,
+  label: string | undefined,
+  value: string | undefined,
+): void {
+  const normalizedLabel = readString(label);
+  const normalizedValue = readString(value);
+
+  if (!normalizedLabel || !normalizedValue) {
+    return;
+  }
+
+  const key = normalizedLabel.toLowerCase();
+  if (seen.has(key)) {
+    return;
+  }
+
+  seen.add(key);
+  specifications.push({ label: normalizedLabel, value: normalizedValue });
 }
 
 function readProductSlug(product: ProductRecord): string | undefined {
@@ -109,21 +214,67 @@ function readProductName(product: ProductRecord): string | undefined {
 }
 
 function readProductBrand(product: ProductRecord): string | undefined {
-  return readNestedString(product, "brand", ["name", "label", "slug"]);
+  return (
+    readNestedString(product, "brand", ["name", "label", "slug"]) ??
+    readNestedString(product, "brandId", ["name", "label", "slug"])
+  );
 }
 
 function readProductCategory(product: ProductRecord): string | undefined {
-  return readNestedString(product, "category", ["name", "label", "slug"]);
+  return (
+    readNestedString(product, "category", ["name", "label", "slug"]) ??
+    readNestedString(product, "categoryId", ["name", "label", "slug"])
+  );
 }
 
 function readProductCategoryMatchValue(product: ProductRecord): string | undefined {
-  const category = product.category;
+  const category = readRecord(product.category) ?? readRecord(product.categoryId);
 
-  if (isRecord(category)) {
+  if (category) {
     return readStringFromRecord(category, ["slug", "categoryId", "id"]) ?? readStringFromRecord(category, ["name", "label"]);
   }
 
-  return readString(category);
+  return readString(product.category);
+}
+
+function readProductImageItems(product: ProductRecord, fallbackAlt?: string): ProductDetailImage[] {
+  const images: ProductDetailImage[] = [];
+  const seen = new Set<string>();
+  const directImage = readString(product.imageUrl);
+
+  const pushImage = (url: string | undefined, alt?: string) => {
+    if (!url) return;
+    if (seen.has(url)) return;
+    seen.add(url);
+    const normalizedAlt = readString(alt) ?? fallbackAlt;
+
+    images.push({
+      url,
+      ...(normalizedAlt ? { alt: normalizedAlt } : {}),
+    });
+  };
+
+  pushImage(directImage, fallbackAlt);
+
+  for (const image of readArray(product.images) ?? []) {
+    if (typeof image === "string") {
+      pushImage(readString(image), fallbackAlt);
+      continue;
+    }
+
+    if (isRecord(image)) {
+      pushImage(
+        readStringFromRecord(image, ["url", "src", "imageUrl"]),
+        readString(image.alt) ?? fallbackAlt,
+      );
+    }
+  }
+
+  return images;
+}
+
+function readProductPrimaryImageUrl(product: ProductRecord): string | undefined {
+  return readProductImageItems(product)[0]?.url;
 }
 
 function readProductCollectionValues(product: ProductRecord): string[] {
@@ -146,8 +297,8 @@ function readProductCollectionValues(product: ProductRecord): string[] {
   }
 
   for (const key of ["collectionIds", "collectionSlugs", "collections"]) {
-    const rawValues = product[key];
-    if (!Array.isArray(rawValues)) continue;
+    const rawValues = readArray(product[key]);
+    if (!rawValues) continue;
 
     for (const rawValue of rawValues) {
       if (typeof rawValue === "string") {
@@ -183,63 +334,112 @@ function hasExplicitFeaturedFlag(product: ProductRecord): boolean {
   );
 }
 
+function readCommercialInfo(product: ProductRecord): ProductRecord | undefined {
+  return readRecord(product.commercialInfo);
+}
+
+function readDeliveryInfo(product: ProductRecord): ProductRecord | undefined {
+  return readRecord(product.deliveryInfo);
+}
+
 function readPriceAmount(product: ProductRecord): number | undefined {
+  const commercialInfo = readCommercialInfo(product);
   const enrichedPrice =
     readNumber(product.priceWithTax) ??
-    readNumber(product.finalPrice);
+    readNumber(product.finalPrice) ??
+    (commercialInfo ? readNumberFromRecord(commercialInfo, ["priceWithTax", "finalPrice", "amount", "value"]) : undefined);
+
   if (enrichedPrice !== undefined) return enrichedPrice;
 
   if (isRecord(product.price)) {
-    return readNumber(product.price.amount) ?? readNumber(product.price.value);
+    return readNumberFromRecord(product.price, ["amount", "value"]);
   }
 
   return readNumber(product.price);
 }
 
 function readDiscountedPriceAmount(product: ProductRecord): number | undefined {
+  const commercialInfo = readCommercialInfo(product);
   return (
     readNumber(product.discountedPrice) ??
+    (commercialInfo ? readNumberFromRecord(commercialInfo, ["discountedPrice", "cashPrice"]) : undefined) ??
     (isRecord(product.price)
-      ? readNumber(product.price.discountedAmount) ?? readNumber(product.price.discountedPrice)
+      ? readNumberFromRecord(product.price, ["discountedAmount", "discountedPrice"])
       : undefined)
   );
 }
 
 function readCompareAtPrice(product: ProductRecord): number | undefined {
+  const commercialInfo = readCommercialInfo(product);
+
   if (isRecord(product.price)) {
-    return readNumber(product.price.compareAt) ?? readNumber(product.price.compareAtPrice);
+    const compareAt = readNumberFromRecord(product.price, ["compareAt", "compareAtPrice", "originalAmount"]);
+    if (compareAt !== undefined) return compareAt;
   }
 
-  return readNumber(product.compareAtPrice) ?? readNumber(product.originalPrice);
+  return (
+    readNumber(product.compareAtPrice) ??
+    readNumber(product.originalPrice) ??
+    (commercialInfo ? readNumberFromRecord(commercialInfo, ["compareAt", "compareAtPrice", "originalPrice"]) : undefined)
+  );
 }
 
 function readCurrency(product: ProductRecord): string {
+  const commercialInfo = readCommercialInfo(product);
+
   if (isRecord(product.price)) {
     return readString(product.price.currency) ?? "ARS";
   }
 
-  return readString(product.currency) ?? "ARS";
+  return readString(product.currency) ?? readString(commercialInfo?.currency) ?? "ARS";
 }
 
-function readInstallments(product: ProductRecord, amount: number | undefined, currency: string): ProductCardInstallments | undefined {
-  if (!isRecord(product.installments)) {
+function readInstallmentsRecord(product: ProductRecord): ProductRecord | undefined {
+  const commercialInfo = readCommercialInfo(product);
+
+  return (
+    readRecord(product.installments) ??
+    readRecord(commercialInfo?.installments) ??
+    readRecord(product.paymentPlan)
+  );
+}
+
+function readInstallments(
+  product: ProductRecord,
+  amount: number | undefined,
+  currency: string,
+): ProductCardInstallments | undefined {
+  const installments = readInstallmentsRecord(product);
+  if (!installments) {
     return undefined;
   }
 
-  const enabled = readBoolean(product.installments.enabled);
+  const enabled = readBoolean(installments.enabled);
   if (enabled === false) return undefined;
 
-  const count = readNumber(product.installments.count);
+  const count = readNumberFromRecord(installments, ["count", "installments", "quantity"]);
   if (!count || count < 1) return undefined;
 
-  const installmentAmount = readNumber(product.installments.amount) ?? (amount ? amount / count : undefined);
+  const baseAmount = amount && amount > 0 ? amount : undefined;
+  const installmentAmount =
+    readNumberFromRecord(installments, ["amount", "value", "installmentAmount", "monthlyAmount"]) ??
+    (baseAmount ? Math.round((baseAmount / count) * 100) / 100 : undefined);
+
   if (!installmentAmount) return undefined;
+
+  const formatted = readString(installments.formatted) ?? formatMoney(installmentAmount, currency);
+  const interestFree =
+    readBoolean(installments.interestFree) ??
+    readBoolean(installments.withoutInterest) ??
+    readBoolean(installments.noInterest) ??
+    readString(installments.label)?.toLowerCase().includes("sin interés") ??
+    false;
 
   return {
     count,
     amount: installmentAmount,
-    formatted: formatMoney(installmentAmount, currency),
-    interestFree: readBoolean(product.installments.interestFree) ?? false,
+    formatted,
+    interestFree,
   };
 }
 
@@ -248,8 +448,8 @@ function readBootstrapInstallments(
   amount: number | undefined,
   currency: string,
 ): ProductCardInstallments | undefined {
-  const installmentsConfig = bootstrap?.commerce.payment.installments;
-  const mercadoPagoEnabled = bootstrap?.commerce.payment.visibleMethods.includes("mercadopago") ?? false;
+  const installmentsConfig = bootstrap?.commerce?.payment.installments;
+  const mercadoPagoEnabled = bootstrap?.commerce?.payment.visibleMethods.includes("mercadopago") ?? false;
   const count =
     mercadoPagoEnabled && installmentsConfig?.enabled && typeof installmentsConfig.count === "number"
       ? installmentsConfig.count
@@ -269,15 +469,31 @@ function readBootstrapInstallments(
   };
 }
 
-function readCashDiscount(product: ProductRecord, amount: number | undefined, currency: string): ProductCardData["cashDiscount"] {
-  if (!isRecord(product.bestDiscount)) {
+function readCashDiscountRecord(product: ProductRecord): ProductRecord | undefined {
+  const commercialInfo = readCommercialInfo(product);
+
+  return (
+    readRecord(product.bestDiscount) ??
+    readRecord(product.cashDiscount) ??
+    readRecord(commercialInfo?.bestDiscount) ??
+    readRecord(commercialInfo?.cashDiscount)
+  );
+}
+
+function readCashDiscount(
+  product: ProductRecord,
+  amount: number | undefined,
+  currency: string,
+): ProductCardData["cashDiscount"] {
+  const discount = readCashDiscountRecord(product);
+  if (!discount) {
     return undefined;
   }
 
-  const percentage = readNumber(product.bestDiscount.percentage) ?? readNumber(product.bestDiscount.value);
+  const percentage = readNumberFromRecord(discount, ["percentage", "percent", "value"]);
   if (!percentage || percentage <= 0) return undefined;
 
-  const label = readString(product.bestDiscount.label) ?? `${percentage}% OFF`;
+  const label = readString(discount.formatted) ?? readString(discount.label) ?? `${percentage}% OFF contado`;
 
   return {
     percent: percentage,
@@ -294,8 +510,32 @@ function hasFreeShipping(
     return true;
   }
 
-  const threshold = readNumber(bootstrap?.commerce.shipping?.freeShippingThreshold);
+  if (readBoolean(readDeliveryInfo(product)?.freeShipping) === true) {
+    return true;
+  }
+
+  const threshold = readNumber(bootstrap?.commerce?.shipping?.freeShippingThreshold);
   return typeof threshold === "number" && threshold > 0 && typeof amount === "number" && amount >= threshold;
+}
+
+function readDispatchType(product: ProductRecord): string | undefined {
+  return (
+    readString(product.dispatchType) ??
+    readString(readDeliveryInfo(product)?.dispatchType) ??
+    readString(readDeliveryInfo(product)?.type) ??
+    readString(readDeliveryInfo(product)?.serviceLevel)
+  );
+}
+
+function readDispatchLabel(product: ProductRecord): string | undefined {
+  const deliveryInfo = readDeliveryInfo(product);
+  const dispatchType = readDispatchType(product);
+
+  return (
+    readString(deliveryInfo?.dispatchLabel) ??
+    readString(deliveryInfo?.label) ??
+    (dispatchType ? DISPATCH_LABELS[dispatchType] : undefined)
+  );
 }
 
 function resolveProductStock(product: ProductRecord): ProductCardData["stock"] {
@@ -331,7 +571,42 @@ function resolveProductStock(product: ProductRecord): ProductCardData["stock"] {
     };
   }
 
+  const inStock = readBoolean(product.inStock);
+  if (inStock !== undefined) {
+    return {
+      available: inStock,
+      label: inStock ? "Stock disponible" : "Sin stock",
+    };
+  }
+
   return undefined;
+}
+
+function readExplicitBadges(product: ProductRecord): ProductCardBadge[] {
+  const badges: ProductCardBadge[] = [];
+  const seen = new Set<string>();
+
+  for (const source of [
+    readArray(product.badges),
+    readArray(readCommercialInfo(product)?.badges),
+    readArray(readDeliveryInfo(product)?.badges),
+  ]) {
+    if (!source) continue;
+
+    for (const badge of source) {
+      if (!isRecord(badge)) continue;
+      const label = readStringFromRecord(badge, ["label", "text", "title", "name"]);
+      if (!label) continue;
+      const tone = normalizeBadgeTone(readStringFromRecord(badge, ["tone", "variant", "type"]));
+
+      pushUniqueBadge(badges, seen, {
+        label,
+        ...(tone ? { tone } : {}),
+      });
+    }
+  }
+
+  return badges;
 }
 
 function readBadges(
@@ -339,26 +614,175 @@ function readBadges(
   bootstrap: ProductPaymentContext,
   amount: number | undefined,
 ): ProductCardBadge[] | undefined {
-  const badges: ProductCardBadge[] = [];
+  const badges = readExplicitBadges(product);
+  const seen = new Set(badges.map((badge) => badge.label.toLowerCase()));
 
-  if (readBoolean(product.isFeatured)) badges.push({ label: "Top", tone: "accent" });
-  if (readBoolean(product.isNewProduct)) badges.push({ label: "Nuevo", tone: "info" });
-  if (readBoolean(product.isOnSale)) badges.push({ label: "Oferta", tone: "warning" });
-  if (hasFreeShipping(product, bootstrap, amount)) badges.push({ label: "Envío gratis", tone: "success" });
+  if (readBoolean(product.isFeatured)) pushUniqueBadge(badges, seen, { label: "Top", tone: "accent" });
+  if (readBoolean(product.isNewProduct)) pushUniqueBadge(badges, seen, { label: "Nuevo", tone: "info" });
+  if (readBoolean(product.isOnSale)) pushUniqueBadge(badges, seen, { label: "Oferta", tone: "warning" });
+  if (readBoolean(product.isOutlet)) pushUniqueBadge(badges, seen, { label: "Outlet", tone: "warning" });
+  if (hasFreeShipping(product, bootstrap, amount)) {
+    pushUniqueBadge(badges, seen, { label: "Envío gratis", tone: "success" });
+  }
 
-  const dispatchType = readString(product.dispatchType);
-  if (dispatchType === "IMMEDIATE") {
-    badges.push({ label: "Despacho inmediato", tone: "success" });
+  const dispatchLabel = readDispatchLabel(product);
+  if (dispatchLabel) {
+    pushUniqueBadge(badges, seen, {
+      label: dispatchLabel,
+      tone: readDispatchType(product) === "DELAYED_72H" ? "warning" : "success",
+    });
   }
 
   return badges.length > 0 ? badges : undefined;
+}
+
+function readAttributeDefinitions(product: ProductRecord): Array<Record<string, unknown>> {
+  const category = readRecord(product.categoryId);
+  const definitions = readArray(category?.attributeDefinitions);
+  return definitions?.filter((definition): definition is Record<string, unknown> => isRecord(definition)) ?? [];
+}
+
+function readSpecifications(product: ProductRecord): ProductDetailSpecification[] | undefined {
+  const specifications: ProductDetailSpecification[] = [];
+  const seen = new Set<string>();
+
+  for (const key of ["specifications", "specs"]) {
+    const source = readArray(product[key]);
+    if (!source) continue;
+
+    for (const entry of source) {
+      if (!isRecord(entry)) continue;
+      pushUniqueSpecification(
+        specifications,
+        seen,
+        readStringFromRecord(entry, ["label", "name", "key", "title"]),
+        normalizeSpecificationValue(entry.value ?? entry.values ?? entry.text),
+      );
+    }
+  }
+
+  const definitions = readAttributeDefinitions(product);
+  const definitionLabels = new Map(
+    definitions.map((definition) => [
+      readString(definition.fieldName) ?? "",
+      readString(definition.displayLabel) ?? readString(definition.label) ?? readString(definition.fieldName) ?? "",
+    ]),
+  );
+
+  for (const key of ["dynamicAttributes", "typeSpecificAttributes"]) {
+    const source = readRecord(product[key]);
+    if (!source) continue;
+
+    for (const [fieldName, rawValue] of Object.entries(source)) {
+      pushUniqueSpecification(
+        specifications,
+        seen,
+        definitionLabels.get(fieldName) ?? fieldName,
+        normalizeSpecificationValue(rawValue),
+      );
+    }
+  }
+
+  const weight = readNumber(product.weight);
+  if (weight !== undefined) {
+    pushUniqueSpecification(specifications, seen, "Peso", `${weight} kg`);
+  }
+
+  const dimensions = readRecord(product.dimensions);
+  if (dimensions) {
+    const length = readNumber(dimensions.length);
+    const width = readNumber(dimensions.width);
+    const height = readNumber(dimensions.height);
+    const parts = [length, width, height].filter((value): value is number => value !== undefined);
+
+    if (parts.length > 0) {
+      pushUniqueSpecification(specifications, seen, "Dimensiones", `${parts.join(" x ")} cm`);
+    }
+  }
+
+  return specifications.length > 0 ? specifications : undefined;
+}
+
+function normalizeRelatedProductCandidate(candidate: unknown): StorefrontCatalogProduct | null {
+  if (!isRecord(candidate)) {
+    return null;
+  }
+
+  const slug = readProductSlug(candidate);
+  const id = readProductId(candidate) ?? slug;
+  const name = readProductName(candidate);
+
+  if (!id || !slug || !name) {
+    return null;
+  }
+
+  const amount = readPriceAmount(candidate);
+  const currency = readCurrency(candidate);
+  const compareAt = readCompareAtPrice(candidate);
+  const brand = readProductBrand(candidate);
+  const category = readProductCategory(candidate);
+  const imageUrl =
+    readProductPrimaryImageUrl(candidate) ??
+    readString(candidate.image);
+  const sku = readString(candidate.sku);
+  const discountedPrice = readNumber(candidate.discountedPrice);
+  const bestDiscount = readRecord(candidate.bestDiscount);
+  const installments = readRecord(candidate.installments);
+  const freeShipping = readBoolean(candidate.freeShipping);
+  const dispatchType = readDispatchType(candidate);
+
+  return {
+    productId: id,
+    slug,
+    name,
+    ...(sku ? { sku } : {}),
+    ...(imageUrl ? { imageUrl } : {}),
+    ...(brand ? { brand } : {}),
+    ...(category ? { category } : {}),
+    ...(amount !== undefined ? { price: { amount, currency, ...(compareAt !== undefined ? { compareAt } : {}) } } : {}),
+    ...(discountedPrice !== undefined ? { discountedPrice } : {}),
+    ...(bestDiscount ? { bestDiscount: bestDiscount as NonNullable<StorefrontCatalogProduct["bestDiscount"]> } : {}),
+    ...(installments ? { installments: installments as NonNullable<StorefrontCatalogProduct["installments"]> } : {}),
+    ...(freeShipping !== undefined ? { freeShipping } : {}),
+    ...(dispatchType ? { dispatchType } : {}),
+  };
+}
+
+export function extractRelatedCatalogProductsFromDetail(
+  product: StorefrontProductDetail | null | undefined,
+): StorefrontCatalogProduct[] {
+  if (!product) {
+    return [];
+  }
+
+  const record = product as unknown as ProductRecord;
+  const relatedCandidates = [
+    ...(readArray(record.relatedProducts) ?? []),
+    ...(readArray(record.equivalents) ?? []),
+  ];
+
+  const seen = new Set<string>();
+  const relatedProducts: StorefrontCatalogProduct[] = [];
+
+  for (const candidate of relatedCandidates) {
+    const normalized = normalizeRelatedProductCandidate(candidate);
+    if (!normalized) continue;
+
+    const key = `${normalized.productId}:${normalized.slug}`;
+    if (seen.has(key)) continue;
+
+    seen.add(key);
+    relatedProducts.push(normalized);
+  }
+
+  return relatedProducts;
 }
 
 export function mapCatalogProductToCardData(
   product: StorefrontCatalogProduct,
   bootstrap?: ProductPaymentContext,
 ): ProductCardData | null {
-  const record = product as ProductRecord;
+  const record = product as unknown as ProductRecord;
   const slug = readProductSlug(record);
   const id = readProductId(record) ?? slug;
   const name = readProductName(record);
@@ -373,7 +797,7 @@ export function mapCatalogProductToCardData(
   const currency = readCurrency(record);
   const compareAt = discountedAmount !== undefined ? listAmount : readCompareAtPrice(record);
   const stock = resolveProductStock(record);
-  const imageUrl = readProductImages(record);
+  const imageUrl = readProductPrimaryImageUrl(record);
   const brand = readProductBrand(record);
   const category = readProductCategory(record);
   const installments =
@@ -412,27 +836,40 @@ export function mapProductDetailToData(
     return undefined;
   }
 
-  const record = product as ProductRecord;
-  const id = product.productId || readProductId(record) || product.slug;
+  const record = product as unknown as ProductRecord;
+  const slug = readProductSlug(record) ?? product.slug;
+  const id = readProductId(record) ?? slug;
+  const name = readProductName(record) ?? product.name;
+
+  if (!id || !slug || !name) {
+    return undefined;
+  }
+
   const listAmount = readPriceAmount(record);
   const discountedAmount = readDiscountedPriceAmount(record);
   const effectiveAmount = discountedAmount ?? listAmount;
   const currency = readCurrency(record);
   const compareAt = discountedAmount !== undefined ? listAmount : readCompareAtPrice(record);
-  const imageUrls = Array.isArray(product.images) ? product.images.filter((image): image is string => Boolean(readString(image))) : [];
   const stock = resolveProductStock(record);
   const installments =
     readInstallments(record, compareAt ?? effectiveAmount, currency) ??
     readBootstrapInstallments(bootstrap, compareAt ?? effectiveAmount, currency);
   const cashDiscount = readCashDiscount(record, effectiveAmount, currency);
+  const badges = readBadges(record, bootstrap, effectiveAmount);
+  const specifications = readSpecifications(record);
+  const brand = readProductBrand(record);
+  const description = readString(product.description);
+  const dispatchType = readDispatchType(record);
+  const dispatchLabel = readDispatchLabel(record);
+  const freeShipping = hasFreeShipping(record, bootstrap, effectiveAmount);
 
   return {
     id,
-    name: product.name,
-    slug: product.slug,
-    ...(product.brand ? { brand: product.brand } : {}),
-    ...(product.description ? { description: product.description } : {}),
-    images: imageUrls.map((url) => ({ url })),
+    name,
+    slug,
+    ...(brand ? { brand } : {}),
+    ...(description ? { description } : {}),
+    images: readProductImageItems(record, name),
     price: {
       amount: effectiveAmount ?? 0,
       currency,
@@ -444,12 +881,16 @@ export function mapProductDetailToData(
     ...(installments ? { installments } : {}),
     ...(cashDiscount ? { cashDiscount } : {}),
     ...(stock ? { stock } : {}),
-    href: `/producto/${encodeURIComponent(product.slug)}`,
+    ...(freeShipping ? { freeShipping: true } : {}),
+    ...(dispatchType && dispatchLabel ? { dispatch: { type: dispatchType, label: dispatchLabel } } : {}),
+    ...(badges ? { badges } : {}),
+    ...(specifications ? { specifications } : {}),
+    href: `/producto/${encodeURIComponent(slug)}`,
   };
 }
 
 function matchesCategory(product: StorefrontCatalogProduct, categorySlug: string): boolean {
-  const record = product as ProductRecord;
+  const record = product as unknown as ProductRecord;
   const category = readProductCategoryMatchValue(record)?.toLowerCase();
   const slug = categorySlug.toLowerCase();
 
@@ -457,14 +898,14 @@ function matchesCategory(product: StorefrontCatalogProduct, categorySlug: string
 }
 
 function matchesCollection(product: StorefrontCatalogProduct, collectionId: string): boolean {
-  const record = product as ProductRecord;
+  const record = product as unknown as ProductRecord;
   const normalizedCollectionId = collectionId.toLowerCase();
 
   return readProductCollectionValues(record).some((value) => value.toLowerCase() === normalizedCollectionId);
 }
 
 function matchesStableProductId(product: StorefrontCatalogProduct, ids: Set<string>): boolean {
-  const record = product as ProductRecord;
+  const record = product as unknown as ProductRecord;
   const stableId = readProductId(record);
   const stableSlug = readProductSlug(record);
 
@@ -486,8 +927,6 @@ export function selectProductsForGrid(
 
   if (source.type === "handpicked") {
     const ids = new Set(source.productIds);
-    // `handpicked` solo puede resolver IDs presentes en el catálogo recibido;
-    // no consulta ni inventa productos fuera de la página cargada por host.
     selected = sourceProducts.filter((product) => matchesStableProductId(product, ids));
   }
 
@@ -496,12 +935,12 @@ export function selectProductsForGrid(
   }
 
   if (source.type === "featured") {
-    selected = sourceProducts.filter((product) => hasExplicitFeaturedFlag(product as ProductRecord));
+    selected = sourceProducts.filter((product) => hasExplicitFeaturedFlag(product as unknown as ProductRecord));
   }
 
   if (source.type === "newest") {
     selected = sourceProducts
-      .map((product) => ({ product, createdAt: readProductCreatedAt(product as ProductRecord) }))
+      .map((product) => ({ product, createdAt: readProductCreatedAt(product as unknown as ProductRecord) }))
       .filter((entry): entry is { product: StorefrontCatalogProduct; createdAt: number } => entry.createdAt !== undefined)
       .sort((a, b) => b.createdAt - a.createdAt)
       .map((entry) => entry.product);
@@ -525,7 +964,7 @@ export function mapCatalogProductsToCardData(
 }
 
 function matchesBrand(product: StorefrontCatalogProduct, brand: string): boolean {
-  const productBrand = readProductBrand(product as ProductRecord)?.toLowerCase();
+  const productBrand = readProductBrand(product as unknown as ProductRecord)?.toLowerCase();
   return Boolean(productBrand && productBrand === brand.toLowerCase());
 }
 
@@ -540,24 +979,39 @@ export function selectRelatedProductsForDetail(
     return [];
   }
 
-  const currentSlug = product.slug;
-  const currentId = product.productId;
-  const sourceProducts = products.filter(
-    (candidate) => candidate.slug !== currentSlug && candidate.productId !== currentId,
-  );
+  const record = product as unknown as ProductRecord;
+  const currentSlug = readProductSlug(record) ?? product.slug;
+  const currentId = readProductId(record) ?? product.productId;
+  const sourceProducts = products.filter((candidate) => {
+    const candidateRecord = candidate as unknown as ProductRecord;
+    return (
+      readProductSlug(candidateRecord) !== currentSlug &&
+      readProductId(candidateRecord) !== currentId
+    );
+  });
 
   let selected = sourceProducts;
 
-  if (relatedSource === "category" && product.category) {
-    selected = sourceProducts.filter((candidate) => matchesCategory(candidate, product.category!));
+  if (relatedSource === "category") {
+    const categoryValue = readProductCategoryMatchValue(record);
+    if (categoryValue) {
+      selected = sourceProducts.filter((candidate) => matchesCategory(candidate, categoryValue));
+    }
   }
 
-  if (relatedSource === "brand" && product.brand) {
-    selected = sourceProducts.filter((candidate) => matchesBrand(candidate, product.brand!));
+  if (relatedSource === "brand") {
+    const brand = readProductBrand(record);
+    if (brand) {
+      selected = sourceProducts.filter((candidate) => matchesBrand(candidate, brand));
+    }
   }
 
   if (relatedSource === "collection") {
     selected = [];
+  }
+
+  if (selected.length === 0) {
+    selected = sourceProducts;
   }
 
   return selected

@@ -8,7 +8,10 @@ import {
 } from "@/lib/presentation/render-utils";
 import { adaptSectionToModule } from "@/components/presentation/section-adapter";
 import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
-import { buildProductPresentationContext } from "@/app/(storefront)/producto/_lib/presentation-context";
+import {
+  buildProductPresentationContext,
+  hydrateProductPresentationWithRuntimeSignals,
+} from "@/app/(storefront)/producto/_lib/presentation-context";
 import type { Presentation, SectionInstance, SectionType } from "@/lib/types/presentation";
 import type {
   StorefrontBootstrap,
@@ -823,6 +826,82 @@ describe("presentation renderer logic", () => {
     );
   });
 
+  it("normaliza el detalle enriquecido real sin perder imágenes, señales comerciales ni specs", () => {
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "productDetail",
+        variant: "gallery-specs",
+        content: {
+          showRelated: true,
+          relatedSource: "category",
+          relatedLimit: 4,
+        },
+      }),
+      {
+        product: buildProductDetail({
+          slug: "slug-legacy-interno",
+          ecommerceSlug: "cubierta-premium-publica",
+          images: [
+            { url: "https://cdn.example.com/cubierta-premium-1.webp", alt: "Vista principal" },
+            { src: "https://cdn.example.com/cubierta-premium-2.webp", alt: "Vista lateral" },
+          ],
+          discountedPrice: 369099,
+          bestDiscount: { percentage: 20, label: "20% OFF contado" },
+          installments: { enabled: true, count: 6, amount: 76896, interestFree: true },
+          freeShipping: true,
+          dispatchType: "IMMEDIATE",
+          dynamicAttributes: {
+            season: "Verano",
+            loadIndex: "91",
+          },
+          categoryId: {
+            name: "Neumáticos",
+            attributeDefinitions: [
+              { fieldName: "season", displayLabel: "Temporada" },
+              { fieldName: "loadIndex", displayLabel: "Índice de carga" },
+            ],
+          },
+        }),
+      },
+    ) as {
+      product?: {
+        slug: string;
+        images: Array<{ url: string; alt?: string }>;
+        price: { amount: number };
+        compareAtPrice?: { amount: number };
+        installments?: { count: number; interestFree: boolean };
+        cashDiscount?: { percent: number; formatted: string };
+        freeShipping?: boolean;
+        dispatch?: { type: string; label: string };
+        badges?: Array<{ label: string }>;
+        specifications?: Array<{ label: string; value: string }>;
+      };
+    };
+
+    expect(module.product).toMatchObject({
+      slug: "cubierta-premium-publica",
+      images: [
+        { url: "https://cdn.example.com/cubierta-premium-1.webp", alt: "Vista principal" },
+        { url: "https://cdn.example.com/cubierta-premium-2.webp", alt: "Vista lateral" },
+      ],
+      price: { amount: 369099 },
+      compareAtPrice: { amount: 461374 },
+      installments: { count: 6, interestFree: true },
+      cashDiscount: { percent: 20, formatted: "20% OFF contado" },
+      freeShipping: true,
+      dispatch: { type: "IMMEDIATE", label: "Despacho inmediato" },
+    });
+    expect(module.product?.badges?.map((badge) => badge.label)).toEqual(
+      expect.arrayContaining(["Envío gratis", "Despacho inmediato"]),
+    );
+    expect(module.product?.specifications).toEqual(
+      expect.arrayContaining([
+        { label: "Temporada", value: "Verano" },
+        { label: "Índice de carga", value: "91" },
+      ]),
+    );
+  });
+
   it("arma contexto real de producto para PresentationRenderer", () => {
     const product = buildProductDetail();
     const relatedProducts = [
@@ -852,6 +931,131 @@ describe("presentation renderer logic", () => {
       host: "acme.example.com",
       product,
       products: relatedProducts,
+    });
+  });
+
+  it("usa equivalentes del detalle como fallback de relacionados en presentation mode", () => {
+    const product = buildProductDetail({
+      equivalents: [
+        {
+          _id: "prod-eq-1",
+          slug: "cubierta-equivalente",
+          name: "Cubierta Equivalente",
+          image: "https://cdn.example.com/cubierta-equivalente.webp",
+          brand: "Pirelli",
+          priceWithTax: 398000,
+        },
+      ],
+    });
+
+    const context = buildProductPresentationContext({
+      bootstrap: { tenant: { status: "active" } } as StorefrontBootstrap,
+      product,
+      runtime: {
+        context: {
+          host: "acme.example.com",
+        },
+      },
+    });
+
+    const module = adaptSectionToModule(
+      buildSection({
+        type: "productDetail",
+        variant: "gallery-specs",
+        content: {
+          showRelated: true,
+          relatedSource: "category",
+          relatedLimit: 4,
+        },
+      }),
+      context,
+    ) as {
+      relatedProducts?: Array<{ id: string; slug: string; imageUrl?: string }>;
+    };
+
+    expect(context.products).toEqual([
+      expect.objectContaining({
+        productId: "prod-eq-1",
+        slug: "cubierta-equivalente",
+      }),
+    ]);
+    expect(module.relatedProducts).toEqual([
+      expect.objectContaining({
+        id: "prod-eq-1",
+        slug: "cubierta-equivalente",
+        imageUrl: "https://cdn.example.com/cubierta-equivalente.webp",
+      }),
+    ]);
+  });
+
+  it("hidrata presentation del PDP con paymentMethods, shipping message y reviews enabled", () => {
+    const presentation = buildPresentation({
+      pages: {
+        home: { sections: [] },
+        catalog: { sections: [] },
+        product: {
+          sections: [
+            buildSection({
+              id: "product-detail-1",
+              type: "productDetail",
+              variant: "gallery-specs",
+              content: {
+                showRelated: true,
+              },
+            }),
+          ],
+        },
+      },
+    });
+
+    const hydrated = hydrateProductPresentationWithRuntimeSignals(presentation, {
+      bootstrap: {
+        tenant: { status: "active" },
+        commerce: {
+          payment: { visibleMethods: [] },
+          shipping: { message: "Envíos a todo el país" },
+        },
+        features: {
+          reviewsEnabled: true,
+          compareEnabled: false,
+          wishlistEnabled: false,
+          contactBarEnabled: false,
+          searchEnabled: true,
+        },
+      } as unknown as StorefrontBootstrap,
+      product: buildProductDetail(),
+      paymentMethods: {
+        paymentMethods: [
+          {
+            methodId: "pm-mp",
+            methodType: "gateway",
+            displayName: "Mercado Pago",
+            description: "Cuotas",
+            icon: null,
+            color: null,
+            discount: null,
+          },
+        ],
+      },
+      runtime: {
+        context: {
+          host: "acme.example.com",
+        },
+      },
+    });
+
+    expect(hydrated?.pages.product.sections[0]).toMatchObject({
+      content: {
+        showRelated: true,
+        shippingMessage: "Envíos a todo el país",
+        reviewsEnabled: true,
+        paymentMethods: [
+          expect.objectContaining({
+            methodId: "pm-mp",
+            displayName: "Mercado Pago",
+          }),
+        ],
+      },
     });
   });
 });

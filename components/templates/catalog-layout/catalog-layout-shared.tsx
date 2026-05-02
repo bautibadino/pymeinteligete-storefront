@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Route } from "next";
 import type { ReadonlyURLSearchParams } from "next/navigation";
@@ -29,6 +29,7 @@ export const SORT_OPTIONS: { value: string; label: string }[] = [
  * Etiquetas para filtros configurados.
  */
 export const FILTER_LABELS: Record<string, string> = {
+  search: "Búsqueda",
   brand: "Marca",
   priceRange: "Precio",
   category: "Categoría",
@@ -110,6 +111,7 @@ function buildClearAllFiltersHref(
     onlyImmediate: undefined,
     page: undefined,
     rating: undefined,
+    search: undefined,
   });
 }
 
@@ -195,6 +197,28 @@ function buildCategoryTreeOptions(
     label: category.name,
     slug: category.slug,
   }));
+}
+
+function findCategoryLabel(
+  categories: StorefrontCategory[] | undefined,
+  matcher: (category: StorefrontCategory) => boolean,
+): string | null {
+  if (!categories) {
+    return null;
+  }
+
+  for (const category of categories) {
+    if (matcher(category)) {
+      return category.name;
+    }
+
+    const nested = findCategoryLabel(category.children, matcher);
+    if (nested) {
+      return nested;
+    }
+  }
+
+  return null;
 }
 
 function filterCategoryTree(
@@ -459,8 +483,14 @@ function buildSortHref(
 function resolveFilterValue(
   key: string,
   searchParams: URLSearchParams | ReadonlyURLSearchParams,
+  categories?: StorefrontCategory[],
 ): { clearKeys: string[]; value: string } | null {
   switch (key) {
+    case "search": {
+      const search = searchParams.get("search");
+      return search ? { value: search, clearKeys: ["search", "page"] } : null;
+    }
+
     case "brand": {
       const brand = searchParams.get("brand");
       return brand ? { value: brand, clearKeys: ["brand", "page"] } : null;
@@ -485,7 +515,15 @@ function resolveFilterValue(
     }
 
     case "category": {
-      const category = searchParams.get("category") ?? searchParams.get("categoryId");
+      const categorySlug = searchParams.get("category");
+      const categoryId = searchParams.get("categoryId");
+      const categoryLabel = categoryId
+        ? findCategoryLabel(categories, (category) => category.categoryId === categoryId)
+        : categorySlug
+          ? findCategoryLabel(categories, (category) => category.slug === categorySlug)
+          : null;
+      const category = categoryLabel ?? categorySlug ?? categoryId;
+
       return category
         ? { value: category, clearKeys: ["category", "categoryId", "page"] }
         : null;
@@ -518,15 +556,24 @@ function resolveConfiguredFilters(
   activeFilters: Record<string, boolean | undefined> | undefined,
   pathname: string,
   searchParams: URLSearchParams | ReadonlyURLSearchParams,
+  categories?: StorefrontCategory[],
 ): ResolvedFilter[] {
   if (!activeFilters) {
     return [];
   }
 
-  return Object.entries(activeFilters)
-    .filter(([, enabled]) => enabled === true)
-    .flatMap(([key]) => {
-      const filterValue = resolveFilterValue(key, searchParams);
+  const enabledKeys = new Set(
+    Object.entries(activeFilters)
+      .filter(([, enabled]) => enabled === true)
+      .map(([key]) => key),
+  );
+
+  if (searchParams.get("search")) {
+    enabledKeys.add("search");
+  }
+
+  return Array.from(enabledKeys).flatMap((key) => {
+      const filterValue = resolveFilterValue(key, searchParams, categories);
       if (!filterValue) {
         return [];
       }
@@ -689,27 +736,77 @@ export function CatalogToolbar({
 
 function FilterSection({
   group,
+  layout = "sidebar",
 }: {
   group: FilterGroup;
+  layout?: "sidebar" | "topbar";
 }) {
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between gap-3">
-        <h4 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+        <h4
+          className={cn(
+            "text-[10px] font-semibold uppercase tracking-[0.16em]",
+            layout === "sidebar" ? "text-[#f4f4f5]" : "text-muted",
+          )}
+        >
           {group.title}
         </h4>
-        <span className="text-[10px] font-medium text-muted tabular-nums">
+        <span
+          className={cn(
+            "text-[10px] font-medium tabular-nums",
+            layout === "sidebar" ? "text-[#a1a1aa]" : "text-muted",
+          )}
+        >
           {countGroupOptions(group)}
         </span>
       </div>
-      <FilterGroupContent group={group} />
+      <FilterGroupContent group={group} layout={layout} />
     </section>
   );
 }
 
-function FilterGroupContent({ group }: { group: FilterGroup }) {
+function FilterGroupContent({
+  group,
+  layout = "sidebar",
+}: {
+  group: FilterGroup;
+  layout?: "sidebar" | "topbar";
+}) {
   if (group.key === "category") {
-    return <CategoryFilterSectionContent group={group} />;
+    return <CategoryFilterSectionContent group={group} layout={layout} />;
+  }
+
+  if (layout === "sidebar") {
+    return (
+      <div className="space-y-1">
+        {group.options.map((option) => (
+          <Link
+            key={option.id}
+            href={option.href as Route}
+            aria-current={option.active ? "true" : undefined}
+            className={cn(
+              "flex min-h-10 items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-0",
+              option.active
+                ? "bg-white text-black"
+                : "text-[#e4e4e7] hover:bg-white/[0.08] hover:text-white",
+            )}
+          >
+            <span
+              className={cn(
+                "h-4 w-4 rounded-[4px] border transition",
+                option.active
+                  ? "border-white bg-black/90"
+                  : "border-[#71717a] bg-transparent",
+              )}
+            />
+            <span className={cn("truncate", option.active ? "font-semibold" : "font-medium")}>
+              {option.label}
+            </span>
+          </Link>
+        ))}
+      </div>
+    );
   }
 
   return (
@@ -732,7 +829,13 @@ function FilterGroupContent({ group }: { group: FilterGroup }) {
   );
 }
 
-function CategoryFilterSectionContent({ group }: { group: FilterGroup }) {
+function CategoryFilterSectionContent({
+  group,
+  layout = "sidebar",
+}: {
+  group: FilterGroup;
+  layout?: "sidebar" | "topbar";
+}) {
   const [search, setSearch] = useState("");
   const tree = group.categoryTree ?? [];
   const filteredOptions = useMemo(() => {
@@ -746,15 +849,29 @@ function CategoryFilterSectionContent({ group }: { group: FilterGroup }) {
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         placeholder="Buscar categoría..."
-        className="h-8 rounded-md border-[color:var(--line)] bg-[color:var(--surface-raised)] text-sm shadow-none focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-0"
+        className={cn(
+          "h-8 text-sm shadow-none",
+          layout === "sidebar"
+            ? "rounded-lg border-[#3f3f46] bg-[#18181b] text-[#fafafa] placeholder:text-[#a1a1aa] focus-visible:ring-white/20 focus-visible:ring-offset-0"
+            : "rounded-md border-[color:var(--line)] bg-[color:var(--surface-raised)] focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-0",
+        )}
         aria-label="Buscar categoría"
       />
 
-      <div className="max-h-44 space-y-1 overflow-y-auto rounded-lg border border-[color:var(--line)] bg-[color:var(--surface-muted)] p-1.5">
+      <div
+        className={cn(
+          "max-h-56 space-y-1 overflow-y-auto p-1.5",
+          layout === "sidebar"
+            ? "rounded-xl border border-[#27272a] bg-[#18181b]"
+            : "rounded-lg border border-[color:var(--line)] bg-[color:var(--surface-muted)]",
+        )}
+      >
         {hasCategories ? (
-          <CategoryTreeList nodes={filteredOptions} />
+          <CategoryTreeList nodes={filteredOptions} layout={layout} />
         ) : (
-          <p className="px-2.5 py-2 text-sm text-muted">No encontramos categorías para esa búsqueda.</p>
+          <p className={cn("px-2.5 py-2 text-sm", layout === "sidebar" ? "text-[#c4c4cc]" : "text-muted")}>
+            No encontramos categorías para esa búsqueda.
+          </p>
         )}
       </div>
     </div>
@@ -763,13 +880,24 @@ function CategoryFilterSectionContent({ group }: { group: FilterGroup }) {
 
 function CategoryTreeList({
   depth = 0,
+  layout = "sidebar",
   nodes,
 }: {
   depth?: number;
+  layout?: "sidebar" | "topbar";
   nodes: CategoryTreeOption[];
 }) {
   return (
-    <ul className={cn("space-y-1", depth > 0 ? "mt-1 border-l border-[color:var(--line)]/80 pl-3" : "")}>
+    <ul
+      className={cn(
+        "space-y-1",
+        depth > 0
+          ? layout === "sidebar"
+            ? "mt-1 border-l border-[#27272a] pl-3"
+            : "mt-1 border-l border-[color:var(--line)]/80 pl-3"
+          : "",
+      )}
+    >
       {nodes.map((node) => (
         <li key={node.id} className="space-y-1">
           <Link
@@ -777,14 +905,18 @@ function CategoryTreeList({
             aria-current={node.active ? "true" : undefined}
             className={
               node.active
-                ? "flex items-center rounded-md bg-[color:var(--accent)] px-2.5 py-1.5 text-sm font-semibold text-[color:var(--action-contrast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-muted)]"
-                : "flex items-center rounded-md px-2.5 py-1.5 text-sm text-foreground transition hover:bg-[color:var(--surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-muted)]"
+                ? layout === "sidebar"
+                  ? "flex items-center rounded-lg bg-white px-2.5 py-2 text-sm font-semibold text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-0"
+                  : "flex items-center rounded-md bg-[color:var(--accent)] px-2.5 py-1.5 text-sm font-semibold text-[color:var(--action-contrast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-muted)]"
+                : layout === "sidebar"
+                  ? "flex items-center rounded-lg px-2.5 py-2 text-sm text-[#e4e4e7] transition hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-0"
+                  : "flex items-center rounded-md px-2.5 py-1.5 text-sm text-foreground transition hover:bg-[color:var(--surface-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-muted)]"
             }
           >
             {node.label}
           </Link>
           {node.children.length > 0 ? (
-            <CategoryTreeList depth={depth + 1} nodes={node.children} />
+            <CategoryTreeList depth={depth + 1} nodes={node.children} layout={layout} />
           ) : null}
         </li>
       ))}
@@ -797,16 +929,63 @@ function FilterPanelWrapper({
   defaultOpen = false,
   filtersCount = 0,
   density,
+  mobilePresentation = "inline",
   title,
 }: {
   children: React.ReactNode;
   defaultOpen?: boolean;
   filtersCount?: number;
   density?: CatalogLayoutDensity | undefined;
+  mobilePresentation?: "drawer" | "inline";
   title: string;
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const resolvedDensity = resolveCatalogDensity(density);
+
+  if (mobilePresentation === "drawer") {
+    return (
+      <div className="space-y-4">
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-[#131416] px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(0,0,0,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 md:hidden"
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen(true)}
+        >
+          <SlidersHorizontal className="size-4" aria-hidden="true" />
+          <span>{title}</span>
+          {filtersCount > 0 ? (
+            <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-white/10 px-1.5 py-0.5 text-[11px] text-white/72">
+              {filtersCount}
+            </span>
+          ) : null}
+        </button>
+
+        {isOpen ? (
+          <div className="fixed inset-0 z-50 md:hidden">
+            <button
+              type="button"
+              aria-label="Cerrar filtros"
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={() => setIsOpen(false)}
+            />
+            <div className="absolute inset-y-0 left-0 w-[88vw] max-w-sm overflow-y-auto border-r border-white/10 bg-[#0b0c0d] px-4 py-5 shadow-2xl">
+              <button
+                type="button"
+                aria-label="Cerrar filtros"
+                className="absolute right-4 top-4 rounded-full p-2 text-white/70 transition hover:bg-white/6 hover:text-white"
+                onClick={() => setIsOpen(false)}
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+              <div className="pr-8">{children}</div>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="hidden md:block">{children}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -855,7 +1034,7 @@ export function FilterSidebar({
   const pathname = usePathname() || "/catalogo";
   const searchParams = useSearchParams();
   const resolvedDensity = resolveCatalogDensity(density);
-  const filters = resolveConfiguredFilters(activeFilters, pathname, searchParams);
+  const filters = resolveConfiguredFilters(activeFilters, pathname, searchParams, categories);
   const groups = resolveFilterGroups(
     activeFilters,
     pathname,
@@ -880,34 +1059,35 @@ export function FilterSidebar({
       defaultOpen={false}
       filtersCount={filters.length}
       density={resolvedDensity}
+      mobilePresentation="drawer"
     >
       <aside
         className={cn(
-          "space-y-4 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-raised)] shadow-sm backdrop-blur-sm",
+          "space-y-4 rounded-[1.4rem] border border-[#27272a] bg-[#111113] shadow-[0_20px_50px_rgba(0,0,0,0.22)] backdrop-blur-sm",
           resolvedDensity === "comfortable" ? "p-4.5" : "p-4",
         )}
       >
         <div className="flex items-center justify-between gap-3">
           <div className="space-y-1">
-            <h3 className="text-base font-semibold text-foreground">Filtros</h3>
-            <p className="text-sm text-muted">Refiná el catálogo con pocos clics.</p>
+            <h3 className="text-lg font-semibold text-[#fafafa]">Filtros</h3>
+            <p className="text-sm text-[#c4c4cc]">Refiná el catálogo sin salir de la grilla.</p>
           </div>
           {filters.length > 0 ? (
-            <Link href={clearAllHref as Route} className="text-xs font-semibold text-[color:var(--accent)] transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-raised)]">
+            <Link href={clearAllHref as Route} className="text-xs font-semibold text-[#e4e4e7] transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-0">
               Limpiar
             </Link>
           ) : null}
         </div>
 
         {filters.length > 0 ? (
-          <div className="flex flex-wrap gap-2 border-b border-[color:var(--line)]/80 pb-3">
+          <div className="flex flex-wrap gap-2 border-b border-[#27272a] pb-3">
             {filters.map((filter) => (
               <Link
                 key={filter.key}
                 href={filter.href as Route}
-                className="inline-flex items-center gap-1 rounded-full border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-3 py-1.5 text-xs text-foreground transition hover:border-[color:var(--accent)] hover:bg-[color:var(--surface-raised)]"
+                className="inline-flex items-center gap-1 rounded-full border border-[#3f3f46] bg-[#18181b] px-3 py-1.5 text-xs text-[#e4e4e7] transition hover:bg-[#232326]"
               >
-                <span className="font-semibold text-[color:var(--accent)]">{filter.label}</span>
+                <span className="font-semibold text-[#fafafa]">{filter.label}</span>
                 <span>{filter.value}</span>
               </Link>
             ))}
@@ -917,7 +1097,7 @@ export function FilterSidebar({
         {groups.length > 0 ? (
           <div className="space-y-4">
             {groups.map((group) => (
-              <FilterSection key={group.key} group={group} />
+              <FilterSection key={group.key} group={group} layout="sidebar" />
             ))}
           </div>
         ) : null}
@@ -943,7 +1123,7 @@ export function FilterBar({
   const pathname = usePathname() || "/catalogo";
   const searchParams = useSearchParams();
   const resolvedDensity = resolveCatalogDensity(density);
-  const filters = resolveConfiguredFilters(activeFilters, pathname, searchParams);
+  const filters = resolveConfiguredFilters(activeFilters, pathname, searchParams, categories);
   const groups = resolveFilterGroups(
     activeFilters,
     pathname,
@@ -1032,7 +1212,7 @@ export function FilterBar({
                   </span>
                 </summary>
                 <div className="mt-1.5 border-t border-[color:var(--line)]/80 pt-1.5">
-                  <FilterGroupContent group={group} />
+                  <FilterGroupContent group={group} layout="topbar" />
                 </div>
               </details>
             ))}

@@ -4,12 +4,12 @@
   "branding": {
     "name": "BYM Repuestos",
     "theme": {
-      "preset": "industrialWarm",
-      "name": "Taller industrial BYM",
+      "preset": "tyreshop",
+      "name": "Tyreshop BYM",
       "colors": {
-        "primary": "#8b3f16",
-        "accent": "#245f68",
-        "background": "#f2eadf"
+        "primary": "#ffde01",
+        "accent": "#34495e",
+        "background": "#f7f7f4"
       }
     }
   },

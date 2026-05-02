@@ -77,6 +77,20 @@ describe("tenant theme", () => {
     expect(theme.colors.primary).toBeTruthy();
   });
 
+  it("resuelve tyreshop como preset comercial válido", () => {
+    const theme = resolveEffectiveTenantTheme(
+      buildBootstrap({
+        presentation: buildPresentation({
+          preset: "tyreshop",
+        }),
+      }),
+    );
+
+    expect(theme.preset).toBe("tyreshop");
+    expect(theme.colors.primary).toBe("#ffde01");
+    expect(theme.colors.accent).toBe("#34495e");
+  });
+
   it("usa presentation.theme como fuente visual principal", () => {
     const theme = resolveEffectiveTenantTheme(
       buildBootstrap({
