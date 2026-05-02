@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 
 import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
+import { resolveCartItemPrice } from "@/lib/cart/storefront-cart";
 import { ProductCardMediaFrame } from "@/components/templates/product-card/product-card-media-frame";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -168,7 +169,10 @@ export function ProductCardPremiumCommerce({
               slug: product.slug,
               name: product.name,
               href: product.href,
-              price: product.price,
+              price: resolveCartItemPrice({
+                price: product.price,
+                basePrice: product.basePrice,
+              }),
               ...(product.brand ? { brand: product.brand } : {}),
               ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
             }}

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
+import { resolveCartItemPrice } from "@/lib/cart/storefront-cart";
 import { ProductCardCompact } from "@/components/templates/product-card/product-card-compact";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/cn";
@@ -101,10 +102,10 @@ type ProductDetailRelatedGridProps = {
 };
 
 const CARD_BASE =
-  "min-w-0 rounded-none border-y border-black/10 border-x-0 bg-white shadow-none sm:rounded-[24px] sm:border sm:shadow-[0_16px_42px_rgba(15,23,42,0.08)] xl:rounded-[28px] xl:border-white/10 xl:bg-white/[0.04] xl:shadow-[0_28px_90px_rgba(0,0,0,0.24)] xl:backdrop-blur-xl";
+  "min-w-0 rounded-none border-y border-black/10 border-x-0 bg-white shadow-none sm:rounded-[24px] sm:border sm:shadow-[0_16px_42px_rgba(15,23,42,0.08)] xl:rounded-[28px] xl:border-black/6 xl:bg-white/92 xl:shadow-[0_24px_70px_rgba(15,23,42,0.1)]";
 
 const INNER_PANEL =
-  "rounded-[20px] border border-black/10 bg-black/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] xl:rounded-[24px] xl:border-white/10 xl:bg-black/20 xl:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]";
+  "rounded-[20px] border border-black/10 bg-black/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] xl:rounded-[24px] xl:border-black/10 xl:bg-black/[0.02] xl:shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]";
 
 function formatCurrency(amount: number, currency: string) {
   return new Intl.NumberFormat("es-AR", {
@@ -336,13 +337,13 @@ export function ProductDetailShell({ children, className }: ProductDetailShellPr
       <div className="mx-auto max-w-7xl px-3 sm:px-0">
         <div
           className={cn(
-            "relative overflow-hidden bg-transparent text-foreground shadow-none sm:rounded-[28px] sm:border sm:border-black/6 sm:bg-white/92 sm:shadow-[0_24px_70px_rgba(15,23,42,0.08)] xl:rounded-[34px] xl:border-white/10 xl:bg-foreground xl:text-white xl:shadow-[0_38px_130px_rgba(0,0,0,0.34)]",
-            "xl:before:absolute xl:before:inset-0 xl:before:bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--accent)_22%,transparent),transparent_34%)] xl:before:content-['']",
-            "xl:after:absolute xl:after:inset-0 xl:after:bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--module-accent)_18%,transparent),transparent_30%)] xl:after:content-['']",
+            "relative overflow-hidden bg-transparent text-foreground shadow-none sm:rounded-[28px] sm:border sm:border-black/6 sm:bg-white/92 sm:shadow-[0_24px_70px_rgba(15,23,42,0.08)] xl:rounded-[34px] xl:border-black/6 xl:bg-white/92 xl:text-foreground xl:shadow-[0_28px_80px_rgba(15,23,42,0.1)]",
+            "xl:before:absolute xl:before:inset-0 xl:before:bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--accent)_10%,transparent),transparent_40%)] xl:before:content-['']",
+            "xl:after:absolute xl:after:inset-0 xl:after:bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--module-accent)_8%,transparent),transparent_36%)] xl:after:content-['']",
             className,
           )}
         >
-          <div className="absolute inset-0 hidden bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0)_24%,rgba(0,0,0,0.16))] xl:block" />
+          <div className="absolute inset-0 hidden bg-[linear-gradient(180deg,rgba(255,255,255,0.4),rgba(255,255,255,0)_24%,rgba(255,255,255,0.1))] xl:block" />
           <div className="relative z-10 p-0 sm:p-4 md:p-5 xl:p-10">{children}</div>
         </div>
       </div>
@@ -354,10 +355,10 @@ export function ProductDetailEmptyState() {
   return (
     <ProductDetailShell>
       <div className={productDetailCardClassName("px-6 py-14 text-center")}>
-        <p className="font-heading text-2xl font-semibold text-foreground md:text-3xl xl:text-white">
+        <p className="font-heading text-2xl font-semibold text-foreground md:text-3xl">
           Producto no disponible
         </p>
-        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground md:text-base xl:text-white/68">
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground md:text-base">
           Este detalle todavía no tiene información suficiente para renderizar una ficha
           comercial.
         </p>
@@ -374,7 +375,7 @@ export function ProductDetailBreadcrumbs({
     <nav
       aria-label="Breadcrumb"
       className={cn(
-        "mb-4 hidden overflow-x-auto text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground sm:block md:mb-6 md:text-xs md:tracking-[0.18em] xl:text-white/52",
+        "mb-4 hidden overflow-x-auto text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground sm:block md:mb-6 md:text-xs md:tracking-[0.18em]",
         className,
       )}
     >
@@ -397,7 +398,7 @@ export function ProductDetailBreadcrumbs({
           </Link>
         </li>
         <li aria-hidden="true">/</li>
-        <li className="max-w-[10rem] truncate text-foreground sm:max-w-[16rem] md:max-w-none xl:text-white" aria-current="page">
+        <li className="max-w-[10rem] truncate text-foreground sm:max-w-[16rem] md:max-w-none" aria-current="page">
           {productName}
         </li>
       </ol>
@@ -423,7 +424,7 @@ export function ProductDetailBadgeGroup({
           key={`${badge.label}-${index}`}
           variant={mapBadgeVariant(badge.tone)}
           className={cn(
-            "rounded-full border border-black/10 bg-black/[0.03] uppercase text-foreground shadow-none xl:border-white/10 xl:bg-white/[0.06] xl:text-white",
+            "rounded-full border border-black/10 bg-black/[0.03] uppercase text-foreground shadow-none xl:border-black/10 xl:bg-black/[0.03] xl:text-foreground",
             compact
               ? "px-2.5 py-1 text-[10px] tracking-[0.14em]"
               : "px-3 py-1 text-[11px] tracking-[0.16em]",
@@ -436,7 +437,7 @@ export function ProductDetailBadgeGroup({
         <Badge
           variant="soft"
           className={cn(
-            "rounded-full border border-black/10 bg-black/[0.03] uppercase text-muted-foreground shadow-none xl:border-white/10 xl:bg-white/[0.04] xl:text-white/72",
+            "rounded-full border border-black/10 bg-black/[0.03] uppercase text-muted-foreground shadow-none xl:border-black/10 xl:bg-black/[0.03] xl:text-muted-foreground",
             compact
               ? "px-2.5 py-1 text-[10px] tracking-[0.14em]"
               : "px-3 py-1 text-[11px] tracking-[0.16em]",
@@ -459,18 +460,18 @@ export function ProductDetailPriceStack({
     <div className={cn("grid gap-2.5", className)}>
       <div className="grid gap-1.5">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2">
-          <p className="font-heading text-[1.75rem] font-semibold tracking-[-0.05em] text-foreground sm:text-[2.05rem] md:text-[2.35rem] lg:text-5xl xl:text-white">
+          <p className="font-heading text-[1.75rem] font-semibold tracking-[-0.05em] text-foreground sm:text-[2.05rem] md:text-[2.35rem] lg:text-5xl">
             {product.price.formatted}
           </p>
           {product.compareAtPrice ? (
-            <p className="text-sm text-muted-foreground line-through md:text-base xl:text-white/46">
+            <p className="text-sm text-muted-foreground line-through md:text-base">
               {product.compareAtPrice.formatted}
             </p>
           ) : null}
         </div>
 
         {savings ? (
-          <div className="inline-flex w-fit items-center rounded-full border border-[color:color-mix(in_srgb,var(--accent)_40%,black_10%)] bg-[color:color-mix(in_srgb,var(--accent)_18%,transparent)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-foreground xl:border-[color:color-mix(in_srgb,var(--accent)_40%,white_10%)] xl:text-white">
+          <div className="inline-flex w-fit items-center rounded-full border border-[color:color-mix(in_srgb,var(--accent)_40%,black_10%)] bg-[color:color-mix(in_srgb,var(--accent)_18%,transparent)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-foreground xl:border-[color:color-mix(in_srgb,var(--accent)_40%,black_10%)] xl:text-foreground">
             Ahorrás {savings.formatted}
           </div>
         ) : null}
@@ -484,10 +485,10 @@ export function ProductDetailPriceStack({
         >
           {product.installments ? (
             <div className="grid gap-0.5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground xl:text-white/46">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Cuotas
               </p>
-              <p className="text-[13px] leading-5 text-foreground/80 xl:text-white/78">
+              <p className="text-[13px] leading-5 text-foreground/80">
                 {product.installments.count} de {product.installments.formatted}
                 {product.installments.interestFree ? " sin interés" : ""}
               </p>
@@ -495,10 +496,10 @@ export function ProductDetailPriceStack({
           ) : null}
           {product.cashDiscount ? (
             <div className="grid gap-0.5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground xl:text-white/46">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Contado
               </p>
-              <p className="text-[13px] font-medium leading-5 text-foreground xl:text-white">
+              <p className="text-[13px] font-medium leading-5 text-foreground">
                 {product.cashDiscount.formatted}
               </p>
             </div>
@@ -532,13 +533,13 @@ export function ProductDetailPurchaseCard({
     >
       <div className="grid gap-3">
         {product.brand ? (
-          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground xl:text-white/54">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             {product.brand}
           </span>
         ) : null}
 
         <div className="grid gap-2.5">
-          <h1 className="font-heading text-[1.55rem] font-semibold leading-[0.96] tracking-[-0.05em] text-foreground [overflow-wrap:anywhere] sm:text-[1.9rem] md:text-[2.3rem] lg:text-[2.6rem] xl:text-5xl xl:text-white">
+          <h1 className="font-heading text-[1.55rem] font-semibold leading-[0.96] tracking-[-0.05em] text-foreground [overflow-wrap:anywhere] sm:text-[1.9rem] md:text-[2.3rem] lg:text-[2.6rem] xl:text-5xl">
             {product.name}
           </h1>
           <ProductDetailBadgeGroup
@@ -550,7 +551,7 @@ export function ProductDetailPurchaseCard({
         </div>
 
         {description ? (
-          <p className="hidden max-w-[54ch] text-sm leading-7 text-muted-foreground xl:block xl:text-base xl:text-white/70">
+          <p className="hidden max-w-[54ch] text-sm leading-7 text-muted-foreground xl:block xl:text-base">
             {description}
           </p>
         ) : null}
@@ -564,7 +565,10 @@ export function ProductDetailPurchaseCard({
           slug: product.slug,
           name: product.name,
           href: product.href,
-          price: product.price,
+          price: resolveCartItemPrice({
+            price: product.price,
+            basePrice: product.basePrice,
+          }),
           ...(product.brand ? { brand: product.brand } : {}),
           ...(mainImage?.url ? { imageUrl: mainImage.url } : {}),
         }}
@@ -584,16 +588,16 @@ export function ProductDetailPurchaseCard({
                   className={cn(
                     "grid min-h-10 grid-cols-[auto_minmax(0,1fr)] items-start gap-2 rounded-[14px] border px-3 py-2",
                     signal.emphasized
-                      ? "border-black/12 bg-black/[0.04] xl:border-white/16 xl:bg-white/[0.08]"
-                      : "border-black/10 bg-black/[0.02] xl:border-white/10 xl:bg-white/[0.04]",
+                      ? "border-black/12 bg-black/[0.04] xl:border-black/12 xl:bg-black/[0.04]"
+                      : "border-black/10 bg-black/[0.02] xl:border-black/10 xl:bg-black/[0.02]",
                   )}
                 >
-                  <div className="mt-0.5 text-muted-foreground xl:text-white/72">{signal.icon}</div>
+                  <div className="mt-0.5 text-muted-foreground">{signal.icon}</div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground xl:text-white/44">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
                       {signal.label}
                     </p>
-                    <p className="mt-0.5 text-[13px] leading-5 text-foreground xl:text-white/84">
+                    <p className="mt-0.5 text-[13px] leading-5 text-foreground">
                       {signal.value}
                     </p>
                   </div>
@@ -607,14 +611,14 @@ export function ProductDetailPurchaseCard({
               {primaryFacts.map((fact) => (
                 <div
                   key={fact.id}
-                  className="grid min-h-10 grid-cols-[auto_minmax(0,1fr)] items-start gap-2 rounded-[14px] border border-black/10 bg-black/[0.02] px-3 py-2 xl:border-white/10 xl:bg-white/[0.03]"
+                  className="grid min-h-10 grid-cols-[auto_minmax(0,1fr)] items-start gap-2 rounded-[14px] border border-black/10 bg-black/[0.02] px-3 py-2 xl:border-black/10 xl:bg-black/[0.02]"
                 >
-                  <div className="mt-0.5 text-muted-foreground xl:text-white/66">{fact.icon}</div>
+                  <div className="mt-0.5 text-muted-foreground">{fact.icon}</div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground xl:text-white/48">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
                       {fact.label}
                     </p>
-                    <p className="mt-0.5 text-[13px] leading-5 text-foreground/80 xl:text-white/78">
+                    <p className="mt-0.5 text-[13px] leading-5 text-foreground/80">
                       {fact.value}
                     </p>
                   </div>
@@ -630,14 +634,14 @@ export function ProductDetailPurchaseCard({
           {secondaryFacts.map((fact) => (
             <div
               key={fact.id}
-              className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 rounded-[18px] border border-white/10 bg-white/[0.03] px-3 py-3"
+              className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 rounded-[18px] border border-black/10 bg-black/[0.02] px-3 py-3"
             >
-              <div className="mt-0.5 text-white/66">{fact.icon}</div>
+              <div className="mt-0.5 text-muted-foreground">{fact.icon}</div>
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   {fact.label}
                 </p>
-                <p className="mt-1 text-sm leading-6 text-white/78">{fact.value}</p>
+                <p className="mt-1 text-sm leading-6 text-foreground/80">{fact.value}</p>
               </div>
             </div>
           ))}
@@ -646,7 +650,7 @@ export function ProductDetailPurchaseCard({
 
       {secondarySignals.length > 0 ? (
         <div className="hidden gap-2 xl:grid">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/48">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Más señales comerciales
           </p>
           <div className="grid gap-2">
@@ -656,18 +660,18 @@ export function ProductDetailPurchaseCard({
                 className={cn(
                   "grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 rounded-[18px] border px-3 py-3",
                   signal.emphasized
-                    ? "border-white/16 bg-white/[0.06]"
-                    : "border-white/10 bg-white/[0.03]",
+                    ? "border-black/12 bg-black/[0.04]"
+                    : "border-black/10 bg-black/[0.02]",
                 )}
               >
-                <div className="mt-0.5 text-white/72">{signal.icon}</div>
+                <div className="mt-0.5 text-muted-foreground">{signal.icon}</div>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/46">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     {signal.label}
                   </p>
-                  <p className="mt-1 text-sm leading-6 text-white/84">{signal.value}</p>
+                  <p className="mt-1 text-sm leading-6 text-foreground">{signal.value}</p>
                   {signal.detail ? (
-                    <p className="text-xs leading-5 text-white/58">{signal.detail}</p>
+                    <p className="text-xs leading-5 text-muted-foreground">{signal.detail}</p>
                   ) : null}
                 </div>
               </div>
@@ -678,19 +682,19 @@ export function ProductDetailPurchaseCard({
 
       {quickSpecs.length > 0 ? (
         <div className="hidden gap-3 xl:grid">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/48">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Snapshot técnico
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
             {quickSpecs.map((spec, index) => (
               <div
                 key={`${spec.label}-${index}`}
-                className="rounded-[18px] border border-white/10 bg-white/[0.03] px-3 py-3"
+                className="rounded-[18px] border border-black/10 bg-black/[0.02] px-3 py-3"
               >
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/42">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   {spec.label}
                 </p>
-                <p className="mt-1 text-sm font-medium leading-6 text-white/84">
+                <p className="mt-1 text-sm font-medium leading-6 text-foreground/84">
                   {spec.value}
                 </p>
               </div>
@@ -709,14 +713,14 @@ export function ProductDetailRelatedGrid({
   return (
     <div className={productDetailCardClassName(cn("p-5 md:p-6", className))}>
       <div className="mb-4 flex items-start gap-3">
-        <div className="rounded-full border border-black/10 bg-black/[0.03] p-2 text-muted-foreground xl:border-white/10 xl:bg-white/[0.06] xl:text-white/72">
+        <div className="rounded-full border border-black/10 bg-black/[0.03] p-2 text-muted-foreground xl:border-black/10 xl:bg-black/[0.03] xl:text-muted-foreground">
           <Sparkles className="size-4" aria-hidden="true" />
         </div>
         <div className="min-w-0">
-          <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-foreground xl:text-white">
+          <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-foreground">
             Relacionados
           </h2>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground xl:text-white/62">
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
             Productos del contexto actual del storefront.
           </p>
         </div>
@@ -743,14 +747,14 @@ export function ProductDetailFallbackCard({
   return (
     <div className={productDetailCardClassName(cn("p-5 md:p-6", className))}>
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 rounded-full border border-black/10 bg-black/[0.03] p-2 text-muted-foreground xl:border-white/10 xl:bg-white/[0.06] xl:text-white/72">
+        <div className="mt-0.5 rounded-full border border-black/10 bg-black/[0.03] p-2 text-muted-foreground xl:border-black/10 xl:bg-black/[0.03] xl:text-muted-foreground">
           <Info className="size-4" aria-hidden="true" />
         </div>
         <div className="min-w-0">
-          <h3 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-foreground xl:text-white">
+          <h3 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-foreground">
             {title}
           </h3>
-          <p className="mt-2 text-sm leading-7 text-muted-foreground md:text-base xl:text-white/68">
+          <p className="mt-2 text-sm leading-7 text-muted-foreground md:text-base">
             {body}
           </p>
         </div>
@@ -781,15 +785,15 @@ export function ProductDetailSpecsCard({
   return (
     <div className={productDetailCardClassName(cn("p-5 md:p-6", className))}>
       <div className="mb-5 flex items-start gap-3">
-        <div className="rounded-full border border-black/10 bg-black/[0.03] p-2 text-muted-foreground xl:border-white/10 xl:bg-white/[0.06] xl:text-white/74">
+        <div className="rounded-full border border-black/10 bg-black/[0.03] p-2 text-muted-foreground xl:border-black/10 xl:bg-black/[0.03] xl:text-muted-foreground">
           <Package className="size-4" aria-hidden="true" />
         </div>
         <div className="min-w-0">
-          <h3 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-foreground xl:text-white">
+          <h3 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-foreground">
             {title}
           </h3>
           {description ? (
-            <p className="mt-2 text-sm leading-6 text-muted-foreground xl:text-white/64">
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
               {description}
             </p>
           ) : null}
@@ -802,10 +806,10 @@ export function ProductDetailSpecsCard({
             key={`${spec.label}-${index}`}
             className={productDetailInnerPanelClassName("px-4 py-3")}
           >
-            <dt className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground xl:text-white/42">
+            <dt className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
               {spec.label}
             </dt>
-            <dd className="mt-1 text-sm font-medium leading-6 text-foreground xl:text-white/82">
+            <dd className="mt-1 text-sm font-medium leading-6 text-foreground">
               {spec.value}
             </dd>
           </div>

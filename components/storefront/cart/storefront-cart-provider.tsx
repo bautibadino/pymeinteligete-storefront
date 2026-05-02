@@ -364,7 +364,7 @@ export function StorefrontCartProvider({
   host,
   mode = "floating-drawer",
 }: StorefrontCartProviderProps) {
-  const storageKey = `pyme-storefront-cart:${host}`;
+  const storageKey = `pyme-storefront-cart:v2:${host}`;
   const [items, setItems] = useState<StorefrontCartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 

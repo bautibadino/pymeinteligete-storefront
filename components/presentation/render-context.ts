@@ -856,6 +856,15 @@ export function mapCatalogProductToCardData(
     slug,
     ...(brand ? { brand } : category ? { brand: category } : {}),
     ...(imageUrl ? { imageUrl } : {}),
+    ...(typeof listAmount === "number"
+      ? {
+          basePrice: {
+            amount: listAmount,
+            currency,
+            formatted: formatMoney(listAmount, currency),
+          },
+        }
+      : {}),
     price: {
       amount: effectiveAmount ?? 0,
       currency,
@@ -914,6 +923,15 @@ export function mapProductDetailToData(
     ...(brand ? { brand } : {}),
     ...(description ? { description } : {}),
     images: readProductImageItems(record, name),
+    ...(typeof listAmount === "number"
+      ? {
+          basePrice: {
+            amount: listAmount,
+            currency,
+            formatted: formatMoney(listAmount, currency),
+          },
+        }
+      : {}),
     price: {
       amount: effectiveAmount ?? 0,
       currency,

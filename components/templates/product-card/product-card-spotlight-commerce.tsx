@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
+import { resolveCartItemPrice } from "@/lib/cart/storefront-cart";
 import { ProductCardMediaFrame } from "@/components/templates/product-card/product-card-media-frame";
 import { ProductCardStockBadge } from "@/components/templates/product-card/product-card-stock-badge";
 import { Badge } from "@/components/ui/badge";
@@ -180,7 +181,10 @@ export function ProductCardSpotlightCommerce({
               slug: product.slug,
               name: product.name,
               href: product.href,
-              price: product.price,
+              price: resolveCartItemPrice({
+                price: product.price,
+                basePrice: product.basePrice,
+              }),
               ...(product.brand ? { brand: product.brand } : {}),
               ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
             }}
