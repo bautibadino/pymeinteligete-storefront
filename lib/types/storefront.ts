@@ -479,6 +479,66 @@ export interface StorefrontProductDetail {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Shipping quote
+// ─────────────────────────────────────────────────────────────
+
+export interface StorefrontShippingQuotePackage {
+  declaredValue: number;
+  volumeCm3: number;
+  weightKg: number;
+}
+
+export interface StorefrontShippingQuoteRequest {
+  destinationPostalCode: string;
+  packages: StorefrontShippingQuotePackage[];
+}
+
+export interface StorefrontShippingCheckoutSnapshot {
+  contractVersion: "storefront.shipping.quote.v1";
+  provider: "andreani";
+  optionId: string;
+  carrierName: string;
+  serviceName: string;
+  priceWithTax: number;
+  priceWithoutTax: number;
+  billableWeightKg?: number;
+  currency: "ARS";
+  destinationPostalCode: string;
+  originPostalCode?: string;
+  packages: StorefrontShippingQuotePackage[];
+  quotedAt: string;
+  expiresAt: string;
+}
+
+export interface StorefrontShippingQuoteOption {
+  optionId: string;
+  provider: "andreani";
+  carrierName: string;
+  serviceName: string;
+  currency: "ARS";
+  priceWithTax: number;
+  priceWithoutTax: number;
+  billableWeightKg?: number;
+  checkoutSnapshot: StorefrontShippingCheckoutSnapshot;
+}
+
+export interface StorefrontShippingQuoteResponse {
+  contractVersion: "storefront.shipping.quote.v1";
+  provider: "andreani";
+  available: boolean;
+  currency: "ARS";
+  destinationPostalCode: string;
+  originPostalCode: string;
+  quotedAt: string;
+  expiresAt: string;
+  options: StorefrontShippingQuoteOption[];
+  reason?:
+    | "SHIPPING_PROVIDER_NOT_CONFIGURED"
+    | "ORIGIN_POSTAL_CODE_NOT_CONFIGURED"
+    | "QUOTE_UNAVAILABLE";
+}
+
+// ─────────────────────────────────────────────────────────────
 // Payment methods
 // ─────────────────────────────────────────────────────────────
 
@@ -541,6 +601,7 @@ export interface StorefrontCheckoutRequest {
   shippingAddress: StorefrontAddressInput;
   billingAddress?: StorefrontAddressInput;
   items: StorefrontCheckoutItemInput[];
+  shippingQuoteSnapshot?: StorefrontShippingCheckoutSnapshot;
   paymentMethodId?: string;
   notes?: string;
   idempotencyKey?: string;

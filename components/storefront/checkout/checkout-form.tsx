@@ -29,11 +29,17 @@ import { trackStorefrontAnalyticsEvent } from "@/lib/analytics/client";
 import { buildAddPaymentInfoPayload, buildInitiateCheckoutPayload } from "@/lib/analytics/events";
 import { markTrackedEvent } from "@/lib/analytics/storage";
 import type { StorefrontCartItem } from "@/lib/cart/storefront-cart";
+import {
+  isShippingCheckoutSnapshotExpired,
+  normalizeStoredShippingCheckoutSnapshot,
+} from "@/lib/shipping/checkout-shipping";
+import { readStoredSelectedShippingOption } from "@/lib/shipping/postal-code-storage";
 import { createRandomId } from "@/lib/utils/random-id";
 import type {
   StorefrontPaymentMethod,
   StorefrontPaymentMethods,
 } from "@/lib/storefront-api";
+import type { StorefrontShippingCheckoutSnapshot } from "@/lib/types/storefront";
 
 type CheckoutFormProps = {
   paymentMethods: StorefrontPaymentMethods | null;
@@ -335,7 +341,13 @@ export function resolveInitialPaymentStrategy(input: {
   return "none";
 }
 
-function SubmitButton({ paymentStrategy }: { paymentStrategy: CheckoutPaymentStrategy }) {
+function SubmitButton({
+  disabled,
+  paymentStrategy,
+}: {
+  disabled?: boolean;
+  paymentStrategy: CheckoutPaymentStrategy;
+}) {
   const { pending } = useFormStatus();
   const label =
     paymentStrategy === "auto"
@@ -351,7 +363,12 @@ function SubmitButton({ paymentStrategy }: { paymentStrategy: CheckoutPaymentStr
           : "Reservar pedido";
 
   return (
-    <Button className="h-11 w-full rounded-full px-6 sm:w-auto" size="lg" type="submit" disabled={pending}>
+    <Button
+      className="h-11 w-full rounded-full px-6 sm:w-auto"
+      size="lg"
+      type="submit"
+      disabled={pending || disabled}
+    >
       {label}
     </Button>
   );
@@ -409,6 +426,46 @@ function SummaryItem({ item }: { item: CheckoutDisplayItem }) {
   );
 }
 
+function ShippingSummary({
+  snapshot,
+  expired,
+}: {
+  snapshot: StorefrontShippingCheckoutSnapshot | null;
+  expired: boolean;
+}) {
+  if (!snapshot) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
+        No hay un envío seleccionado desde el carrito.
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            Envío elegido
+          </p>
+          <p className="text-base font-semibold text-foreground">{snapshot.serviceName}</p>
+          <p className="text-sm leading-6 text-muted-foreground">
+            {snapshot.carrierName} · CP {snapshot.destinationPostalCode}
+          </p>
+        </div>
+        <strong className="shrink-0 text-sm text-foreground">
+          {formatCurrency(snapshot.priceWithTax)}
+        </strong>
+      </div>
+      {expired ? (
+        <p className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-950">
+          Esta cotización venció. Volvé al carrito y cotizá nuevamente antes de finalizar.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function CheckoutForm({
   paymentMethods,
   publicKey,
@@ -445,6 +502,9 @@ export function CheckoutForm({
     return initialMethod?.methodId ?? "";
   });
   const [formValues, setFormValues] = useState<CheckoutFormValues>(EMPTY_FORM_VALUES);
+  const [selectedShippingSnapshot, setSelectedShippingSnapshot] =
+    useState<StorefrontShippingCheckoutSnapshot | null>(null);
+  const [isSelectedShippingExpired, setIsSelectedShippingExpired] = useState(false);
   const [fiscalAutofill, setFiscalAutofill] = useState<StorefrontFiscalAutofillData | null>(null);
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [isLookingUpTaxpayer, setIsLookingUpTaxpayer] = useState(false);
@@ -494,12 +554,20 @@ export function CheckoutForm({
     selectedPaymentMethod?.discount ?? null,
   );
   const selectedDiscountedTotal = Math.max(0, checkoutValue - selectedDiscountAmount);
+  const selectedShippingAmount =
+    selectedShippingSnapshot && !isSelectedShippingExpired
+      ? selectedShippingSnapshot.priceWithTax
+      : 0;
+  const hasValidSelectedShipping =
+    Boolean(selectedShippingSnapshot) && !isSelectedShippingExpired;
+  const selectedDiscountedTotalWithShipping = selectedDiscountedTotal + selectedShippingAmount;
+  const checkoutValueWithShipping = checkoutValue + selectedShippingAmount;
   const selectedInstallmentAmount =
     selectedPaymentMethod?.methodType === "automatic" &&
     installmentsCount &&
     installmentsCount > 0 &&
-    checkoutValue > 0
-      ? Math.round(checkoutValue / installmentsCount)
+    checkoutValueWithShipping > 0
+      ? Math.round(checkoutValueWithShipping / installmentsCount)
       : null;
 
   useEffect(() => {
@@ -546,6 +614,27 @@ export function CheckoutForm({
       },
     });
   }, [checkoutValue, displayItems]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const snapshot = normalizeStoredShippingCheckoutSnapshot(
+      readStoredSelectedShippingOption<StorefrontShippingCheckoutSnapshot>(window.localStorage),
+    );
+
+    setSelectedShippingSnapshot(snapshot);
+    setIsSelectedShippingExpired(snapshot ? isShippingCheckoutSnapshotExpired(snapshot) : false);
+
+    if (snapshot?.destinationPostalCode) {
+      setFormValues((current) =>
+        current.shippingPostalCode
+          ? current
+          : { ...current, shippingPostalCode: snapshot.destinationPostalCode },
+      );
+    }
+  }, []);
 
   function updateField(field: keyof CheckoutFormValues, value: string) {
     setFormValues((current) => ({
@@ -731,6 +820,15 @@ export function CheckoutForm({
       <input type="hidden" name="idempotencyKey" value={idempotencyKeyRef.current} />
       <input type="hidden" name="paymentStrategy" value={paymentStrategy} />
       <input type="hidden" name="paymentMethodId" value={selectedPaymentMethodId} />
+      <input
+        type="hidden"
+        name="shippingQuoteSnapshot"
+        value={
+          selectedShippingSnapshot && !isSelectedShippingExpired
+            ? JSON.stringify(selectedShippingSnapshot)
+            : ""
+        }
+      />
       {displayItems.map((item) => (
         <div key={`${item.productId}-${item.quantity}`} className="hidden">
           <input type="hidden" name="itemProductId" value={item.productId} />
@@ -1011,8 +1109,16 @@ export function CheckoutForm({
             )}
 
             <div className="flex justify-end">
-              <SubmitButton paymentStrategy={paymentStrategy} />
+              <SubmitButton
+                disabled={!hasValidSelectedShipping}
+                paymentStrategy={paymentStrategy}
+              />
             </div>
+            {!hasValidSelectedShipping ? (
+              <p className="text-right text-sm text-muted-foreground">
+                Seleccioná un envío válido desde el carrito para finalizar la compra.
+              </p>
+            ) : null}
           </div>
         </CheckoutStepCard>
 
@@ -1067,7 +1173,7 @@ export function CheckoutForm({
                   <p className="text-sm leading-6 text-muted-foreground">
                     {selectedPaymentMethod.methodType === "automatic"
                       ? selectedInstallmentAmount && installmentsCount
-                        ? `${installmentsCount} cuotas de ${formatCurrency(selectedInstallmentAmount)} sin interés. Total ${formatCurrency(checkoutValue)}.`
+                        ? `${installmentsCount} cuotas de ${formatCurrency(selectedInstallmentAmount)} sin interés. Total estimado ${formatCurrency(checkoutValueWithShipping)}.`
                         : "Pagás online con el total confirmado al momento de procesar el pago."
                       : selectedDiscountAmount > 0
                         ? `Con este medio ahorrás ${formatCurrency(selectedDiscountAmount)} sobre el total.`
@@ -1081,6 +1187,16 @@ export function CheckoutForm({
               <span>Subtotal</span>
               <span>{checkoutValue > 0 ? formatCurrency(checkoutValue) : "A confirmar"}</span>
             </div>
+            <ShippingSummary
+              snapshot={selectedShippingSnapshot}
+              expired={isSelectedShippingExpired}
+            />
+            {selectedShippingAmount > 0 ? (
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>Envío</span>
+                <span>{formatCurrency(selectedShippingAmount)}</span>
+              </div>
+            ) : null}
             {selectedDiscountAmount > 0 ? (
               <div className="flex items-center justify-between text-emerald-700">
                 <span>Descuento aplicado</span>
@@ -1097,7 +1213,11 @@ export function CheckoutForm({
               <span>{selectedDiscountAmount > 0 ? "Total con descuento" : "Total estimado"}</span>
               <span>
                 {checkoutValue > 0
-                  ? formatCurrency(selectedDiscountAmount > 0 ? selectedDiscountedTotal : checkoutValue)
+                  ? formatCurrency(
+                      selectedDiscountAmount > 0
+                        ? selectedDiscountedTotalWithShipping
+                        : checkoutValueWithShipping,
+                    )
                   : "Se confirma al crear la orden"}
               </span>
             </div>

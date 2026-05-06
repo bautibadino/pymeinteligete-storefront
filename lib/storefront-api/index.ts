@@ -44,6 +44,11 @@ export type {
   StorefrontQueryParams,
   StorefrontResponseEnvelope,
   StorefrontSeoConfig,
+  StorefrontShippingCheckoutSnapshot,
+  StorefrontShippingQuoteOption,
+  StorefrontShippingQuotePackage,
+  StorefrontShippingQuoteRequest,
+  StorefrontShippingQuoteResponse,
   StorefrontSuccessResponse,
   StorefrontTenantIdentity,
 } from "@/lib/types/storefront";

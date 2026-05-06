@@ -6,12 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ShippingQuoteCalculator } from "@/components/storefront/shipping/shipping-quote-calculator";
 import {
   resolveModules,
   resolveTenantDescription,
   resolveTenantDisplayName,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { mapCatalogProductToCardData } from "@/components/presentation/render-context";
+import { buildShippingQuotePackageFromStorefrontProduct } from "@/lib/shipping/product-package";
 import type {
   StorefrontBootstrap,
   StorefrontPaymentMethods,
@@ -217,6 +219,7 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
     typeof normalizedProduct?.price.amount === "number" && discountedPrice
       ? normalizedProduct.price.amount - discountedPrice
       : undefined;
+  const quotePackage = buildShippingQuotePackageFromStorefrontProduct(product);
 
   return (
     <section className="grid gap-6">
@@ -339,6 +342,8 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
                 <span>Compra protegida por PyME Inteligente</span>
               </div>
             </div>
+
+            <ShippingQuoteCalculator quotePackage={quotePackage} />
 
             {stockByBranch.length > 0 ? (
               <div className="grid gap-3 pt-1">

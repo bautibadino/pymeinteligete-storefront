@@ -12,6 +12,7 @@ export const STOREFRONT_API_PATHS = {
   bootstrap: `${STOREFRONT_API_PREFIX}/bootstrap`,
   catalog: `${STOREFRONT_API_PREFIX}/catalog`,
   categories: `${STOREFRONT_API_PREFIX}/categories`,
+  shippingQuote: `${STOREFRONT_API_PREFIX}/shipping/quote`,
   paymentMethods: `${STOREFRONT_API_PREFIX}/payment-methods`,
   checkout: `${STOREFRONT_API_PREFIX}/checkout`,
   processPayment: `${STOREFRONT_API_PREFIX}/payments/process`,

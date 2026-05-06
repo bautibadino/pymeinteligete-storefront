@@ -23,8 +23,43 @@ import {
   postManualPayment,
   processPayment,
 } from "@/lib/storefront-api";
+import type { StorefrontShippingCheckoutSnapshot } from "@/lib/types/storefront";
 
 type PaymentStrategy = "none" | "manual" | "auto";
+
+function readShippingQuoteSnapshot(
+  formData: FormData,
+): StorefrontShippingCheckoutSnapshot | null {
+  const rawSnapshot = readTrimmedString(formData, "shippingQuoteSnapshot");
+
+  if (!rawSnapshot) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(rawSnapshot) as Partial<StorefrontShippingCheckoutSnapshot>;
+
+    if (
+      parsed.contractVersion !== "storefront.shipping.quote.v1" ||
+      parsed.provider !== "andreani" ||
+      parsed.currency !== "ARS" ||
+      typeof parsed.optionId !== "string" ||
+      typeof parsed.carrierName !== "string" ||
+      typeof parsed.serviceName !== "string" ||
+      typeof parsed.destinationPostalCode !== "string" ||
+      typeof parsed.quotedAt !== "string" ||
+      typeof parsed.expiresAt !== "string" ||
+      typeof parsed.priceWithTax !== "number" ||
+      typeof parsed.priceWithoutTax !== "number"
+    ) {
+      return null;
+    }
+
+    return parsed as StorefrontShippingCheckoutSnapshot;
+  } catch {
+    return null;
+  }
+}
 
 export async function submitCheckoutAction(
   _previousState: CheckoutActionState,
@@ -54,6 +89,7 @@ export async function submitCheckoutAction(
   try {
     const bootstrap = await getBootstrap(runtime.context);
     const analyticsIdentity = await readAnalyticsIdentityFromRequest();
+    const shippingQuoteSnapshot = readShippingQuoteSnapshot(formData);
 
     if (!canAccessCheckout(bootstrap.tenant.status)) {
       return {
@@ -101,6 +137,7 @@ export async function submitCheckoutAction(
           ? { notes: readTrimmedString(formData, "shippingNotes") }
           : {}),
       },
+      ...(shippingQuoteSnapshot ? { shippingQuoteSnapshot } : {}),
       items: parseItems(formData),
       ...(paymentStrategy === "manual" && selectedPaymentMethodId
         ? { paymentMethodId: selectedPaymentMethodId }
