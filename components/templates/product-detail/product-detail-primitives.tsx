@@ -13,7 +13,9 @@ import {
 } from "lucide-react";
 
 import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
+import { ShippingQuoteCalculator } from "@/components/storefront/shipping/shipping-quote-calculator";
 import { resolveCartItemPrice } from "@/lib/cart/storefront-cart";
+import { buildShippingQuotePackageFromProductDetailData } from "@/lib/shipping/product-package";
 import { ProductCardCompact } from "@/components/templates/product-card/product-card-compact";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/cn";
@@ -151,6 +153,34 @@ function normalizePaymentMethodLabel(value: string): string {
     .filter(Boolean)
     .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
     .join(" ");
+}
+
+function normalizeComparableLabel(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function uniqueProductBadges(
+  badges?: ProductDetailBadge[] | undefined,
+): ProductDetailBadge[] {
+  if (!badges || badges.length === 0) return [];
+
+  const seenLabels = new Set<string>();
+  const uniqueBadges: ProductDetailBadge[] = [];
+
+  for (const badge of badges) {
+    const labelKey = normalizeComparableLabel(badge.label);
+    if (!labelKey || seenLabels.has(labelKey)) continue;
+
+    seenLabels.add(labelKey);
+    uniqueBadges.push(badge);
+  }
+
+  return uniqueBadges;
 }
 
 function readPaymentMethods(value: unknown): string[] {
@@ -412,10 +442,11 @@ export function ProductDetailBadgeGroup({
   limit,
   compact = false,
 }: ProductDetailBadgeGroupProps) {
-  if (!badges || badges.length === 0) return null;
+  const uniqueBadges = uniqueProductBadges(badges);
+  if (uniqueBadges.length === 0) return null;
 
-  const visibleBadges = typeof limit === "number" ? badges.slice(0, limit) : badges;
-  const hiddenCount = badges.length - visibleBadges.length;
+  const visibleBadges = typeof limit === "number" ? uniqueBadges.slice(0, limit) : uniqueBadges;
+  const hiddenCount = uniqueBadges.length - visibleBadges.length;
 
   return (
     <div className={cn("flex flex-wrap gap-2", className)}>
@@ -524,6 +555,7 @@ export function ProductDetailPurchaseCard({
   const primaryFacts = facts.slice(0, 1);
   const secondaryFacts = facts.slice(1);
   const secondarySignals = commercialSignals.slice(2);
+  const quotePackage = buildShippingQuotePackageFromProductDetailData(product);
 
   return (
     <aside
@@ -577,6 +609,8 @@ export function ProductDetailPurchaseCard({
         disabled={!isAvailable}
         unavailableLabel="No disponible"
       />
+
+      <ShippingQuoteCalculator quotePackage={quotePackage} />
 
       {(commercialSignals.length > 0 || primaryFacts.length > 0) ? (
         <div className={productDetailInnerPanelClassName("grid gap-2.5 p-3")}>
@@ -823,6 +857,7 @@ export function buildProductDetailTabs(
   product: ProductDetailData,
   commercialData?: ProductDetailCommercialData | undefined,
 ): ProductDetailTabSection[] {
+  const uniqueBadges = uniqueProductBadges(product.badges);
   const descriptionParagraphs = splitParagraphs(
     product.description,
     "La descripción comercial todavía no fue cargada para este producto.",
@@ -839,41 +874,19 @@ export function buildProductDetailTabs(
       : null,
   ].filter((paragraph): paragraph is string => Boolean(paragraph));
 
-  const shippingNotes = [
-    product.stock?.label
-      ? `Estado actual: ${product.stock.label}`
-      : "Estado actual: disponibilidad sin detalle público",
-    commercialData?.paymentMethods?.length
-      ? `Pago visible: ${commercialData.paymentMethods.slice(0, 3).join(" · ")}`
-      : null,
-    commercialData?.reviewsEnabled
-      ? "La tienda tiene social proof habilitado para el canal."
-      : null,
-  ].filter((note): note is string => Boolean(note));
-
   return [
     {
-      id: "description",
-      label: "Descripción",
-      eyebrow: "Overview",
-      title: "Contexto del producto",
+      id: "details",
+      label: "Detalle",
+      eyebrow: "Producto",
+      title: "Descripción y especificaciones",
       paragraphs: descriptionParagraphs,
       notes: [
         product.brand ? `Marca: ${product.brand}` : "Marca pendiente de publicación",
-        product.badges && product.badges.length > 0
-          ? `Distinciones: ${product.badges.map((badge) => badge.label).join(" · ")}`
+        uniqueBadges.length > 0
+          ? `Distinciones: ${uniqueBadges.map((badge) => badge.label).join(" · ")}`
           : "Sin badges comerciales configurados",
       ],
-    },
-    {
-      id: "specs",
-      label: "Especificaciones",
-      eyebrow: "Ficha técnica",
-      title: "Detalles técnicos relevantes",
-      paragraphs:
-        product.specifications && product.specifications.length > 0
-          ? ["Las especificaciones disponibles se listan en este bloque para facilitar comparación y decisión."]
-          : ["La ficha técnica todavía no expone atributos específicos para este producto."],
       specifications: product.specifications,
     },
     {
@@ -888,7 +901,6 @@ export function buildProductDetailTabs(
               "La información logística todavía no está publicada para este producto dentro del storefront.",
               "Cuando el canal exponga cobertura, tiempos y retiro, aparecerán en esta sección.",
             ],
-      notes: shippingNotes,
     },
   ];
 }

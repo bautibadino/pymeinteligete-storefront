@@ -241,10 +241,7 @@ describe("presentation renderer logic", () => {
   });
 
   it("mantiene el renderer acotado en grid y resalta la selección sin outline externo", () => {
-    const globalsCss = readFileSync(
-      "/Users/bautista/Desktop/Repositorios/pymeinteligete-storefront/app/globals.css",
-      "utf8",
-    );
+    const globalsCss = readFileSync(`${process.cwd()}/app/globals.css`, "utf8");
 
     expect(globalsCss).toContain(".presentation-renderer {");
     expect(globalsCss).toContain(".presentation-renderer-content {");

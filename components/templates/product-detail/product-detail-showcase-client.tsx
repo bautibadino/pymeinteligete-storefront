@@ -291,7 +291,7 @@ export function ProductDetailSegmentedTabs({
           </ul>
         ) : null}
 
-        {activeSection.id === "specs" ? (
+        {activeSection.specifications ? (
           <ProductSpecificationsGrid specifications={activeSection.specifications} />
         ) : null}
       </div>

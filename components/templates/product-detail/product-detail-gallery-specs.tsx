@@ -38,12 +38,16 @@ export function ProductDetailGallerySpecs({ module }: { module: ProductDetailMod
         {showBreadcrumbs ? <ProductDetailBreadcrumbs productName={product.name} /> : null}
 
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(300px,320px)] lg:items-start lg:gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(340px,0.88fr)] xl:gap-6">
-          <ProductImageGallery
-            images={product.images}
-            productName={product.name}
-            aspectClassName="aspect-[11/10] sm:aspect-square md:aspect-[6/5] lg:aspect-[5/4] xl:aspect-square"
-            className="min-w-0"
-          />
+          <div className="grid min-w-0 gap-3 lg:gap-5 xl:gap-6">
+            <ProductImageGallery
+              images={product.images}
+              productName={product.name}
+              aspectClassName="aspect-[11/10] sm:aspect-square md:aspect-[6/5] lg:aspect-[5/4] xl:aspect-square"
+              className="min-w-0"
+            />
+
+            <ProductDetailSegmentedTabs sections={tabs} className="hidden lg:grid lg:min-h-[300px]" />
+          </div>
 
           <div className="grid min-w-0 gap-3 lg:sticky lg:top-20 lg:gap-5 xl:gap-6 xl:top-24">
             <ProductDetailPurchaseCard
@@ -63,7 +67,7 @@ export function ProductDetailGallerySpecs({ module }: { module: ProductDetailMod
           </div>
         </div>
 
-        <div className="mt-4 md:mt-5 xl:mt-6">
+        <div className="mt-4 md:mt-5 lg:hidden">
           <ProductDetailSegmentedTabs sections={tabs} />
         </div>
 
