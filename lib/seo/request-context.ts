@@ -1,7 +1,10 @@
 import { headers } from "next/headers";
 
 import { STOREFRONT_HEADERS } from "@/lib/contracts/storefront-v1";
-import { normalizeStorefrontTenantSlug } from "@/lib/preview/storefront-preview";
+import {
+  normalizeStorefrontTenantSlug,
+  readStorefrontTenantSlugFromCookieHeader,
+} from "@/lib/preview/storefront-preview";
 import { resolveRequestHostFromHeaders } from "@/lib/tenancy/resolve-request-host";
 
 import type { TenantSeoRequestContext } from "@/lib/seo/types";
@@ -44,7 +47,9 @@ export async function getTenantSeoRequestContext(): Promise<TenantSeoRequestCont
   const resolvedHost = resolveRequestHostFromHeaders(headerStore);
   const requestHost = resolveRequestHostWithPort(headerStore);
   const protocol = resolveProtocol(headerStore, resolvedHost);
-  const tenantSlug = normalizeStorefrontTenantSlug(headerStore.get(STOREFRONT_HEADERS.tenantSlug));
+  const tenantSlug =
+    normalizeStorefrontTenantSlug(headerStore.get(STOREFRONT_HEADERS.tenantSlug)) ??
+    readStorefrontTenantSlugFromCookieHeader(headerStore.get("cookie"));
 
   return {
     protocol,

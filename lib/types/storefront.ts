@@ -10,9 +10,17 @@ export type StorefrontSuccessResponse<TData> = {
   data: TData;
 };
 
+export type StorefrontStructuredError = {
+  code?: string;
+  message: string;
+  requestId?: string;
+  details?: unknown;
+  [key: string]: unknown;
+};
+
 export type StorefrontErrorResponse = {
   success: false;
-  error: string;
+  error: string | StorefrontStructuredError;
   code?: string;
   details?: unknown;
 };
@@ -533,6 +541,7 @@ export interface StorefrontCheckoutRequest {
   shippingAddress: StorefrontAddressInput;
   billingAddress?: StorefrontAddressInput;
   items: StorefrontCheckoutItemInput[];
+  paymentMethodId?: string;
   notes?: string;
   idempotencyKey?: string;
   analytics?: StorefrontAnalyticsInput;
@@ -613,6 +622,10 @@ export interface StorefrontOrderLine {
 export interface StorefrontOrderPayment {
   provider: string;
   reference: string;
+  method?: string;
+  amount?: number;
+  installments?: number;
+  statusDetail?: string;
 }
 
 export interface StorefrontOrderByTokenResult {

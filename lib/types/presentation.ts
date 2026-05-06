@@ -101,6 +101,7 @@ export type SectionType =
   | "hero"
   | "trustBar"
   | "categoryTile"
+  | "socialProof"
   | "productGrid"
   | "productCard"
   | "promoBand"

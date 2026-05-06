@@ -1,25 +1,17 @@
-import { headers } from "next/headers";
-
 import { resolveNotFoundPolicy } from "@/lib/seo/not-found-policy";
-import { StorefrontApiError, getBootstrap } from "@/lib/storefront-api";
-import { resolveRequestHostFromHeaders } from "@/lib/tenancy/resolve-request-host";
+import { getStorefrontRuntimeSnapshot } from "@/lib/runtime/storefront-request-context";
+import { getBootstrap } from "@/lib/storefront-api";
 
 export default async function NotFound() {
-  const headerStore = await headers();
-  let host: string;
-
-  try {
-    host = resolveRequestHostFromHeaders(headerStore);
-  } catch {
-    host = "desconocido";
-  }
+  const runtime = await getStorefrontRuntimeSnapshot();
+  const host = runtime.context.host || "desconocido";
 
   let bootstrap: Awaited<ReturnType<typeof getBootstrap>> | null = null;
   let fetchError = false;
 
-  if (host !== "desconocido") {
+  if (host !== "desconocido" && runtime.hasApiBaseUrl) {
     try {
-      bootstrap = await getBootstrap(host);
+      bootstrap = await getBootstrap(runtime.context);
     } catch {
       // Cualquier error de fetch (tipado o no) se trata como caso operativo
       // para evitar falsos "Tienda no encontrada" cuando la plataforma falla.

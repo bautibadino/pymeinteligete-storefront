@@ -18,6 +18,8 @@ interface PaymentBrickProps {
   orderToken: string;
   /** Email del cliente (prefilled) */
   payerEmail: string;
+  /** Badge comercial de cuotas configuradas para la tienda */
+  installmentsLabel?: string;
   /** Callback cuando el pago se procesa exitosamente */
   onPaymentSuccess: (paymentData: PaymentFormData) => void;
   /** Callback cuando hay un error en el pago */
@@ -32,6 +34,7 @@ export function PaymentBrick({
   orderId,
   orderToken,
   payerEmail,
+  installmentsLabel,
   onPaymentSuccess,
   onPaymentError,
   onReady,
@@ -204,6 +207,14 @@ export function PaymentBrick({
 
   return (
     <div className="payment-brick-wrapper">
+      {installmentsLabel ? (
+        <div className="mb-4 flex">
+          <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-950 shadow-sm">
+            {installmentsLabel}
+          </span>
+        </div>
+      ) : null}
+
       {error && (
         <div className="checkout-error-banner" role="alert">
           {error}

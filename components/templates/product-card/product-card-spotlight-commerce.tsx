@@ -65,57 +65,53 @@ export function ProductCardSpotlightCommerce({
     <article
       aria-label={name}
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-border/70",
-        "bg-white shadow-[0_24px_80px_-40px_rgba(15,23,42,0.55)]",
-        "transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_30px_90px_-40px_rgba(15,23,42,0.65)]",
+        "group relative grid min-h-[11.5rem] overflow-hidden rounded-[1.5rem] border border-border/60 bg-white/95",
+        "shadow-[0_18px_45px_-32px_rgba(15,23,42,0.35)] transition-all duration-300",
+        "hover:border-border/80 hover:shadow-[0_24px_52px_-36px_rgba(15,23,42,0.42)]",
+        "sm:grid-cols-[minmax(0,1.1fr)_minmax(16rem,0.9fr)]",
       )}
       data-template="product-card-spotlight-commerce"
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-6 top-0 h-28 rounded-b-full bg-primary/10 blur-3xl"
-      />
+      <div className="relative border-b border-border/50 bg-[linear-gradient(180deg,rgba(248,250,252,0.94),rgba(255,255,255,0.98))] sm:border-b-0 sm:border-r">
+        <Link href={href as Route} className="contents" tabIndex={-1} aria-hidden="true">
+          <ProductCardMediaFrame
+            imageUrl={imageUrl}
+            alt={name}
+            fit="contain"
+            frameClassName="aspect-[4/3] bg-transparent sm:h-full sm:min-h-[11.5rem] sm:aspect-auto"
+            imageClassName="p-4 transition-transform duration-500 group-hover:scale-[1.02] sm:p-5"
+            placeholderClassName="bg-[linear-gradient(135deg,rgba(241,245,249,0.96),rgba(255,255,255,1))]"
+          >
+            {renderedBadges.length > 0 ? (
+              <div className="absolute left-3 top-3 z-10 flex max-w-[78%] flex-wrap gap-1.5">
+                {renderedBadges.map((badge, index) => (
+                  <Badge
+                    key={`${badge.label}-${index}`}
+                    variant={badge.tone ? BADGE_VARIANT_MAP[badge.tone] : "outline"}
+                    className="border border-white/70 bg-white/88 text-[10px] text-slate-700 shadow-none"
+                  >
+                    {index === 0 ? <Sparkles className="size-3" aria-hidden="true" /> : null}
+                    {badge.label}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
 
-      <Link href={href as Route} className="contents" tabIndex={-1} aria-hidden="true">
-        <ProductCardMediaFrame
-          imageUrl={imageUrl}
-          alt={name}
-          fit="contain"
-          frameClassName="aspect-[4/4.8]"
-          imageClassName="p-5 transition-transform duration-500 group-hover:scale-[1.02]"
-          placeholderClassName="bg-gradient-to-br from-primary-soft via-panel-strong to-accent-soft"
-        >
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/18 via-slate-950/0 to-white/10" />
+            {showStockBadge ? (
+              <ProductCardStockBadge
+                stock={stock}
+                tone={stockBadgeTone}
+                className="absolute bottom-3 left-3 z-10 max-w-[calc(100%-1.5rem)] border border-white/70 bg-white/92 shadow-none"
+              />
+            ) : null}
+          </ProductCardMediaFrame>
+        </Link>
+      </div>
 
-          {renderedBadges.length > 0 ? (
-            <div className="absolute left-4 top-4 z-10 flex max-w-[78%] flex-wrap gap-2">
-              {renderedBadges.map((badge, index) => (
-                <Badge
-                  key={`${badge.label}-${index}`}
-                  variant={badge.tone ? BADGE_VARIANT_MAP[badge.tone] : "soft"}
-                  className="backdrop-blur-sm"
-                >
-                  {index === 0 ? <Sparkles className="size-3" aria-hidden="true" /> : null}
-                  {badge.label}
-                </Badge>
-              ))}
-            </div>
-          ) : null}
-
-          {showStockBadge ? (
-            <ProductCardStockBadge
-              stock={stock}
-              tone={stockBadgeTone}
-              className="absolute bottom-4 left-4 z-10 border-white/30 bg-white/85 shadow-sm backdrop-blur-md"
-            />
-          ) : null}
-        </ProductCardMediaFrame>
-      </Link>
-
-      <div className="relative flex flex-1 flex-col gap-4 px-5 pb-5 pt-4">
-        <div className="space-y-2">
+      <div className="flex flex-1 flex-col gap-4 px-4 py-4 sm:px-5 sm:py-5">
+        <div className="space-y-2.5">
           {showBrand && brand ? (
-            <span className={themeTypographyStyles.brand("text-[10px] text-muted")}>
+            <span className={themeTypographyStyles.brand("text-[10px] text-muted/90")}>
               {brand}
             </span>
           ) : null}
@@ -123,89 +119,101 @@ export function ProductCardSpotlightCommerce({
           <Link href={href as Route}>
             <h3
               className={themeTypographyStyles.cardTitle(
-                "line-clamp-2 text-lg leading-tight text-foreground transition-colors hover:text-primary",
+                "line-clamp-2 text-base leading-tight text-foreground transition-colors hover:text-primary sm:text-[1.05rem]",
               )}
             >
               {name}
             </h3>
           </Link>
-        </div>
 
-        <div className="rounded-[1.25rem] border border-border/70 bg-panel/80 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
             {compareAtPrice ? (
-              <span className="text-sm text-muted line-through">{compareAtPrice.formatted}</span>
+              <span className="line-through">{compareAtPrice.formatted}</span>
             ) : null}
-          </div>
-
-          <div className="mt-3 flex items-end justify-between gap-3">
-            <div className="space-y-1.5">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-muted">Precio final</p>
-              <div data-price-row="final" className="flex flex-wrap items-center gap-2">
-                <p className="text-2xl font-semibold leading-none text-foreground">
-                  {price.formatted}
-                </p>
-                {showCashDiscount && cashDiscount ? (
-                  <span
-                    data-discount-badge="cash-discount"
-                    className="inline-flex items-center rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-950"
-                  >
-                    {cashDiscount.percent}% OFF contado
-                  </span>
-                ) : null}
-              </div>
-            </div>
-
             {showInstallments && installments ? (
-              <div className="text-right">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Financiación</p>
-                <p className="text-sm font-medium text-foreground">
-                  {installments.count}x {installments.formatted}
-                </p>
+              <span className="inline-flex items-center gap-1 rounded-full border border-border/70 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-muted/90">
+                {installments.count}x {installments.formatted}
                 {installments.interestFree ? (
-                  <p className="text-xs text-primary">sin interés</p>
+                  <span className="text-foreground">sin interés</span>
                 ) : null}
-              </div>
+              </span>
             ) : null}
           </div>
 
-          {!isAvailable && stock?.label ? (
-            <p className="mt-3 text-sm font-medium text-muted">{stock.label}</p>
-          ) : null}
+          <div className="space-y-1.5">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-muted">Precio final</p>
+            <div data-price-row="final" className="flex flex-wrap items-center gap-2">
+              <p className="text-[1.6rem] font-semibold leading-none text-foreground">
+                {price.formatted}
+              </p>
+              {showCashDiscount && cashDiscount ? (
+                <span
+                  data-discount-badge="cash-discount"
+                  className="inline-flex items-center rounded-full border border-primary/15 bg-primary-soft px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-950"
+                >
+                  {cashDiscount.percent}% OFF contado
+                </span>
+              ) : null}
+            </div>
+          </div>
         </div>
 
-        {showAddToCart && isAvailable ? (
-          <AddToCartButton
-            item={{
-              productId: product.id,
-              slug: product.slug,
-              name: product.name,
-              href: product.href,
-              price: resolveCartItemPrice({
-                price: product.price,
-                basePrice: product.basePrice,
-              }),
-              ...(product.brand ? { brand: product.brand } : {}),
-              ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
-            }}
-            size="lg"
-            className="mt-auto w-full rounded-full"
-            aria-label={`Agregar ${name} al carrito`}
-          >
-            Agregar ahora
-          </AddToCartButton>
-        ) : !showAddToCart ? (
-          <Button asChild size="lg" variant="outline" className="mt-auto w-full rounded-full">
-            <Link href={href as Route}>
-              Ver producto
-              <ArrowRight className="size-4" aria-hidden="true" />
+        <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/60 pt-3">
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted">Ficha</p>
+            <Link
+              href={href as Route}
+              className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-foreground transition-colors hover:text-primary"
+            >
+              Ver detalle
+              <ArrowRight className="size-3.5" aria-hidden="true" />
             </Link>
-          </Button>
-        ) : (
-          <Button size="lg" variant="outline" className="mt-auto w-full rounded-full" disabled>
-            Sin stock
-          </Button>
-        )}
+            {!isAvailable && stock?.label ? (
+              <p className="mt-1 text-xs text-muted">{stock.label}</p>
+            ) : null}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            {showAddToCart ? (
+              <AddToCartButton
+                item={{
+                  productId: product.id,
+                  slug: product.slug,
+                  name: product.name,
+                  href: product.href,
+                  price: resolveCartItemPrice({
+                    price: product.price,
+                    basePrice: product.basePrice,
+                  }),
+                  ...(product.brand ? { brand: product.brand } : {}),
+                  ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+                }}
+                size="sm"
+                className="rounded-full px-4"
+                disabled={!isAvailable}
+                aria-label={`Agregar ${name} al carrito`}
+                unavailableLabel="Sin stock"
+              >
+                Agregar
+              </AddToCartButton>
+            ) : (
+              <Button asChild size="sm" variant="outline" className="rounded-full px-4">
+                <Link href={href as Route}>Ver</Link>
+              </Button>
+            )}
+
+            <Button
+              asChild
+              size="icon"
+              variant="outline"
+              className="size-9 rounded-full border border-border/70 bg-white/90"
+            >
+              <Link href={href as Route} aria-label={`Ver ${name}`}>
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+        </div>
       </div>
     </article>
   );

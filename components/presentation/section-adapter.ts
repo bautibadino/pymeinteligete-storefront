@@ -1,6 +1,8 @@
 import { normalizeAnnouncementBarModule } from "@/lib/modules/announcement-bar";
 import { normalizeCatalogLayoutContent } from "@/lib/modules/catalog-layout";
 import { normalizeProductGridContent } from "@/lib/modules/product-grid";
+import { normalizeSocialProofContent } from "@/lib/modules/social-proof";
+import { getStorefrontInstallmentsLabel } from "@/lib/commerce/installments";
 import type {
   PresentationResolvedMediaMetadata,
   SectionInstance,
@@ -163,6 +165,17 @@ export function adaptSectionToModule(
       };
     }
 
+    case "socialProof": {
+      const normalizedContent = normalizeSocialProofContent(content);
+
+      return {
+        ...base,
+        content: normalizedContent,
+        empresaId: context?.bootstrap?.tenant.empresaId,
+        tenantSlug: context?.bootstrap?.tenant.tenantSlug,
+      };
+    }
+
     case "productGrid": {
       const normalizedContent = normalizeProductGridContent(content);
       const products = selectProductsForGrid(
@@ -171,8 +184,15 @@ export function adaptSectionToModule(
         normalizedContent.limit ?? 12,
         context?.bootstrap,
       );
+      const carouselMeta = context?.bootstrap
+        ? {
+            empresaId: context.bootstrap.tenant.empresaId,
+            tenantSlug: context.bootstrap.tenant.tenantSlug,
+            installmentsLabel: getStorefrontInstallmentsLabel(context.bootstrap),
+          }
+        : undefined;
 
-      return { ...base, content: normalizedContent, products };
+      return { ...base, content: normalizedContent, products, ...(carouselMeta ? { carouselMeta } : {}) };
     }
 
     case "catalogLayout": {

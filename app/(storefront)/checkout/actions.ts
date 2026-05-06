@@ -1,9 +1,13 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 
 import { canAccessCheckout } from "@/app/(storefront)/_lib/storefront-shell-data";
-import type { ManualPaymentSuccessSource } from "@/lib/checkout/manual-payment";
+import type {
+  CheckoutActionState,
+  ManualPaymentActionState,
+} from "@/app/(storefront)/checkout/action-state";
+import { readAnalyticsIdentityFromRequest } from "@/lib/analytics/server";
 import { resolveCheckoutStrategy } from "@/lib/checkout/strategy";
 import {
   buildFieldErrors,
@@ -19,30 +23,6 @@ import {
   postManualPayment,
   processPayment,
 } from "@/lib/storefront-api";
-
-export type CheckoutActionState = {
-  status: "idle" | "error" | "success";
-  message?: string;
-  fieldErrors?: Partial<Record<import("@/lib/checkout/validation").CheckoutFieldName, string>>;
-  orderId?: string;
-  orderToken?: string;
-  orderNumber?: string;
-  total?: number;
-  payerEmail?: string;
-};
-
-export type ManualPaymentActionState = {
-  status: "idle" | "success" | "error";
-  message?: string;
-} & Partial<ManualPaymentSuccessSource>;
-
-export const initialCheckoutActionState: CheckoutActionState = {
-  status: "idle",
-};
-
-export const initialManualPaymentActionState: ManualPaymentActionState = {
-  status: "idle",
-};
 
 type PaymentStrategy = "none" | "manual" | "auto";
 
@@ -62,9 +42,18 @@ export async function submitCheckoutAction(
 
   const runtime = await getStorefrontRuntimeSnapshot();
   const paymentStrategy = (readTrimmedString(formData, "paymentStrategy") as PaymentStrategy) || "none";
+  const selectedPaymentMethodId = readTrimmedString(formData, "paymentMethodId");
+
+  if (paymentStrategy === "manual" && !selectedPaymentMethodId) {
+    return {
+      status: "error",
+      message: "Seleccioná un método de pago para continuar.",
+    };
+  }
 
   try {
     const bootstrap = await getBootstrap(runtime.context);
+    const analyticsIdentity = await readAnalyticsIdentityFromRequest();
 
     if (!canAccessCheckout(bootstrap.tenant.status)) {
       return {
@@ -92,6 +81,15 @@ export async function submitCheckoutAction(
         ...(readTrimmedString(formData, "customerDni")
           ? { dni: readTrimmedString(formData, "customerDni") }
           : {}),
+        ...(readTrimmedString(formData, "customerTaxId")
+          ? { taxId: readTrimmedString(formData, "customerTaxId") }
+          : {}),
+        ...(readTrimmedString(formData, "customerTaxIdType")
+          ? { taxIdType: readTrimmedString(formData, "customerTaxIdType") }
+          : {}),
+        ...(readTrimmedString(formData, "customerTaxCondition")
+          ? { taxCondition: readTrimmedString(formData, "customerTaxCondition") }
+          : {}),
       },
       shippingAddress: {
         street: readTrimmedString(formData, "shippingStreet"),
@@ -104,10 +102,29 @@ export async function submitCheckoutAction(
           : {}),
       },
       items: parseItems(formData),
+      ...(paymentStrategy === "manual" && selectedPaymentMethodId
+        ? { paymentMethodId: selectedPaymentMethodId }
+        : {}),
+      ...(readTrimmedString(formData, "billingStreet") &&
+      readTrimmedString(formData, "billingNumber") &&
+      readTrimmedString(formData, "billingCity") &&
+      readTrimmedString(formData, "billingProvince") &&
+      readTrimmedString(formData, "billingPostalCode")
+        ? {
+            billingAddress: {
+              street: readTrimmedString(formData, "billingStreet"),
+              number: readTrimmedString(formData, "billingNumber"),
+              city: readTrimmedString(formData, "billingCity"),
+              province: readTrimmedString(formData, "billingProvince"),
+              postalCode: readTrimmedString(formData, "billingPostalCode"),
+            },
+          }
+        : {}),
       ...(readTrimmedString(formData, "orderNotes")
         ? { notes: readTrimmedString(formData, "orderNotes") }
         : {}),
       idempotencyKey: readTrimmedString(formData, "idempotencyKey"),
+      ...(analyticsIdentity ? { analytics: analyticsIdentity } : {}),
     });
 
     if (paymentStrategy === "auto") {
@@ -123,9 +140,16 @@ export async function submitCheckoutAction(
       };
     }
 
-    // "none" y "manual" redirigen a confirmación.
+    if (paymentStrategy === "manual") {
+      redirect(
+        `/checkout/confirmacion/${encodeURIComponent(checkout.orderToken)}?method=${encodeURIComponent(selectedPaymentMethodId)}`,
+      );
+    }
+
     redirect(`/checkout/confirmacion/${encodeURIComponent(checkout.orderToken)}`);
   } catch (error) {
+    unstable_rethrow(error);
+
     if (error instanceof StorefrontApiError) {
       return {
         status: "error",
@@ -207,6 +231,8 @@ export async function processPaymentAction(
       message: `El pago no pudo completarse (${paymentResult.statusDetail || paymentResult.status}). La orden ya fue creada; podés completar el pago manualmente desde la confirmación.`,
     };
   } catch (error) {
+    unstable_rethrow(error);
+
     if (error instanceof StorefrontApiError) {
       return {
         status: "error",
@@ -260,6 +286,8 @@ export async function submitManualPaymentAction(
       ...(manualPayment.contactInfo ? { contactInfo: manualPayment.contactInfo } : {}),
     };
   } catch (error) {
+    unstable_rethrow(error);
+
     if (error instanceof StorefrontApiError) {
       return {
         status: "error",

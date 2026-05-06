@@ -135,7 +135,7 @@ export const PRODUCT_GRID_TEMPLATE_DESCRIPTORS: Record<
     id: "spotlight-carousel",
     label: "Spotlight Carousel",
     description:
-      "Carrusel premium para home con dos cards activas más grandes, laterales desaturadas y navegación con motion real.",
+      "Carrusel curado para home con cards más contenidas, ritmo horizontal preciso y jerarquía editorial/comercial.",
     bestFor: ["home principal", "campañas comerciales", "destacados premium", "lanzamientos"],
     thumbnailUrl: buildThumbnailUrl("spotlight-carousel"),
     contentSchema: ProductGridContentSchema,

@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   initialManualPaymentActionState,
-  submitManualPaymentAction,
-} from "@/app/(storefront)/checkout/actions";
+} from "@/app/(storefront)/checkout/action-state";
+import { submitManualPaymentAction } from "@/app/(storefront)/checkout/actions";
 import { buildManualPaymentSuccessDetails } from "@/lib/checkout/manual-payment";
 import type { StorefrontManualPaymentResult } from "@/lib/storefront-api";
 

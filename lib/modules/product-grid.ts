@@ -100,6 +100,11 @@ export interface ProductGridModule {
    * No forma parte del content editable del builder.
    */
   products?: ProductCardData[];
+  carouselMeta?: {
+    empresaId?: string;
+    tenantSlug?: string;
+    installmentsLabel?: string;
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

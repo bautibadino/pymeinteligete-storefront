@@ -9,6 +9,7 @@ import { HEADER_TEMPLATE_IDS } from "@/lib/templates/header-catalog";
 import { HERO_TEMPLATE_IDS } from "@/lib/templates/hero-catalog";
 import { PRODUCT_CARD_TEMPLATE_IDS } from "@/lib/templates/product-card-catalog";
 import { PRODUCT_DETAIL_TEMPLATE_IDS } from "@/lib/templates/product-detail-catalog";
+import { SOCIAL_PROOF_TEMPLATE_IDS } from "@/lib/templates/social-proof-catalog";
 import { PRODUCT_GRID_TEMPLATE_IDS } from "@/lib/templates/product-grid-catalog";
 import { PROMO_BAND_TEMPLATE_IDS } from "@/lib/templates/promo-band-catalog";
 import { RICH_TEXT_TEMPLATE_IDS } from "@/lib/templates/rich-text-catalog";
@@ -22,6 +23,7 @@ const ERP_CATALOG_DESCRIPTOR_IDS = {
   hero: ["split", "workshop", "editorial", "commerce", "button-overlay"],
   trustBar: ["inline", "stacked-cards", "rail-dense", "compact-strip"],
   categoryTile: ["grid-cards", "rail-horizontal", "masonry", "compact-list"],
+  socialProof: ["mini", "carousel", "grid"],
   productGrid: ["carousel-arrows", "grid-3", "grid-4", "masonry", "spotlight-carousel"],
   productCard: ["classic", "compact", "editorial", "premium-commerce", "spotlight-commerce"],
   promoBand: ["split-cta", "solid-bg", "countdown", "image-overlay"],
@@ -39,6 +41,7 @@ const STOREFRONT_TEMPLATE_IDS = {
   hero: HERO_TEMPLATE_IDS,
   trustBar: TRUST_BAR_TEMPLATE_IDS,
   categoryTile: CATEGORY_TILE_TEMPLATE_IDS,
+  socialProof: SOCIAL_PROOF_TEMPLATE_IDS,
   productGrid: PRODUCT_GRID_TEMPLATE_IDS,
   productCard: PRODUCT_CARD_TEMPLATE_IDS,
   promoBand: PROMO_BAND_TEMPLATE_IDS,

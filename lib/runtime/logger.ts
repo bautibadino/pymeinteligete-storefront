@@ -7,6 +7,7 @@ type LogEntry = {
   message: string;
   host: string;
   requestId: string;
+  tenantSlug?: string;
   path?: string;
   status?: number;
   code?: string | undefined;
@@ -40,6 +41,7 @@ export function logStorefrontRequest({
     message: `Request ${method} ${path}`,
     host: context.host,
     requestId: context.requestId,
+    ...(context.tenantSlug ? { tenantSlug: context.tenantSlug } : {}),
     path,
     timestamp: new Date().toISOString(),
   });
@@ -59,6 +61,7 @@ export function logStorefrontResponse({
     message: `Response ${status} for ${path}`,
     host: context.host,
     requestId: context.requestId,
+    ...(context.tenantSlug ? { tenantSlug: context.tenantSlug } : {}),
     path,
     status,
     timestamp: new Date().toISOString(),
@@ -81,6 +84,7 @@ export function logStorefrontError({
     message: error instanceof Error ? error.message : "Error desconocido en llamada al ERP",
     host: context.host,
     requestId: context.requestId,
+    ...(context.tenantSlug ? { tenantSlug: context.tenantSlug } : {}),
     path,
     code,
     error: error instanceof Error ? { name: error.name, message: error.message } : error,

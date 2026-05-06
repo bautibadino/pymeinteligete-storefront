@@ -1,6 +1,7 @@
 export type CheckoutFieldName =
   | "customerName"
   | "customerEmail"
+  | "customerPhone"
   | "shippingStreet"
   | "shippingNumber"
   | "shippingCity"
@@ -64,6 +65,10 @@ export function buildFieldErrors(formData: FormData): CheckoutFieldErrors {
 
   if (!readTrimmedString(formData, "customerEmail")) {
     errors.customerEmail = "Ingresá un email válido para el pedido.";
+  }
+
+  if (!readTrimmedString(formData, "customerPhone")) {
+    errors.customerPhone = "Ingresá un teléfono o WhatsApp para coordinar la compra.";
   }
 
   if (!readTrimmedString(formData, "shippingStreet")) {

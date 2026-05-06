@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { Route } from "next";
 import { PackageSearch } from "lucide-react";
 
@@ -9,28 +10,30 @@ import { resolveProductCardTemplate } from "@/lib/templates/product-card-registr
 
 export interface ProductGridHeaderProps {
   module: ProductGridModule;
+  mobileAccessory?: ReactNode;
 }
 
-export function ProductGridHeader({ module }: ProductGridHeaderProps) {
+export function ProductGridHeader({ module, mobileAccessory }: ProductGridHeaderProps) {
   const { title, subtitle, showViewAllLink, viewAllHref, viewAllLabel } = module.content;
 
   if (!title && !subtitle) return null;
 
   return (
-    <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-      <div className="max-w-2xl">
+    <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+      <div className="max-w-xl">
+        {mobileAccessory ? <div className="mb-3 md:hidden">{mobileAccessory}</div> : null}
         {title ? (
-          <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+          <h2 className="font-heading text-[1.55rem] font-semibold tracking-tight text-foreground md:text-[2rem]">
             {title}
           </h2>
         ) : null}
         {subtitle ? (
-          <p className="mt-2 text-base leading-relaxed text-muted md:text-lg">{subtitle}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted md:text-[0.95rem]">{subtitle}</p>
         ) : null}
       </div>
 
       {showViewAllLink && viewAllHref ? (
-        <Button asChild variant="outline" className="self-start rounded-full md:self-auto">
+        <Button asChild variant="outline" size="sm" className="self-start rounded-full px-4 md:self-auto">
           <Link href={viewAllHref as Route}>{viewAllLabel || "Ver catálogo"}</Link>
         </Button>
       ) : null}

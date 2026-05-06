@@ -15,6 +15,7 @@ import type {
   ProductDetailImage,
   ProductDetailSpecification,
 } from "@/lib/modules/product-detail";
+import { getStorefrontInstallmentsCount } from "@/lib/commerce/installments";
 import { buildCategoryCatalogHref as buildCategoryCatalogHrefInternal } from "@/lib/presentation/catalog-routing";
 import type { ProductGridSource } from "@/lib/modules/product-grid";
 import type { CategoryTileItem } from "@/lib/modules/category-tile";
@@ -496,12 +497,7 @@ function readBootstrapInstallments(
   amount: number | undefined,
   currency: string,
 ): ProductCardInstallments | undefined {
-  const installmentsConfig = bootstrap?.commerce?.payment.installments;
-  const mercadoPagoEnabled = bootstrap?.commerce?.payment.visibleMethods.includes("mercadopago") ?? false;
-  const count =
-    mercadoPagoEnabled && installmentsConfig?.enabled && typeof installmentsConfig.count === "number"
-      ? installmentsConfig.count
-      : undefined;
+  const count = getStorefrontInstallmentsCount(bootstrap);
 
   if (!count || count < 2 || typeof amount !== "number" || amount <= 0) {
     return undefined;

@@ -25,6 +25,12 @@ import { CategoryTileRailHorizontal } from "@/components/templates/category-tile
 import type { CategoryTileModule } from "@/lib/modules/category-tile";
 import { resolveCategoryTileTemplateId, type CategoryTileTemplateId } from "@/lib/templates/category-tile-catalog";
 
+import { SocialProofCarouselSection } from "@/components/templates/social-proof/social-proof-carousel-section";
+import { SocialProofGridSection } from "@/components/templates/social-proof/social-proof-grid-section";
+import { SocialProofMiniSection } from "@/components/templates/social-proof/social-proof-mini-section";
+import type { SocialProofModule } from "@/lib/modules/social-proof";
+import { resolveSocialProofTemplateId, type SocialProofTemplateId } from "@/lib/templates/social-proof-catalog";
+
 // ProductGrid
 import { ProductGridCarouselArrows } from "@/components/templates/product-grid/product-grid-carousel-arrows";
 import { ProductGridGrid3 } from "@/components/templates/product-grid/product-grid-grid-3";
@@ -179,6 +185,22 @@ export const CATEGORY_TILE_TEMPLATES: Record<CategoryTileTemplateId, CategoryTil
 
 export function resolveCategoryTileTemplate(templateId: unknown): CategoryTileTemplateComponent {
   return CATEGORY_TILE_TEMPLATES[resolveCategoryTileTemplateId(templateId)];
+}
+
+// ---------------------------------------------------------------------------
+// SocialProof
+// ---------------------------------------------------------------------------
+
+export type SocialProofTemplateComponent = ComponentType<{ module: SocialProofModule }>;
+
+export const SOCIAL_PROOF_TEMPLATES: Record<SocialProofTemplateId, SocialProofTemplateComponent> = {
+  mini: SocialProofMiniSection,
+  carousel: SocialProofCarouselSection,
+  grid: SocialProofGridSection,
+};
+
+export function resolveSocialProofTemplate(templateId: unknown): SocialProofTemplateComponent {
+  return SOCIAL_PROOF_TEMPLATES[resolveSocialProofTemplateId(templateId)];
 }
 
 // ---------------------------------------------------------------------------

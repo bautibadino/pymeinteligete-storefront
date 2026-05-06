@@ -93,7 +93,7 @@ export const PRODUCT_CARD_TEMPLATE_DESCRIPTORS: Record<
     id: "spotlight-commerce",
     label: "Spotlight Commerce",
     description:
-      "Card comercial protagonista para home: imagen dominante, badges premium, precio jerarquizado y CTA fuerte sin inventar datos.",
+      "Card comercial curada para home: más tensa, más baja y claramente distinta a la card de catálogo.",
     bestFor: ["home destacada", "lanzamientos", "campañas comerciales premium", "carruseles hero"],
     thumbnailUrl: "/template-thumbnails/product-card-spotlight-commerce.svg",
   },

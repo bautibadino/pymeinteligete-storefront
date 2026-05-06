@@ -1,6 +1,7 @@
 export const STOREFRONT_PREVIEW_QUERY_PARAM = "preview";
 export const STOREFRONT_PREVIEW_TENANT_QUERY_PARAM = "tenantSlug";
 export const STOREFRONT_PREVIEW_COOKIE = "__preview_token";
+export const STOREFRONT_PREVIEW_TENANT_COOKIE = "__preview_tenant_slug";
 export const STOREFRONT_PREVIEW_HEADER = "x-preview-token";
 export const STOREFRONT_LEGACY_PREVIEW_HEADER = "x-storefront-preview-token";
 
@@ -58,6 +59,36 @@ export function readStorefrontPreviewTokenFromCookieHeader(
   return null;
 }
 
+export function readStorefrontTenantSlugFromCookieHeader(
+  cookieHeader: string | null,
+): string | null {
+  if (!cookieHeader) {
+    return null;
+  }
+
+  for (const part of cookieHeader.split(";")) {
+    const [rawName, ...rawValueParts] = part.trim().split("=");
+
+    if (rawName !== STOREFRONT_PREVIEW_TENANT_COOKIE) {
+      continue;
+    }
+
+    const rawValue = rawValueParts.join("=");
+
+    try {
+      return normalizeStorefrontTenantSlug(decodeURIComponent(rawValue));
+    } catch {
+      return normalizeStorefrontTenantSlug(rawValue);
+    }
+  }
+
+  return null;
+}
+
 export function buildStorefrontPreviewCookieHeader(token: string): string {
   return `${STOREFRONT_PREVIEW_COOKIE}=${encodeURIComponent(token)}`;
+}
+
+export function buildStorefrontPreviewTenantCookieHeader(tenantSlug: string): string {
+  return `${STOREFRONT_PREVIEW_TENANT_COOKIE}=${encodeURIComponent(tenantSlug)}`;
 }

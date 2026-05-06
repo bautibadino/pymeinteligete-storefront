@@ -1,71 +1,57 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { OffsetCarousel } from "@/components/ui/offset-carousel";
 import type { ProductGridModule } from "@/lib/modules/product-grid";
+import { resolveProductCardTemplate } from "@/lib/templates/product-card-registry";
+import { ProductGridEmptyState } from "./shared";
 import { ProductGridHeader } from "./shared";
-import { useCarouselScroll, CarouselGridList } from "./carousel-client";
 
 /**
  * ProductGrid — Carrusel horizontal con flechas de navegación.
- * Scroll nativo con snap points. Botones condicionales según posición.
+ * Usa el mismo motor de activeIndex del spotlight, pero sin compresión visual.
  * Ideal para destacados en home sin ocupar mucho espacio vertical.
  */
 export function ProductGridCarouselArrows({ module }: { module: ProductGridModule }) {
-  const { scrollRef, canScrollLeft, canScrollRight, scrollBy, checkScroll } =
-    useCarouselScroll();
+  const { cardVariant, cardDisplayOptions } = module.content;
+  const ProductCard = resolveProductCardTemplate(cardVariant);
+  const products = module.products ?? [];
+
+  if (products.length === 0) {
+    return <ProductGridEmptyState />;
+  }
 
   return (
     <section
-      className="py-12"
+      className="py-10 sm:py-12"
       data-template="product-grid-carousel-arrows"
       aria-label={module.content.title}
     >
-      <div className="mx-auto max-w-7xl px-4">
+      <div className="mx-auto max-w-[86rem] px-4 sm:px-6">
         <ProductGridHeader module={module} />
 
-        <div className="relative">
-          {/* Flecha izquierda */}
-          {canScrollLeft ? (
-            <div className="absolute -left-3 top-1/2 z-10 -translate-y-1/2 md:-left-4">
-              <Button
-                size="icon"
-                variant="secondary"
-                className="size-10 rounded-full shadow-md"
-                onClick={() => scrollBy("left")}
-                aria-label="Desplazar a la izquierda"
-              >
-                <ChevronLeft className="size-5" aria-hidden="true" />
-              </Button>
+        <OffsetCarousel
+          ariaLabel={module.content.title || "Carrusel de productos"}
+          items={products}
+          getItemKey={(product) => product.id}
+          itemWidth="clamp(14rem, 20vw, 17rem)"
+          peek="0.75rem"
+          gap="1rem"
+          scaleStep={0}
+          opacityStep={0}
+          maxVisibleOffset={products.length}
+          showDots={false}
+          viewportClassName="pb-2"
+          trackClassName="pb-2"
+          renderItem={({ item, index, offset, isActive }) => (
+            <div
+              data-carousel-index={index}
+              data-carousel-offset={offset}
+              className={isActive ? "shadow-[0_24px_48px_-38px_rgba(15,23,42,0.24)]" : "shadow-none"}
+            >
+              <ProductCard product={item} displayOptions={cardDisplayOptions} />
             </div>
-          ) : null}
-
-          {/* Contenedor scrolleable */}
-          <div
-            ref={scrollRef}
-            onScroll={checkScroll}
-            className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 scrollbar-hide"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            <CarouselGridList module={module} />
-          </div>
-
-          {/* Flecha derecha */}
-          {canScrollRight ? (
-            <div className="absolute -right-3 top-1/2 z-10 -translate-y-1/2 md:-right-4">
-              <Button
-                size="icon"
-                variant="secondary"
-                className="size-10 rounded-full shadow-md"
-                onClick={() => scrollBy("right")}
-                aria-label="Desplazar a la derecha"
-              >
-                <ChevronRight className="size-5" aria-hidden="true" />
-              </Button>
-            </div>
-          ) : null}
-        </div>
+          )}
+        />
       </div>
     </section>
   );

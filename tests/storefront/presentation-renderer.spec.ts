@@ -314,6 +314,36 @@ describe("presentation renderer logic", () => {
     expect(module.content.perPage).toBe(24);
   });
 
+  it("adapta socialProof con empresaId y tenantSlug del bootstrap", () => {
+    const bootstrap = {
+      tenant: {
+        empresaId: "empresa-social-proof",
+        tenantSlug: "bym-social-proof",
+      },
+    } as StorefrontBootstrap;
+
+    const module = adaptSectionToModule(
+      buildSection({
+        id: "social-proof-1",
+        type: "socialProof",
+        variant: "mini",
+        content: { title: "Confianza real", subtitle: "Google Reviews" },
+      }),
+      { bootstrap },
+    ) as {
+      content: { title?: string; subtitle?: string };
+      empresaId?: string;
+      tenantSlug?: string;
+    };
+
+    expect(module.content).toEqual({
+      title: "Confianza real",
+      subtitle: "Google Reviews",
+    });
+    expect(module.empresaId).toBe(bootstrap.tenant.empresaId);
+    expect(module.tenantSlug).toBe(bootstrap.tenant.tenantSlug);
+  });
+
   it("adapta productGrid con defaults seguros para source y cardVariant", () => {
     const module = adaptSectionToModule(
       buildSection({

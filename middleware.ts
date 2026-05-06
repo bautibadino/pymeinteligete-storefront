@@ -4,6 +4,7 @@ import { STOREFRONT_HEADERS } from "@/lib/contracts/storefront-v1";
 import {
   STOREFRONT_LEGACY_PREVIEW_HEADER,
   STOREFRONT_PREVIEW_COOKIE,
+  STOREFRONT_PREVIEW_TENANT_COOKIE,
   STOREFRONT_PREVIEW_HEADER,
   STOREFRONT_PREVIEW_QUERY_PARAM,
   STOREFRONT_PREVIEW_TENANT_QUERY_PARAM,
@@ -24,10 +25,14 @@ export function middleware(request: NextRequest) {
   const queryTenantSlug = normalizeStorefrontTenantSlug(
     request.nextUrl.searchParams.get(STOREFRONT_PREVIEW_TENANT_QUERY_PARAM),
   );
+  const cookieTenantSlug = normalizeStorefrontTenantSlug(
+    request.cookies.get(STOREFRONT_PREVIEW_TENANT_COOKIE)?.value,
+  );
   const cookiePreviewToken = normalizeStorefrontPreviewToken(
     request.cookies.get(STOREFRONT_PREVIEW_COOKIE)?.value,
   );
   const previewToken = queryPreviewToken ?? cookiePreviewToken;
+  const tenantSlug = queryTenantSlug ?? cookieTenantSlug;
   const requestHeaders = new Headers(request.headers);
 
   if (previewToken) {
@@ -35,8 +40,8 @@ export function middleware(request: NextRequest) {
     requestHeaders.set(STOREFRONT_LEGACY_PREVIEW_HEADER, previewToken);
   }
 
-  if (queryTenantSlug) {
-    requestHeaders.set(STOREFRONT_HEADERS.tenantSlug, queryTenantSlug);
+  if (tenantSlug) {
+    requestHeaders.set(STOREFRONT_HEADERS.tenantSlug, tenantSlug);
   }
 
   const response = NextResponse.next({
@@ -49,6 +54,18 @@ export function middleware(request: NextRequest) {
     response.cookies.set({
       name: STOREFRONT_PREVIEW_COOKIE,
       value: queryPreviewToken,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 15,
+    });
+  }
+
+  if (queryTenantSlug) {
+    response.cookies.set({
+      name: STOREFRONT_PREVIEW_TENANT_COOKIE,
+      value: queryTenantSlug,
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",

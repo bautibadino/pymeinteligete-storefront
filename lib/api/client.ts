@@ -40,10 +40,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isErrorEnvelope(value: unknown): value is StorefrontErrorResponse {
+  if (!isRecord(value) || value.success !== false) {
+    return false;
+  }
+
+  const error = value.error;
+
   return (
-    isRecord(value) &&
-    value.success === false &&
-    typeof value.error === "string" &&
+    (typeof error === "string" ||
+      (isRecord(error) && typeof error.message === "string")) &&
     (value.code === undefined || typeof value.code === "string")
   );
 }
@@ -122,19 +127,37 @@ function toStorefrontApiError(
   path: string,
 ): StorefrontApiError {
   if (isErrorEnvelope(payload)) {
+    const message =
+      typeof payload.error === "string" ? payload.error : payload.error.message;
+    const code =
+      typeof payload.error === "string"
+        ? payload.code
+        : typeof payload.error.code === "string"
+          ? payload.error.code
+          : payload.code;
+    const requestId =
+      typeof payload.error === "string"
+        ? context.requestId
+        : typeof payload.error.requestId === "string"
+          ? payload.error.requestId
+          : context.requestId;
+    const details =
+      payload.details ??
+      (typeof payload.error === "string" ? undefined : payload.error.details) ??
+      payload;
     const errorParams = {
-      message: payload.error,
+      message,
       status: response.status,
-      details: payload.details,
+      details,
       path,
       host: context.host,
-      requestId: context.requestId,
+      requestId,
     };
 
-    if (payload.code) {
+    if (code) {
       return new StorefrontApiError({
         ...errorParams,
-        code: payload.code,
+        code,
       });
     }
 

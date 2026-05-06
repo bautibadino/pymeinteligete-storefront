@@ -27,6 +27,7 @@ export * from "@/lib/modules/product-detail";
 export * from "@/lib/modules/product-grid";
 export * from "@/lib/modules/promo-band";
 export * from "@/lib/modules/rich-text";
+export * from "@/lib/modules/social-proof";
 export * from "@/lib/modules/testimonials";
 export type { TrustBarContent, TrustBarModule as TrustBarBuilderModule } from "@/lib/modules/trust-bar";
 

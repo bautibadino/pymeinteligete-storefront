@@ -23,17 +23,17 @@ export default async function CheckoutConfirmationPage() {
   return (
     <>
       <PageIntro
-        eyebrow="Confirmación por token"
-        title={`Resultado de orden en ${displayName}`}
-        description="La confirmación requiere un token firmado de pedido para consultar el estado real en PyMEInteligente."
+        eyebrow="Confirmación de compra"
+        title={`No encontramos tu enlace de confirmación en ${displayName}`}
+        description="Para ver el estado real de una orden necesitás abrir la confirmación firmada que se genera al terminar el checkout."
         aside={
           <div className="stat-stack">
             <div className="stat-box">
-              <span>Host</span>
-              <strong className="mono">{host}</strong>
+              <span>Tienda</span>
+              <strong>{displayName}</strong>
             </div>
             <div className="stat-box">
-              <span>Estado tienda</span>
+              <span>Estado</span>
               <strong>{experience.bootstrap?.tenant.status ?? "sin resolver"}</strong>
             </div>
           </div>
@@ -48,13 +48,13 @@ export default async function CheckoutConfirmationPage() {
       />
 
       <SplitPanel
-        title="Consulta segura de pedido"
-        description="Esta superficie no lee identificadores de orden desde query string. La ruta válida es `/checkout/confirmacion/[token]`."
+        title="Cómo retomarlo"
+        description="La forma correcta de volver a una compra es usando el enlace firmado que deja el checkout o el que te comparta el comercio."
       >
         <ol className="timeline-list">
-          <li>Consumir `GET /api/storefront/v1/orders/:token`.</li>
-          <li>Mantener checkout y confirmación fuera de indexación.</li>
-          <li>Exponer pago manual sólo con token firmado y payload documentado.</li>
+          <li>Volvé al checkout si todavía no generaste la orden.</li>
+          <li>Usá el link de confirmación recibido después de crearla.</li>
+          <li>Si no lo tenés, contactá al comercio para recuperar el estado del pedido.</li>
         </ol>
       </SplitPanel>
     </>

@@ -1,16 +1,21 @@
 "use client";
 
+import { useEffect } from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { Landmark, Wallet } from "lucide-react";
 
 import {
-  initialManualPaymentActionState,
-  submitManualPaymentAction,
   type ManualPaymentActionState,
-} from "@/app/(storefront)/checkout/actions";
+  initialManualPaymentActionState,
+} from "@/app/(storefront)/checkout/action-state";
+import { submitManualPaymentAction } from "@/app/(storefront)/checkout/actions";
+import { Button } from "@/components/ui/button";
+import { useStorefrontCart } from "@/components/storefront/cart/storefront-cart-provider";
 import { buildManualPaymentSuccessDetails } from "@/lib/checkout/manual-payment";
 import { resolvePaymentMethodOptionValue } from "@/lib/checkout/payment-method-option";
 import type { StorefrontPaymentMethod } from "@/lib/storefront-api";
+import { ManualPaymentInstructions } from "./manual-payment-instructions";
 
 type ManualPaymentFormProps = {
   orderToken: string;
@@ -21,18 +26,10 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <button className="checkout-submit" type="submit" disabled={pending}>
-      {pending ? "Iniciando pago manual..." : "Iniciar pago manual"}
-    </button>
+    <Button className="w-full sm:w-auto" type="submit" disabled={pending}>
+      {pending ? "Cargando datos..." : "Ver datos para pagar"}
+    </Button>
   );
-}
-
-function formatAmount(amount: number): string {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0,
-  }).format(amount);
 }
 
 function ManualPaymentSuccessCard({ state }: { state: ManualPaymentActionState }) {
@@ -58,73 +55,7 @@ function ManualPaymentSuccessCard({ state }: { state: ManualPaymentActionState }
     ...(state.contactInfo ? { contactInfo: state.contactInfo } : {}),
   });
 
-  return (
-    <section className="empty-state-card">
-      <h3>Pago manual iniciado</h3>
-      <p>{state.message}</p>
-
-      <div className="confirmation-grid">
-        <article className="confirmation-card">
-          <span>Método</span>
-          <strong>{details.methodDisplayName}</strong>
-        </article>
-        <article className="confirmation-card">
-          <span>Importe</span>
-          <strong>{formatAmount(details.amount)}</strong>
-        </article>
-        <article className="confirmation-card">
-          <span>Orden</span>
-          <strong>{details.orderId}</strong>
-        </article>
-      </div>
-
-      {details.instructions ? (
-        <div className="confirmation-detail">
-          <p>{details.instructions}</p>
-        </div>
-      ) : null}
-
-      {details.bankAccounts.length > 0 ? (
-        <div className="checkout-section">
-          <div className="checkout-section-header">
-            <span className="eyebrow">Datos para transferir</span>
-            <h3>Cuentas habilitadas</h3>
-          </div>
-
-          <div className="confirmation-grid">
-            {details.bankAccounts.map((account) => (
-              <article
-                className="confirmation-card"
-                key={`${account.bank}-${account.cbu}-${account.alias ?? "sin-alias"}`}
-              >
-                <span>{account.bank}</span>
-                <strong>{account.cbu}</strong>
-                {account.alias ? <p>Alias: {account.alias}</p> : null}
-              </article>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {details.contactItems.length > 0 ? (
-        <div className="checkout-section">
-          <div className="checkout-section-header">
-            <span className="eyebrow">Contacto</span>
-            <h3>Canales para enviar tu comprobante</h3>
-          </div>
-
-          <div className="confirmation-grid">
-            {details.contactItems.map((item) => (
-              <article className="confirmation-card" key={`${item.label}-${item.value}`}>
-                <span>{item.label}</span>
-                <strong>{item.value}</strong>
-              </article>
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </section>
-  );
+  return <ManualPaymentInstructions details={details} />;
 }
 
 export function ManualPaymentForm({ orderToken, paymentMethods }: ManualPaymentFormProps) {
@@ -132,36 +63,63 @@ export function ManualPaymentForm({ orderToken, paymentMethods }: ManualPaymentF
     submitManualPaymentAction,
     initialManualPaymentActionState,
   );
+  const { clearCart } = useStorefrontCart();
+
+  useEffect(() => {
+    if (state.status === "success") {
+      clearCart();
+    }
+  }, [clearCart, state.status]);
 
   if (state.status === "success") {
     return <ManualPaymentSuccessCard state={state} />;
   }
 
   return (
-    <form className="checkout-form" action={formAction}>
+    <form className="space-y-5" action={formAction}>
       <input type="hidden" name="orderToken" value={orderToken} />
 
-      <div className="form-grid">
-        <label className="form-field form-field-full">
-          <span>Método de pago</span>
-          <select name="methodId" defaultValue="">
-            <option value="" disabled>
-              Seleccionar...
-            </option>
-            {paymentMethods.map((method: import("@/lib/storefront-api").StorefrontPaymentMethod) => (
-              <option key={method.methodId} value={resolvePaymentMethodOptionValue(method)}>
-                {method.displayName ?? "Método"}
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="grid gap-3">
+        {paymentMethods.map((method: import("@/lib/storefront-api").StorefrontPaymentMethod, index) => (
+          <label
+            key={method.methodId}
+            className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border/70 bg-background/80 p-4 transition hover:border-primary/40"
+          >
+            <input
+              type="radio"
+              name="methodId"
+              value={resolvePaymentMethodOptionValue(method)}
+              defaultChecked={paymentMethods.length === 1 || index === 0}
+              className="mt-1"
+            />
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                {method.methodType === "manual" ? (
+                  <Landmark className="size-4 text-primary" />
+                ) : (
+                  <Wallet className="size-4 text-primary" />
+                )}
+                <span className="font-semibold text-foreground">{method.displayName ?? "Método"}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {method.description ?? "Coordiná el pago con el comercio."}
+              </p>
+            </div>
+          </label>
+        ))}
       </div>
 
       {state.status === "error" && state.message ? (
-        <div className="checkout-error-banner">{state.message}</div>
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {state.message}
+        </div>
       ) : null}
 
-      <div className="checkout-footer">
+      <p className="rounded-2xl border border-border/70 bg-panel/70 px-4 py-3 text-sm leading-6 text-muted-foreground">
+        Al continuar vas a ver el alias, CBU y contacto para enviar el comprobante.
+      </p>
+
+      <div className="flex justify-end">
         <SubmitButton />
       </div>
     </form>

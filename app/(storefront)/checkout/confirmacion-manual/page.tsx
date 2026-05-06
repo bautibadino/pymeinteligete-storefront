@@ -43,14 +43,14 @@ export default async function ManualConfirmationCompatibilityPage({
   return (
     <>
       <PageIntro
-        eyebrow="Compatibilidad manual"
-        title={`Confirmación manual en ${displayName}`}
-        description="Esta ruta existe por compatibilidad con enlaces heredados. El flujo vigente de confirmación y pago manual se resuelve por token firmado."
+        eyebrow="Compatibilidad"
+        title={`Pago manual en ${displayName}`}
+        description="Esta ruta quedó sólo para compatibilidad con enlaces viejos. El flujo vigente de confirmación y pago manual vive dentro de la confirmación firmada."
         aside={
           <div className="stat-stack">
             <div className="stat-box">
-              <span>Host</span>
-              <strong className="mono">{host}</strong>
+              <span>Tienda</span>
+              <strong>{displayName}</strong>
             </div>
             <div className="stat-box">
               <span>Método</span>
@@ -61,8 +61,8 @@ export default async function ManualConfirmationCompatibilityPage({
       />
 
       <SplitPanel
-        title="Ruta pública vigente"
-        description="El storefront externo ya no depende de un paso separado para mostrar instrucciones manuales."
+        title="Ruta vigente"
+        description="La tienda ya no depende de una página aparte para mostrar instrucciones manuales."
       >
         <ul className="timeline-list">
           <li>Si tenés un token de orden, abrí la confirmación firmada recibida después del checkout.</li>

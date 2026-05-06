@@ -9,6 +9,7 @@ import {
   normalizeStorefrontPreviewToken,
   normalizeStorefrontTenantSlug,
   readStorefrontPreviewTokenFromCookieHeader,
+  readStorefrontTenantSlugFromCookieHeader,
 } from "@/lib/preview/storefront-preview";
 import { createRequestId } from "@/lib/runtime/request-id";
 import { resolveRequestHostFromHeaders } from "@/lib/tenancy/resolve-request-host";
@@ -34,7 +35,9 @@ export async function getStorefrontRuntimeSnapshot(): Promise<StorefrontRuntimeS
     normalizeStorefrontPreviewToken(headerStore.get(STOREFRONT_PREVIEW_HEADER)) ??
     normalizeStorefrontPreviewToken(headerStore.get(STOREFRONT_LEGACY_PREVIEW_HEADER)) ??
     readStorefrontPreviewTokenFromCookieHeader(headerStore.get("cookie"));
-  const tenantSlug = normalizeStorefrontTenantSlug(headerStore.get(STOREFRONT_HEADERS.tenantSlug));
+  const tenantSlug =
+    normalizeStorefrontTenantSlug(headerStore.get(STOREFRONT_HEADERS.tenantSlug)) ??
+    readStorefrontTenantSlugFromCookieHeader(headerStore.get("cookie"));
 
   const context: StorefrontRequestContext = {
     host: resolveRequestHostFromHeaders(headerStore),

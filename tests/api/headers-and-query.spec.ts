@@ -9,11 +9,14 @@ import {
   STOREFRONT_LEGACY_PREVIEW_HEADER,
   STOREFRONT_PREVIEW_COOKIE,
   STOREFRONT_PREVIEW_HEADER,
+  STOREFRONT_PREVIEW_TENANT_COOKIE,
   STOREFRONT_PREVIEW_TENANT_QUERY_PARAM,
   buildStorefrontPreviewCookieHeader,
+  buildStorefrontPreviewTenantCookieHeader,
   normalizeStorefrontPreviewToken,
   normalizeStorefrontTenantSlug,
   readStorefrontPreviewTokenFromCookieHeader,
+  readStorefrontTenantSlugFromCookieHeader,
 } from "@/lib/preview/storefront-preview";
 
 describe("buildStorefrontHeaders", () => {
@@ -70,6 +73,15 @@ describe("storefront preview token", () => {
     expect(readStorefrontPreviewTokenFromCookieHeader(cookieHeader)).toBe("draft/token=");
     expect(buildStorefrontPreviewCookieHeader("draft/token=")).toBe(
       "__preview_token=draft%2Ftoken%3D",
+    );
+  });
+
+  it("lee tenantSlug persistido de preview desde cookie header", () => {
+    const cookieHeader = `other=1; ${STOREFRONT_PREVIEW_TENANT_COOKIE}=bym-demo; session=abc`;
+
+    expect(readStorefrontTenantSlugFromCookieHeader(cookieHeader)).toBe("bym-demo");
+    expect(buildStorefrontPreviewTenantCookieHeader("bym-demo")).toBe(
+      "__preview_tenant_slug=bym-demo",
     );
   });
 

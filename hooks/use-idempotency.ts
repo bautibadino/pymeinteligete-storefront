@@ -14,16 +14,7 @@
 
 import { useState, useCallback, useRef } from "react"
 
-/**
- * Genera un UUID v4
- */
-function generateUUID(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0
-    const v = c === "x" ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
-}
+import { createRandomId } from "@/lib/utils/random-id"
 
 interface UseIdempotencyReturn {
   /** Clave única actual para esta operación */
@@ -51,11 +42,11 @@ interface UseIdempotencyReturn {
  */
 export function useIdempotency(): UseIdempotencyReturn {
   // Usar useRef para persistir la key entre renders sin causar re-render innecesario
-  const keyRef = useRef<string>(generateUUID())
+  const keyRef = useRef<string>(createRandomId())
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const resetKey = useCallback(() => {
-    keyRef.current = generateUUID()
+    keyRef.current = createRandomId()
   }, [])
 
   const startSubmit = useCallback(() => {

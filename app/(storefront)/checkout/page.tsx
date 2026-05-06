@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import type { Route } from "next";
 
 import {
   canAccessCheckout,
@@ -6,9 +9,12 @@ import {
   resolveTenantDisplayName,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { CheckoutForm } from "@/components/storefront/checkout/checkout-form";
-import { PageIntro, SplitPanel } from "@/components/storefront/page-sections";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
 import { parseCheckoutItemsFromSearchParams } from "@/lib/cart/storefront-cart";
+import {
+  getStorefrontInstallmentsCount,
+  getStorefrontInstallmentsLabel,
+} from "@/lib/commerce/installments";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
 
 type CheckoutPageProps = {
@@ -32,56 +38,45 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   const displayName = resolveTenantDisplayName(experience.bootstrap, host);
   const initialItems = parseCheckoutItemsFromSearchParams(resolvedSearchParams);
   const canCheckout = canAccessCheckout(experience.bootstrap?.tenant.status ?? null);
-  const visibleMethods = experience.paymentMethods?.paymentMethods.length ?? 0;
   const publicKey = experience.bootstrap?.commerce.payment.publicKey;
+  const installmentsLabel = getStorefrontInstallmentsLabel(experience.bootstrap);
+  const installmentsCount = getStorefrontInstallmentsCount(experience.bootstrap);
 
   return (
-    <>
-      <PageIntro
-        eyebrow="Checkout host-driven"
-        title={`Checkout de ${displayName}`}
-        description="La orden ya se crea con `POST /api/storefront/v1/checkout`, usando host, bootstrap y disponibilidad pública reales del tenant actual. El pago automático queda pendiente hasta cerrar el payload seguro del proveedor."
-        aside={
-          <div className="stat-stack">
-            <div className="stat-box">
-              <span>Host</span>
-              <strong className="mono">{host}</strong>
-            </div>
-            <div className="stat-box">
-              <span>Métodos visibles</span>
-              <strong>{visibleMethods}</strong>
-            </div>
-          </div>
-        }
-      />
-
+    <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      <Link
+        href={"/carrito" as Route}
+        className="inline-flex w-fit items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
+      >
+        <ArrowLeft className="size-4" />
+        Volver al carrito
+      </Link>
+      <header className="max-w-3xl space-y-3">
+        <h1 className="text-balance text-4xl font-semibold tracking-[-0.03em] text-foreground sm:text-5xl">
+          {`Finalizá tu compra en ${displayName}`}
+        </h1>
+        <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
+          Revisá tu pedido, completá los datos de entrega y elegí cómo querés pagar.
+        </p>
+      </header>
       <SurfaceStateCard
         shopStatus={experience.bootstrap?.tenant.status ?? null}
         surface="checkout"
         title="El checkout sólo está habilitado cuando la tienda está activa."
-        description="La política documentada bloquea esta superficie para `paused`, `draft` y `disabled`. La UI ya refleja esa restricción sin recalcular negocio."
+        description="Si la tienda está en pausa, borrador o deshabilitada, frenamos la compra antes de crear una orden inconsistente."
       />
 
       {canCheckout ? (
-        <SplitPanel
-          title="Crear orden oficial"
-          description="La superficie envía cliente, dirección e items explícitos al backend. No replica reglas del ERP ni construye pagos inventados del lado del frontend."
-        >
-          <CheckoutForm paymentMethods={experience.paymentMethods} initialItems={initialItems} {...(publicKey ? { publicKey } : {})} />
-        </SplitPanel>
+        <section className="pb-8">
+          <CheckoutForm
+            paymentMethods={experience.paymentMethods}
+            initialItems={initialItems}
+            {...(publicKey ? { publicKey } : {})}
+            {...(installmentsLabel ? { installmentsLabel } : {})}
+            {...(installmentsCount ? { installmentsCount } : {})}
+          />
+        </section>
       ) : null}
-
-      <SplitPanel
-        title="Estado de integración"
-        description="El checkout ya crea órdenes oficiales. La siguiente fase puede acoplar el procesamiento de pago y la confirmación por token sin rehacer la superficie."
-      >
-        <ol className="timeline-list">
-          <li>`getPaymentMethods(host)` ya alimenta la superficie visible del tenant.</li>
-          <li>`postCheckout(host, payload)` ya crea la orden desde una action server-side.</li>
-          <li>`processPayment()` queda pendiente hasta cerrar el `paymentData` real del proveedor.</li>
-          <li>La navegación final debería migrar a una confirmación basada en `orderToken` firmado.</li>
-        </ol>
-      </SplitPanel>
-    </>
+    </main>
   );
 }
