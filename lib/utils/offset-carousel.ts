@@ -93,3 +93,21 @@ export function getCarouselTrackTransform(
   const offset = Number((activeIndex * measuredStepWidth).toFixed(3));
   return `translate3d(-${offset}px, 0, 0)`;
 }
+
+export function getCarouselCenterPadding(
+  viewportWidth: number | null | undefined,
+  itemWidth: number | null | undefined,
+): number | null {
+  if (
+    !viewportWidth ||
+    !itemWidth ||
+    !Number.isFinite(viewportWidth) ||
+    !Number.isFinite(itemWidth) ||
+    viewportWidth <= 0 ||
+    itemWidth <= 0
+  ) {
+    return null;
+  }
+
+  return Number(Math.max(0, (viewportWidth - itemWidth) / 2).toFixed(3));
+}

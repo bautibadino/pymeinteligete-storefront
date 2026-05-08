@@ -66,7 +66,10 @@ export function ReviewCard({ review, className }: ReviewCardProps) {
           </div>
         </div>
 
-        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-white/90 px-2 py-1 text-[10px] text-muted-foreground">
+        <span
+          className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-white/90 px-2 py-1 text-[10px] text-muted-foreground"
+          data-google-pill="true"
+        >
           <GoogleMark className="size-3.5 shrink-0" />
           Google
         </span>

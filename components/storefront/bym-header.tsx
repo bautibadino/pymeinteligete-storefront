@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { Route } from "next";
 
 import { HeaderCartButton } from "@/components/storefront/cart/header-cart-button";
@@ -32,6 +33,9 @@ export function BymHeader({
   phone,
 }: BymHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const solidHeader = scrolled || !isHome;
 
   useEffect(() => {
     const updateScrolled = () => setScrolled(window.scrollY > 18);
@@ -44,19 +48,21 @@ export function BymHeader({
     <header
       className={cn(
         "fixed inset-x-0 top-0 z-50 border-b transition duration-300",
-        scrolled
-          ? "border-white/10 bg-[#070707]/88 shadow-[0_18px_60px_rgba(0,0,0,0.32)] backdrop-blur-xl"
+        solidHeader
+          ? "border-white/10 bg-[#070707] shadow-[0_18px_60px_rgba(0,0,0,0.32)]"
           : "border-white/10 bg-white/[0.03] backdrop-blur-md",
       )}
-      data-bym-header-state={scrolled ? "scrolled" : "top"}
+      data-bym-header-state={solidHeader ? (scrolled ? "scrolled" : "solid") : "top"}
     >
       {announcement ? (
         <div
           className={cn(
             "overflow-hidden border-b px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] transition duration-300 sm:px-6 lg:px-8",
-            scrolled
-              ? "border-white/10 bg-[#f4c542] text-black"
-              : "border-white/10 bg-black/18 text-white",
+            !isHome
+              ? "border-white/10 bg-[#070707] text-[#f4c542]"
+              : scrolled
+                ? "border-white/10 bg-[#f4c542] text-black"
+                : "border-white/10 bg-black/18 text-white",
           )}
         >
           <div className="mx-auto flex max-w-7xl items-center justify-center gap-4">

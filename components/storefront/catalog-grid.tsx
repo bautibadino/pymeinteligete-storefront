@@ -9,6 +9,7 @@ type CatalogGridProps = {
   emptyTitle: string;
   emptyDescription: string;
   density?: CatalogLayoutDensity;
+  showHeader?: boolean;
 };
 
 export function CatalogGrid({
@@ -17,6 +18,7 @@ export function CatalogGrid({
   emptyTitle,
   emptyDescription,
   density = "compact",
+  showHeader = true,
 }: CatalogGridProps) {
   const normalizedProducts = mapCatalogProductsToCardData(products, products.length, bootstrap);
 
@@ -31,19 +33,21 @@ export function CatalogGrid({
 
   return (
     <section className="grid gap-4" aria-label="Productos públicos">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
-            Catálogo público
-          </p>
-          <h2 className="mt-1 text-lg font-semibold text-foreground">
-            Resultados disponibles
-          </h2>
+      {showHeader ? (
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+              Catálogo público
+            </p>
+            <h2 className="mt-1 text-lg font-semibold text-foreground">
+              Resultados disponibles
+            </h2>
+          </div>
+          <span className="rounded-full border border-border bg-[color:var(--surface-muted)] px-3 py-1.5 text-xs font-semibold text-muted">
+            {normalizedProducts.length} {normalizedProducts.length === 1 ? "producto" : "productos"}
+          </span>
         </div>
-        <span className="rounded-full border border-border bg-[color:var(--surface-muted)] px-3 py-1.5 text-xs font-semibold text-muted">
-          {normalizedProducts.length} {normalizedProducts.length === 1 ? "producto" : "productos"}
-        </span>
-      </div>
+      ) : null}
 
       <ProductGrid
         products={normalizedProducts}
@@ -54,7 +58,7 @@ export function CatalogGrid({
           showBadges: true,
           showInstallments: true,
           showCashDiscount: true,
-          showAddToCart: false,
+          showAddToCart: true,
         }}
         columns={4}
       />

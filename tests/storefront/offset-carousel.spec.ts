@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { OffsetCarousel } from "@/components/ui/offset-carousel";
 import {
   clampCarouselIndex,
+  getCarouselCenterPadding,
   getCarouselItemVisualState,
   getCarouselTrackTransform,
   getVisibleDotIndexes,
@@ -76,6 +77,12 @@ describe("offset carousel helpers", () => {
   it("mueve el track con pixeles medidos para mantener centrados indices avanzados", () => {
     expect(getCarouselTrackTransform(4, 296)).toBe("translate3d(-1184px, 0, 0)");
     expect(getCarouselTrackTransform(4, null)).toBe("translate3d(0, 0, 0)");
+  });
+
+  it("calcula padding de centrado con anchos medidos en vez de calc CSS", () => {
+    expect(getCarouselCenterPadding(420, 280)).toBe(70);
+    expect(getCarouselCenterPadding(260, 280)).toBe(0);
+    expect(getCarouselCenterPadding(null, 280)).toBeNull();
   });
 
   it("renderiza el carrusel con activeIndex inicial, botones clampados y ventana de dots reducida", () => {

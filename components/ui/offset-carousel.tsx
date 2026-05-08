@@ -16,6 +16,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import {
   clampCarouselIndex,
+  getCarouselCenterPadding,
   getCarouselItemVisualState,
   getCarouselTrackTransform,
   getVisibleDotIndexes,
@@ -93,6 +94,8 @@ export function OffsetCarousel<T>({
   );
   const [isHovering, setIsHovering] = useState(false);
   const [trackStepWidth, setTrackStepWidth] = useState<number | null>(null);
+  const [centerPadding, setCenterPadding] = useState<number | null>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const touchStartXRef = useRef<number | null>(null);
   const dotSetId = useId();
@@ -182,8 +185,10 @@ export function OffsetCarousel<T>({
 
   useEffect(() => {
     const track = trackRef.current;
+    const viewport = viewportRef.current;
     if (!track || total === 0) {
       setTrackStepWidth(null);
+      setCenterPadding(null);
       return;
     }
 
@@ -191,6 +196,7 @@ export function OffsetCarousel<T>({
       const firstItem = track.querySelector<HTMLElement>("[data-carousel-item='true']");
       if (!firstItem) {
         setTrackStepWidth(null);
+        setCenterPadding(null);
         return;
       }
 
@@ -198,6 +204,7 @@ export function OffsetCarousel<T>({
       const gap = Number.parseFloat(style.columnGap || style.gap || "0") || 0;
       const width = firstItem.offsetWidth;
       setTrackStepWidth(width > 0 ? width + gap : null);
+      setCenterPadding(getCarouselCenterPadding(viewport?.offsetWidth, width));
     };
 
     measure();
@@ -209,6 +216,9 @@ export function OffsetCarousel<T>({
 
     const observer = new ResizeObserver(measure);
     observer.observe(track);
+    if (viewport) {
+      observer.observe(viewport);
+    }
 
     const firstItem = track.querySelector<HTMLElement>("[data-carousel-item='true']");
     if (firstItem) {
@@ -229,7 +239,7 @@ export function OffsetCarousel<T>({
   } as CSSProperties;
 
   const trackStyle = {
-    paddingInline: "max(var(--carousel-peek), calc(50% - var(--carousel-item-width) / 2))",
+    paddingInline: centerPadding === null ? "var(--carousel-peek)" : `${centerPadding}px`,
     transform: getCarouselTrackTransform(activeIndex, trackStepWidth),
     transition: "transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
   } as CSSProperties;
@@ -244,6 +254,7 @@ export function OffsetCarousel<T>({
         className="relative pb-5 sm:pb-6"
       >
         <div
+          ref={viewportRef}
           className={cn("relative [overflow-x:clip] [overflow-y:visible]", viewportClassName)}
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}

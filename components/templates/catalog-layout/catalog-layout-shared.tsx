@@ -675,11 +675,13 @@ export function CatalogToolbar({
   sortOptions,
   defaultSort,
   density,
+  tone = "default",
 }: {
   count: number;
   sortOptions?: string[] | undefined;
   defaultSort?: string | undefined;
   density?: CatalogLayoutDensity | undefined;
+  tone?: "default" | "dark";
 }) {
   const pathname = usePathname() || "/catalogo";
   const searchParams = useSearchParams();
@@ -700,7 +702,9 @@ export function CatalogToolbar({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-raised)] shadow-sm backdrop-blur-sm",
+        tone === "dark"
+          ? "rounded-2xl border border-white/10 bg-[#141416] shadow-[0_18px_46px_rgba(0,0,0,0.24)] backdrop-blur-sm"
+          : "rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-raised)] shadow-sm backdrop-blur-sm",
         resolvedDensity === "comfortable" ? "px-4 py-3.5" : "px-3.5 py-3",
       )}
     >
@@ -711,13 +715,15 @@ export function CatalogToolbar({
         )}
       >
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold text-foreground tabular-nums">
+          <span className={cn("text-sm font-semibold tabular-nums", tone === "dark" ? "text-white" : "text-foreground")}>
             {count} resultados
           </span>
-          <span className="hidden text-sm text-muted md:inline">Ordená sin salir de la grilla</span>
+          <span className={cn("hidden text-sm md:inline", tone === "dark" ? "text-white/52" : "text-muted")}>
+            Ordená sin salir de la grilla
+          </span>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+          <span className={cn("text-[11px] font-semibold uppercase tracking-[0.14em]", tone === "dark" ? "text-white/54" : "text-muted")}>
             Ordenar
           </span>
           <nav aria-label="Ordenar catálogo" className="flex flex-wrap items-center gap-2">

@@ -151,4 +151,33 @@ describe("extractFiscalAutofillData", () => {
       }),
     ).toBeNull();
   });
+
+  it("descarta datos fiscales de prueba o stub para no completar clientes falsos", () => {
+    expect(
+      extractFiscalAutofillData({
+        success: true,
+        data: {
+          customer: {
+            name: "EMPRESA DE PRUEBA S.A. (STUB)",
+            taxId: "30712345678",
+            taxIdType: "80",
+            taxpayerType: "Juridica",
+          },
+          metadata: {
+            source: "afip-stub",
+          },
+        },
+      }),
+    ).toBeNull();
+
+    expect(
+      extractFiscalAutofillData({
+        customer: {
+          name: "Empresa de Prueba SRL",
+          taxId: "30712345678",
+          taxIdType: "80",
+        },
+      }),
+    ).toBeNull();
+  });
 });

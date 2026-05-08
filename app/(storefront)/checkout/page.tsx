@@ -15,7 +15,9 @@ import {
   getStorefrontInstallmentsCount,
   getStorefrontInstallmentsLabel,
 } from "@/lib/commerce/installments";
+import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
+import { cn } from "@/lib/utils/cn";
 
 type CheckoutPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -41,21 +43,42 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   const publicKey = experience.bootstrap?.commerce.payment.publicKey;
   const installmentsLabel = getStorefrontInstallmentsLabel(experience.bootstrap);
   const installmentsCount = getStorefrontInstallmentsCount(experience.bootstrap);
+  const isBymCustom = isBymCustomExperience(experience.bootstrap);
 
   return (
-    <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+    <main
+      className={cn(
+        "mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10",
+        isBymCustom && "text-white",
+      )}
+    >
       <Link
         href={"/carrito" as Route}
-        className="inline-flex w-fit items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
+        className={cn(
+          "inline-flex w-fit items-center gap-2 text-sm transition",
+          isBymCustom
+            ? "text-white/52 hover:text-white"
+            : "text-muted-foreground hover:text-foreground",
+        )}
       >
         <ArrowLeft className="size-4" />
         Volver al carrito
       </Link>
       <header className="max-w-3xl space-y-3">
-        <h1 className="text-balance text-4xl font-semibold tracking-[-0.03em] text-foreground sm:text-5xl">
+        <h1
+          className={cn(
+            "text-balance text-4xl font-semibold tracking-[-0.03em] sm:text-5xl",
+            isBymCustom ? "text-white" : "text-foreground",
+          )}
+        >
           {`Finalizá tu compra en ${displayName}`}
         </h1>
-        <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
+        <p
+          className={cn(
+            "max-w-2xl text-base leading-7 sm:text-lg",
+            isBymCustom ? "text-white/60" : "text-muted-foreground",
+          )}
+        >
           Revisá tu pedido, completá los datos de entrega y elegí cómo querés pagar.
         </p>
       </header>

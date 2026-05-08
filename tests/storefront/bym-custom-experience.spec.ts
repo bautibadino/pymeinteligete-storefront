@@ -6,6 +6,34 @@ import { BymHomePage } from "@/components/storefront/bym-home-page";
 import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
 import type { StorefrontBootstrap, StorefrontCatalogProduct } from "@/lib/storefront-api";
 
+vi.mock("@/components/social-proof/social-proof-carousel", async () => {
+  const React = await import("react");
+
+  return {
+    SocialProofCarousel: function SocialProofCarousel(props: {
+      empresaId?: string;
+      tenantSlug?: string;
+      title?: string;
+      autoplay?: boolean;
+      interval?: number;
+      className?: string;
+    }) {
+      return React.createElement(
+        "section",
+        {
+          "data-testid": "bym-google-reviews",
+          "data-empresa-id": props.empresaId,
+          "data-tenant-slug": props.tenantSlug,
+          "data-autoplay": props.autoplay ? "true" : "false",
+          "data-interval": props.interval,
+          className: props.className,
+        },
+        props.title,
+      );
+    },
+  };
+});
+
 vi.mock("next/link", () => ({
   default: function Link({
     href,
@@ -121,6 +149,9 @@ describe("BYM custom experience", () => {
     expect(html).toContain("Cubierta radial");
     expect(html).toContain("/producto/cubierta-1");
     expect(html).toContain("height:100dvh;min-height:100dvh");
+    expect(html).toContain('data-testid="bym-google-reviews"');
+    expect(html).toContain("Clientes que ya compraron en BYM");
+    expect(html).toContain('data-autoplay="true"');
   });
 
   it("usa beneficios comerciales por defecto cuando no hay cards configuradas", () => {

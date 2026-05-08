@@ -6,7 +6,9 @@ import {
   type ContactEntry,
   loadInstitutionalPageData,
 } from "@/app/(storefront)/_lib/institutional-page-data";
+import { BymContactPage } from "@/components/storefront/bym-contact-page";
 import { DynamicContactForm } from "@/components/storefront/contact/dynamic-contact-form";
+import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
 
 export async function generateMetadata() {
   return generateInstitutionalMetadata("/contacto", "Contacto");
@@ -51,6 +53,10 @@ function ContactChannels({ entries }: { entries: ContactEntry[] }) {
 export default async function ContactoPage() {
   const data = await loadInstitutionalPageData("/contacto");
   const contactForm = data.bootstrap?.contactForm;
+
+  if (isBymCustomExperience(data.bootstrap)) {
+    return <BymContactPage data={data} {...(contactForm ? { contactForm } : {})} />;
+  }
 
   if (!contactForm?.enabled || contactForm.fields.length === 0) {
     return <InstitutionalPageShell pathname="/contacto" title="Contacto" />;

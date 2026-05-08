@@ -172,6 +172,7 @@ export function BymHomeMotion({
   const trackRef = useRef<HTMLDivElement | null>(null);
   const virtualXRef = useRef(0);
   const touchPointRef = useRef<{ x: number; y: number } | null>(null);
+  const lastSectionAlignAtRef = useRef(0);
   const [travelDistance, setTravelDistance] = useState(0);
   const reduceMotion = useReducedMotion();
   const animate = reduceMotion === false;
@@ -230,9 +231,19 @@ export function BymHomeMotion({
 
       const rect = section.getBoundingClientRect();
       const headerOffset = getHeaderOffset();
+      if (Math.abs(rect.top - headerOffset) <= 10) {
+        return;
+      }
+
+      const now = window.performance.now();
+      if (now - lastSectionAlignAtRef.current < 420) {
+        return;
+      }
+
+      lastSectionAlignAtRef.current = now;
       window.scrollTo({
         top: window.scrollY + rect.top - headerOffset,
-        behavior: "auto",
+        behavior: "smooth",
       });
     };
 
@@ -258,7 +269,8 @@ export function BymHomeMotion({
 
       const rect = section.getBoundingClientRect();
       const headerOffset = getHeaderOffset();
-      return rect.top > headerOffset + 8 && rect.top <= window.innerHeight * 0.86;
+      const catchDistance = Math.min(180, window.innerHeight * 0.22);
+      return rect.top > headerOffset + 8 && rect.top <= headerOffset + catchDistance;
     };
 
     const shouldCaptureDelta = (delta: number) => {
@@ -302,7 +314,6 @@ export function BymHomeMotion({
       if (!isSectionActive() && isSectionApproachingFromAbove(delta)) {
         event.preventDefault();
         alignSectionToViewport();
-        setVirtualX(current + clampDeltaStep(delta) * 0.45);
         return;
       }
 
@@ -339,7 +350,6 @@ export function BymHomeMotion({
       if (!isSectionActive() && isSectionApproachingFromAbove(delta)) {
         event.preventDefault();
         alignSectionToViewport();
-        setVirtualX(virtualXRef.current + clampDeltaStep(delta) * 0.45);
         return;
       }
 

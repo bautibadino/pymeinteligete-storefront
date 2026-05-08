@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 
+import { SocialProofCarousel } from "@/components/social-proof/social-proof-carousel";
 import {
   BymHomeMotion,
   type BymBenefit,
@@ -315,6 +316,20 @@ export function BymHomePage({ bootstrap, categories, products }: BymHomePageProp
         <div className="bg-[#f4f1ea] text-black">
           <ProductGridTemplate module={productGridModule} />
         </div>
+      ) : null}
+
+      {bootstrap ? (
+        <SocialProofCarousel
+          empresaId={bootstrap.tenant.empresaId}
+          tenantSlug={bootstrap.tenant.tenantSlug}
+          eyebrow="Reseñas de Google"
+          title="Clientes que ya compraron en BYM"
+          subtitle="Opiniones reales para cerrar la compra con confianza, atención directa y condiciones claras."
+          autoplay
+          interval={4200}
+          cardClassName="!border-[#dadce0] !bg-white !p-5 !text-[#202124] shadow-[0_18px_50px_-34px_rgba(255,255,255,0.42)] [--ink:#202124] [--line:#dadce0] [--muted:#5f6368] [--paper:#ffffff] [&_[data-google-pill=true]]:!bg-white"
+          className="bg-[#070707] px-4 py-16 text-white sm:px-6 sm:py-20 lg:px-8 [&_[data-carousel-footer=true]]:mx-auto [&_[data-carousel-footer=true]]:max-w-6xl [&_[data-social-proof-muted=true]]:text-white/72"
+        />
       ) : null}
     </div>
   );

@@ -65,18 +65,21 @@ export function ProductCardPremiumCommerce({
   } = product;
 
   const isAvailable = stock === undefined || stock.available;
-  const hasBadges = showBadges && badges && badges.length > 0;
+  const renderedBadges = showBadges
+    ? badges?.filter((badge) => badge.label.trim().toLowerCase() !== "top") ?? []
+    : [];
+  const hasBadges = renderedBadges.length > 0;
 
   return (
     <article
       aria-label={name}
-      className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-white shadow-tenant transition-shadow hover:shadow-md"
+      className="group relative flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-950 shadow-tenant [--accent:#facc15] [--accent-soft:rgba(250,204,21,0.16)] [--ink:#0f172a] [--line:rgba(15,23,42,0.12)] [--muted:#64748b] [--paper:#ffffff] [--surface-muted:#f8fafc] [--surface-raised:#ffffff] transition-shadow hover:shadow-md"
       data-template="product-card-premium-commerce"
     >
       {/* Badges superiores */}
       {hasBadges ? (
         <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
-          {badges!.map((badge, i) => (
+          {renderedBadges.map((badge, i) => (
             <Badge
               key={i}
               variant={badge.tone ? BADGE_VARIANT_MAP[badge.tone] : "default"}

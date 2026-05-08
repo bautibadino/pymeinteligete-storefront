@@ -272,6 +272,13 @@ export function DynamicContactForm({ contactForm, className }: DynamicContactFor
       </div>
 
       <form className="grid gap-4" action={formAction} onSubmit={handleSubmit} noValidate>
+        <input
+          className="hidden"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+        />
         {fields.map((field) => {
           const inputId = `contact-${field.id}`;
           const errorId = `${inputId}-error`;

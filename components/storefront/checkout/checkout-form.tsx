@@ -132,6 +132,8 @@ type StorefrontFiscalAutofillResponse =
       error?: string;
     };
 
+const STUB_FISCAL_NAME_PATTERN = /\b(stub|empresa\s+de\s+prueba|prueba)\b/i;
+
 const EMPTY_FORM_VALUES: CheckoutFormValues = {
   customerName: "",
   customerEmail: "",
@@ -264,14 +266,21 @@ export function extractFiscalAutofillData(
   payload: StorefrontFiscalAutofillResponse,
 ): StorefrontFiscalAutofillData | null {
   if ("customer" in payload && payload.customer) {
-    return payload;
+    return isStubFiscalAutofillData(payload) ? null : payload;
   }
 
   if ("data" in payload && payload.data?.customer) {
-    return payload.data;
+    return isStubFiscalAutofillData(payload.data) ? null : payload.data;
   }
 
   return null;
+}
+
+function isStubFiscalAutofillData(data: StorefrontFiscalAutofillData): boolean {
+  const source = data.metadata?.source?.toLowerCase() ?? "";
+  const customerName = data.customer.name ?? "";
+
+  return source.includes("stub") || STUB_FISCAL_NAME_PATTERN.test(customerName);
 }
 
 export function resolveCheckoutDisplayItems(
@@ -717,7 +726,7 @@ export function CheckoutForm({
 
       if (!resolvedData) {
         setFiscalAutofill(null);
-        setLookupError("No se pudieron interpretar los datos fiscales recibidos.");
+        setLookupError("No encontramos datos fiscales reales para este documento. Podés completar los datos manualmente y continuar.");
         return;
       }
 
