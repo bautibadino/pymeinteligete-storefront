@@ -19,7 +19,6 @@ import {
   getTenantSeoRequestContext,
   resolveTenantSeoSnapshotByRequest,
 } from "@/lib/seo";
-import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
 import { StorefrontApiError, getProduct } from "@/lib/storefront-api";
 
 type ProductPageProps = {
@@ -77,9 +76,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     experience,
   );
 
-  const usePresentation =
-    !isBymCustomExperience(experience.bootstrap) &&
-    shouldUsePresentation(hydratedPresentation ?? undefined, "product");
+  const usePresentation = shouldUsePresentation(hydratedPresentation ?? undefined, "product");
 
   if (usePresentation) {
     return (
