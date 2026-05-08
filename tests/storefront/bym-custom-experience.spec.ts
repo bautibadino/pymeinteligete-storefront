@@ -154,6 +154,35 @@ describe("BYM custom experience", () => {
     expect(html).toContain('data-autoplay="true"');
   });
 
+  it("renderiza CTAs del hero con label y href configurados por bootstrap", () => {
+    const bootstrap = buildBootstrap();
+    if (bootstrap.presentation) {
+      bootstrap.presentation.pages.home.layout = {
+        variant: "bym-immersive-home-v1",
+        content: {
+          h1: "Cubiertas y servicios",
+          primaryAction: { label: "Comprar neumáticos", href: "/catalogo?category=neumaticos" },
+          secondaryAction: { label: "Escribir por WhatsApp", href: "https://wa.me/5493510000000" },
+        },
+      };
+    }
+
+    const html = renderToStaticMarkup(
+      createElement(BymHomePage, {
+        bootstrap,
+        categories: [],
+        products: [],
+      }),
+    );
+
+    expect(html).toContain("Comprar neumáticos");
+    expect(html).toContain("/catalogo?category=neumaticos");
+    expect(html).toContain("Escribir por WhatsApp");
+    expect(html).toContain("https://wa.me/5493510000000");
+    expect(html).not.toContain("Ver catálogo");
+    expect(html).not.toContain("Hablar con BYM");
+  });
+
   it("usa beneficios comerciales por defecto cuando no hay cards configuradas", () => {
     const bootstrap = buildBootstrap();
     if (bootstrap.presentation) {

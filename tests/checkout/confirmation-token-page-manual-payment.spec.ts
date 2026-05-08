@@ -19,6 +19,7 @@ vi.mock("@/app/(storefront)/_lib/storefront-shell-data", () => ({
         status: "active",
       },
     },
+    categories: [],
     issues: [],
   })),
   resolveTenantDisplayName: vi.fn(() => "BYM SRL"),

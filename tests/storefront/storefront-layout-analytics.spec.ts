@@ -117,6 +117,7 @@ describe("StorefrontLayout analytics", () => {
         },
       },
       bootstrap: buildBootstrap(),
+      categories: [],
       issues: [],
     });
 

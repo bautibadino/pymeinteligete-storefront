@@ -6,6 +6,7 @@ import { CatalogLayoutInfiniteScroll } from "@/components/templates/catalog-layo
 import { CatalogLayoutPaginatedClassic } from "@/components/templates/catalog-layout/catalog-layout-paginated-classic";
 import { ProductCardPremiumCommerce } from "@/components/templates/product-card/product-card-premium-commerce";
 import {
+  FilterBar,
   CatalogToolbar,
   FilterSidebar,
 } from "@/components/templates/catalog-layout/catalog-layout-shared";
@@ -139,6 +140,55 @@ describe("catalog layout shared layer", () => {
     expect(html).toContain("Inmediata");
     expect(html).toContain('href="/catalogo?search=aceite&minPrice=1000&maxPrice=5000&availability=inmediata"');
     expect(html).not.toContain("Opción A");
+  });
+
+  it("mantiene el sidebar de filtros colapsado hasta desktop real", () => {
+    setCurrentUrl("/catalogo", "brand=Michelin");
+
+    const html = renderHtml(
+      createElement(FilterSidebar, {
+        activeFilters: {
+          brand: true,
+          category: true,
+        },
+        categories: createCategories(),
+        products: [
+          {
+            ...createProducts(1)[0]!,
+            brand: "Michelin",
+          },
+        ],
+      }),
+    );
+
+    expect(html).toContain("lg:hidden");
+    expect(html).toContain("hidden lg:block");
+    expect(html).not.toContain("md:hidden");
+    expect(html).not.toContain("hidden md:block");
+  });
+
+  it("usa drawer también para la barra de filtros top en mobile y tablet", () => {
+    setCurrentUrl("/catalogo", "brand=Michelin");
+
+    const html = renderHtml(
+      createElement(FilterBar, {
+        activeFilters: {
+          brand: true,
+          category: true,
+        },
+        categories: createCategories(),
+        products: [
+          {
+            ...createProducts(1)[0]!,
+            brand: "Michelin",
+          },
+        ],
+      }),
+    );
+
+    expect(html).toContain("bg-[#131416]");
+    expect(html).toContain("lg:hidden");
+    expect(html).toContain("hidden lg:block");
   });
 
   it("expone opciones de filtros descubribles cuando hay categorías y productos públicos", () => {

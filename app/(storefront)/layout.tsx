@@ -26,6 +26,7 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
         <StorefrontCartProvider host={experience.runtime.context.host}>
           <StorefrontShell
             bootstrap={experience.bootstrap}
+            categories={experience.categories}
             host={experience.runtime.context.host}
             issues={experience.issues}
           >

@@ -29,6 +29,7 @@ export type FetchIssue = {
 export type BootstrapExperience = {
   runtime: Awaited<ReturnType<typeof getStorefrontRuntimeSnapshot>>;
   bootstrap: StorefrontBootstrap | null;
+  categories: StorefrontCategory[];
   issues: FetchIssue[];
 };
 
@@ -140,6 +141,7 @@ export const loadBootstrapExperience = cache(async (): Promise<BootstrapExperien
   const runtime = await getStorefrontRuntimeSnapshot();
   const issues: FetchIssue[] = [];
   let bootstrap: StorefrontBootstrap | null = null;
+  let categories: StorefrontCategory[] = [];
 
   if (!runtime.hasApiBaseUrl) {
     issues.push({
@@ -161,9 +163,24 @@ export const loadBootstrapExperience = cache(async (): Promise<BootstrapExperien
     }
   }
 
+  if (canBrowseCatalog(bootstrap?.tenant.status ?? null)) {
+    try {
+      categories = await getCategories(runtime.context);
+    } catch (error) {
+      issues.push(
+        normalizeApiError(
+          error,
+          "categories",
+          "No se pudieron recuperar las categorías públicas del tenant actual.",
+        ),
+      );
+    }
+  }
+
   return {
     runtime,
     bootstrap,
+    categories,
     issues,
   };
 });
@@ -346,27 +363,11 @@ export async function loadHomeExperience(): Promise<HomeExperience> {
     loadCatalogExperience({ pageSize: 24 }),
     loadCheckoutExperience(),
   ]);
-  let categories: StorefrontCategory[] = [];
-  let categoryIssues: FetchIssue[] = [];
-
-  if (canBrowseCatalog(catalogExperience.bootstrap?.tenant.status ?? null)) {
-    try {
-      categories = await getCategories(catalogExperience.runtime.context);
-    } catch (error) {
-      categoryIssues = [
-        normalizeApiError(
-          error,
-          "categories",
-          "No se pudieron recuperar las categorías públicas del tenant actual.",
-        ),
-      ];
-    }
-  }
 
   return {
     ...catalogExperience,
-    categories,
+    categories: catalogExperience.categories,
     paymentMethods: checkoutExperience.paymentMethods,
-    issues: [...catalogExperience.issues, ...checkoutExperience.issues, ...categoryIssues],
+    issues: [...catalogExperience.issues, ...checkoutExperience.issues],
   };
 }

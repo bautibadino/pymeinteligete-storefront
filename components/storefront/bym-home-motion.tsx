@@ -1,9 +1,14 @@
 "use client";
 
-import { motion, useMotionValue, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { BadgePercent, CreditCard, ShieldCheck, Truck, Wrench } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import {
+  calculateBymHorizontalScrollMetrics,
+  type BymHorizontalScrollMetrics,
+} from "@/lib/storefront/bym-horizontal-scroll";
 
 export type BymBenefit = {
   kind?: "installments" | "shipping" | "discounts" | "service" | "trust";
@@ -161,6 +166,20 @@ function HighlightedBenefitTitle({
   );
 }
 
+function readBymStickyOffset(section: HTMLElement): number {
+  const header = document.querySelector<HTMLElement>("[data-bym-header-state]");
+  const headerHeight = header?.getBoundingClientRect().height;
+  if (headerHeight && Number.isFinite(headerHeight)) {
+    return Math.round(headerHeight);
+  }
+
+  const rawValue = window
+    .getComputedStyle(section)
+    .getPropertyValue("--bym-shell-header-height");
+  const parsedValue = Number.parseFloat(rawValue);
+  return Number.isFinite(parsedValue) ? parsedValue : 0;
+}
+
 export function BymHomeMotion({
   benefitsEyebrow,
   benefitsTitle,
@@ -170,225 +189,80 @@ export function BymHomeMotion({
   const benefitsSectionRef = useRef<HTMLElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
-  const virtualXRef = useRef(0);
-  const touchPointRef = useRef<{ x: number; y: number } | null>(null);
-  const lastSectionAlignAtRef = useRef(0);
-  const [travelDistance, setTravelDistance] = useState(0);
+  const [scrollMetrics, setScrollMetrics] = useState<BymHorizontalScrollMetrics | null>(null);
+  const [stickyOffset, setStickyOffset] = useState(0);
   const reduceMotion = useReducedMotion();
   const animate = reduceMotion === false;
-  const x = useMotionValue(0);
-
-  const setVirtualX = useCallback(
-    (nextValue: number) => {
-      const clampedValue = Math.max(0, Math.min(travelDistance, nextValue));
-      virtualXRef.current = clampedValue;
-      x.set(-clampedValue);
-    },
-    [travelDistance, x],
+  const shouldPinBenefits = animate && (scrollMetrics?.horizontalTravel ?? 0) > 0;
+  const { scrollYProgress } = useScroll({
+    target: benefitsSectionRef,
+    offset: ["start start", "end end"],
+  });
+  const x = useTransform(
+    scrollYProgress,
+    [0, 1],
+    [0, shouldPinBenefits ? -(scrollMetrics?.horizontalTravel ?? 0) : 0],
   );
 
+  const benefitsSectionStyle =
+    shouldPinBenefits && scrollMetrics
+      ? { minHeight: `${scrollMetrics.sectionHeight}px` }
+      : undefined;
+
   useEffect(() => {
-    const updateDistance = () => {
+    const updateMetrics = () => {
+      const section = benefitsSectionRef.current;
       const viewport = viewportRef.current;
       const track = trackRef.current;
-      if (!viewport || !track) {
+      if (!section || !viewport || !track) {
         return;
       }
 
-      const nextTravelDistance = Math.max(0, track.scrollWidth - viewport.clientWidth);
-      setTravelDistance(nextTravelDistance);
-      virtualXRef.current = Math.min(virtualXRef.current, nextTravelDistance);
-      x.set(-virtualXRef.current);
-    };
-
-    updateDistance();
-    const resizeObserver = new ResizeObserver(updateDistance);
-    if (viewportRef.current) resizeObserver.observe(viewportRef.current);
-    if (trackRef.current) resizeObserver.observe(trackRef.current);
-    window.addEventListener("resize", updateDistance);
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener("resize", updateDistance);
-    };
-  }, [benefits.length, x]);
-
-  useEffect(() => {
-    if (!animate || travelDistance <= 0) {
-      return;
-    }
-
-    const getHeaderOffset = () => (window.innerWidth < 1024 ? 112 : 0);
-    const getMaxStep = () => Math.max(160, Math.min(window.innerWidth * 0.62, 360));
-    const clampDeltaStep = (delta: number) =>
-      Math.sign(delta) * Math.min(Math.abs(delta) * 1.05, getMaxStep());
-
-    const alignSectionToViewport = () => {
-      const section = benefitsSectionRef.current;
-      if (!section) {
-        return;
-      }
-
-      const rect = section.getBoundingClientRect();
-      const headerOffset = getHeaderOffset();
-      if (Math.abs(rect.top - headerOffset) <= 10) {
-        return;
-      }
-
-      const now = window.performance.now();
-      if (now - lastSectionAlignAtRef.current < 420) {
-        return;
-      }
-
-      lastSectionAlignAtRef.current = now;
-      window.scrollTo({
-        top: window.scrollY + rect.top - headerOffset,
-        behavior: "smooth",
+      setStickyOffset(readBymStickyOffset(section));
+      const metrics = calculateBymHorizontalScrollMetrics({
+        trackWidth: track.scrollWidth,
+        viewportWidth: viewport.clientWidth,
+        viewportHeight: window.innerHeight,
       });
+
+      setScrollMetrics(metrics);
     };
 
-    const isSectionActive = () => {
-      const section = benefitsSectionRef.current;
-      if (!section) {
-        return false;
-      }
-
-      const rect = section.getBoundingClientRect();
-      const headerOffset = getHeaderOffset();
-      return (
-        rect.top <= headerOffset + 8 &&
-        rect.bottom >= headerOffset + window.innerHeight * 0.42
-      );
-    };
-
-    const isSectionApproachingFromAbove = (delta: number) => {
-      const section = benefitsSectionRef.current;
-      if (!section || delta <= 0) {
-        return false;
-      }
-
-      const rect = section.getBoundingClientRect();
-      const headerOffset = getHeaderOffset();
-      const catchDistance = Math.min(180, window.innerHeight * 0.22);
-      return rect.top > headerOffset + 8 && rect.top <= headerOffset + catchDistance;
-    };
-
-    const shouldCaptureDelta = (delta: number) => {
-      const current = virtualXRef.current;
-      return (
-        (delta > 0 && current < travelDistance) ||
-        (delta < 0 && current > 0)
-      );
-    };
-
-    const syncPositionAtBoundaries = () => {
-      const section = benefitsSectionRef.current;
-      if (!section) {
-        return;
-      }
-
-      const rect = section.getBoundingClientRect();
-      const headerOffset = getHeaderOffset();
-      if (rect.top > window.innerHeight * 0.35) {
-        setVirtualX(0);
-      } else if (rect.bottom < headerOffset + window.innerHeight * 0.35) {
-        setVirtualX(travelDistance);
-      }
-    };
-
-    const handleWheel = (event: WheelEvent) => {
-      const section = benefitsSectionRef.current;
-      if (!section) {
-        return;
-      }
-
-      const delta =
-        Math.abs(event.deltaY) >= Math.abs(event.deltaX)
-          ? event.deltaY
-          : event.deltaX;
-      if (delta === 0) {
-        return;
-      }
-
-      const current = virtualXRef.current;
-      if (!isSectionActive() && isSectionApproachingFromAbove(delta)) {
-        event.preventDefault();
-        alignSectionToViewport();
-        return;
-      }
-
-      if (!isSectionActive()) {
-        return;
-      }
-
-      if (!shouldCaptureDelta(delta)) {
-        return;
-      }
-
-      event.preventDefault();
-      setVirtualX(current + clampDeltaStep(delta));
-    };
-
-    const handleTouchStart = (event: TouchEvent) => {
-      const touch = event.touches.item(0);
-      touchPointRef.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
-    };
-
-    const handleTouchMove = (event: TouchEvent) => {
-      const previousPoint = touchPointRef.current;
-      const touch = event.touches.item(0);
-      if (!previousPoint || !touch) {
-        touchPointRef.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
-        return;
-      }
-
-      const deltaY = previousPoint.y - touch.clientY;
-      const deltaX = previousPoint.x - touch.clientX;
-      const delta = Math.abs(deltaY) >= Math.abs(deltaX) ? deltaY : deltaX;
-      touchPointRef.current = { x: touch.clientX, y: touch.clientY };
-
-      if (!isSectionActive() && isSectionApproachingFromAbove(delta)) {
-        event.preventDefault();
-        alignSectionToViewport();
-        return;
-      }
-
-      if (!isSectionActive()) {
-        return;
-      }
-
-      if (delta === 0 || !shouldCaptureDelta(delta)) {
-        return;
-      }
-
-      event.preventDefault();
-      setVirtualX(virtualXRef.current + clampDeltaStep(delta));
-    };
-
-    syncPositionAtBoundaries();
-    window.addEventListener("scroll", syncPositionAtBoundaries, { passive: true });
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    updateMetrics();
+    const resizeObserver =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateMetrics);
+    if (viewportRef.current) resizeObserver?.observe(viewportRef.current);
+    if (trackRef.current) resizeObserver?.observe(trackRef.current);
+    window.addEventListener("resize", updateMetrics);
 
     return () => {
-      window.removeEventListener("scroll", syncPositionAtBoundaries);
-      window.removeEventListener("wheel", handleWheel);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchmove", handleTouchMove);
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", updateMetrics);
     };
-  }, [animate, setVirtualX, travelDistance]);
+  }, [benefits.length]);
 
   return (
     <>
       {benefits.length > 0 ? (
         <section
           ref={benefitsSectionRef}
-          className="relative flex min-h-[calc(100dvh-var(--bym-shell-header-height))] items-center bg-[#070707] text-white lg:min-h-dvh"
+          className="relative bg-[#070707] text-white"
+          style={benefitsSectionStyle}
           aria-label="Beneficios"
         >
-          <div className="flex w-full items-center overflow-hidden px-4 py-10 sm:px-6 lg:px-8 lg:py-16">
-            <div className="mx-auto grid w-full max-w-7xl gap-6 lg:grid-cols-[0.45fr_0.55fr] lg:items-center lg:gap-8">
+          <div
+            className={[
+              "flex h-dvh w-full items-center overflow-hidden px-4 py-10 sm:px-6 lg:px-8 lg:py-16",
+              shouldPinBenefits
+                ? "sticky"
+                : "",
+            ].join(" ")}
+            style={shouldPinBenefits ? { top: 0 } : undefined}
+          >
+            <div
+              className="mx-auto grid w-full max-w-7xl gap-6 lg:grid-cols-[0.45fr_0.55fr] lg:items-center lg:gap-8"
+              style={{ paddingTop: `${stickyOffset}px` }}
+            >
               <div>
                 <span className="text-xs font-semibold uppercase tracking-[0.22em] text-[#f4c542]">
                   {benefitsEyebrow}
@@ -397,11 +271,19 @@ export function BymHomeMotion({
                   {benefitsTitle}
                 </h2>
               </div>
-              <div ref={viewportRef} className="min-w-0 overflow-hidden">
+              <div
+                ref={viewportRef}
+                className={[
+                  "min-w-0",
+                  shouldPinBenefits
+                    ? "overflow-hidden"
+                    : "overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+                ].join(" ")}
+              >
                 <motion.div
                   ref={trackRef}
-                  className="flex gap-4"
-                  {...(animate ? { style: { x } } : {})}
+                  className={["flex gap-4", shouldPinBenefits ? "will-change-transform" : ""].join(" ")}
+                  {...(shouldPinBenefits ? { style: { x } } : {})}
                 >
                   {benefits.map((benefit, index) => {
                     const visual = getBenefitVisual(benefit);
@@ -461,10 +343,6 @@ export function BymHomeMotion({
                       </motion.article>
                     );
                   })}
-                  <div
-                    className="min-w-[56vw] shrink-0 sm:min-w-[18rem] lg:min-w-[28rem]"
-                    aria-hidden="true"
-                  />
                 </motion.div>
               </div>
             </div>

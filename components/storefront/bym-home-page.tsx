@@ -126,9 +126,11 @@ function getHeroContent(bootstrap: StorefrontBootstrap | null) {
     bootstrap?.seo?.defaultDescription;
   const primaryCta =
     readCta(isRecord(content) ? content.primaryCta : undefined) ??
+    readCta(isRecord(content) ? content.primaryAction : undefined) ??
     { label: "Ver catálogo", href: "/catalogo" };
   const secondaryCta =
     readCta(isRecord(content) ? content.secondaryCta : undefined) ??
+    readCta(isRecord(content) ? content.secondaryAction : undefined) ??
     { label: "Hablar con BYM", href: "/contacto" };
   const benefits = readBenefits(isRecord(content) ? content.benefits : undefined);
   const benefitsEyebrow = isRecord(content)

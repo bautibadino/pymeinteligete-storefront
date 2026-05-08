@@ -22,7 +22,7 @@ import {
   resolveTenantLogoUrl,
   type FetchIssue,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
-import type { StorefrontBootstrap, StorefrontNavLink } from "@/lib/storefront-api";
+import type { StorefrontBootstrap, StorefrontCategory, StorefrontNavLink } from "@/lib/storefront-api";
 import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
 
 const FALLBACK_NAVIGATION: StorefrontNavLink[] = [
@@ -33,6 +33,7 @@ const FALLBACK_NAVIGATION: StorefrontNavLink[] = [
 
 type StorefrontShellProps = {
   bootstrap: StorefrontBootstrap | null;
+  categories?: StorefrontCategory[];
   host: string;
   children: ReactNode;
   issues: FetchIssue[];
@@ -46,7 +47,7 @@ function resolveStatusBadgeVariant(statusTone: ReturnType<typeof resolveStatusTo
   return "outline";
 }
 
-export function StorefrontShell({ bootstrap, host, children, issues }: StorefrontShellProps) {
+export function StorefrontShell({ bootstrap, categories = [], host, children, issues }: StorefrontShellProps) {
   const presentation = bootstrap?.presentation ?? null;
   const displayName = resolveTenantDisplayName(bootstrap, host);
   const description =
@@ -62,7 +63,7 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
 
   if (isBymCustomExperience(bootstrap)) {
     return (
-      <BymStorefrontShell bootstrap={bootstrap} host={host} issues={issues}>
+      <BymStorefrontShell bootstrap={bootstrap} categories={categories} host={host} issues={issues}>
         {children}
       </BymStorefrontShell>
     );

@@ -188,6 +188,28 @@ describe("StorefrontShell presentation mode", () => {
     expect(html).not.toContain('data-presentation-chrome="sticky-stack"');
   });
 
+  it("pasa categorías disponibles al menú mobile BYM", () => {
+    const html = renderHtml(
+      createElement(StorefrontShell, {
+        bootstrap: buildBootstrap({
+          storefrontExperience: {
+            key: "bym-custom-v1",
+            enabled: true,
+          },
+        }),
+        categories: [
+          { categoryId: "cat-neu", slug: "neumaticos", name: "Neumáticos" },
+        ],
+        host: "bym.test",
+        issues: [],
+        children: createElement("section", null, "custom"),
+      }),
+    );
+
+    expect(html).toContain("Neumáticos");
+    expect(html).toContain("/catalogo?category=neumaticos");
+  });
+
   it("muestra todos los mensajes del announcement bar en la shell BYM", () => {
     const presentation = buildPresentation();
     presentation.globals.announcementBar = {

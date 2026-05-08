@@ -2,10 +2,11 @@ import type { ReactNode } from "react";
 
 import { BymHeader } from "@/components/storefront/bym-header";
 import type { FetchIssue } from "@/app/(storefront)/_lib/storefront-shell-data";
-import type { StorefrontBootstrap, StorefrontNavLink } from "@/lib/storefront-api";
+import type { StorefrontBootstrap, StorefrontCategory, StorefrontNavLink } from "@/lib/storefront-api";
 
 type BymStorefrontShellProps = {
   bootstrap: StorefrontBootstrap | null;
+  categories?: StorefrontCategory[];
   children: ReactNode;
   host: string;
   issues: FetchIssue[];
@@ -91,6 +92,7 @@ function resolveAnnouncement(bootstrap: StorefrontBootstrap | null) {
 
 export function BymStorefrontShell({
   bootstrap,
+  categories = [],
   children,
   host,
   issues,
@@ -108,6 +110,7 @@ export function BymStorefrontShell({
     <main className="bym-custom-shell min-h-dvh bg-[#070707] text-white" data-storefront-mode="bym-custom-v1">
       <BymHeader
         {...(announcement ? { announcement } : {})}
+        categories={categories}
         displayName={displayName}
         links={links}
         {...(logoUrl ? { logoUrl } : {})}

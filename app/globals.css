@@ -78,7 +78,7 @@ img {
 
 .tenant-theme {
   min-height: 100dvh;
-  overflow: hidden;
+  overflow: clip;
   color: var(--ink);
   background:
     radial-gradient(circle at 2% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 30%),

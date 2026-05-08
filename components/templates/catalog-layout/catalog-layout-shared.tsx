@@ -999,7 +999,7 @@ function FilterPanelWrapper({
       <div className="space-y-4">
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-[#131416] px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(0,0,0,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 md:hidden"
+          className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-[#131416] px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(0,0,0,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 lg:hidden"
           aria-expanded={isOpen}
           onClick={() => setIsOpen(true)}
         >
@@ -1013,7 +1013,7 @@ function FilterPanelWrapper({
         </button>
 
         {isOpen ? (
-          <div className="fixed inset-0 z-[90] !mt-0 h-dvh w-dvw overflow-hidden bg-black/82 backdrop-blur-sm md:hidden">
+          <div className="fixed inset-0 z-[90] !mt-0 h-dvh w-dvw overflow-hidden bg-black/82 backdrop-blur-sm lg:hidden">
             <button
               type="button"
               aria-label="Cerrar filtros"
@@ -1034,7 +1034,7 @@ function FilterPanelWrapper({
           </div>
         ) : null}
 
-        <div className="hidden md:block">{children}</div>
+        <div className="hidden lg:block">{children}</div>
       </div>
     );
   }
@@ -1044,7 +1044,7 @@ function FilterPanelWrapper({
       <button
         type="button"
         className={cn(
-          "flex w-full items-center justify-between rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-raised)] text-left shadow-sm backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-overlay)] md:hidden",
+          "flex w-full items-center justify-between rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-raised)] text-left shadow-sm backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-overlay)] lg:hidden",
           resolvedDensity === "comfortable" ? "px-4 py-3.5" : "px-4 py-3",
         )}
         aria-expanded={isOpen}
@@ -1064,7 +1064,7 @@ function FilterPanelWrapper({
           aria-hidden="true"
         />
       </button>
-      <div className={cn(isOpen ? "block" : "hidden", "md:block")}>{children}</div>
+      <div className={cn(isOpen ? "block" : "hidden", "lg:block")}>{children}</div>
     </div>
   );
 }
@@ -1199,6 +1199,7 @@ export function FilterBar({
       defaultOpen={false}
       filtersCount={filters.length}
       density={resolvedDensity}
+      mobilePresentation="drawer"
     >
       <div
         className={cn(
