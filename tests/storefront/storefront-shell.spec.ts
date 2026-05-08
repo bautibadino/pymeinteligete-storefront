@@ -188,6 +188,50 @@ describe("StorefrontShell presentation mode", () => {
     expect(html).not.toContain('data-presentation-chrome="sticky-stack"');
   });
 
+  it("renderiza footer BYM y no muestra el teléfono en el header", () => {
+    const html = renderHtml(
+      createElement(StorefrontShell, {
+        bootstrap: buildBootstrap({
+          branding: {
+            storeName: "BYM SRL",
+            logoUrl: "https://cdn.example.com/bym-logo.svg",
+            colors: { primary: "#111827" },
+          },
+          contact: {
+            phone: "+54 9 3468 50 7255",
+            email: "ventas@bym.test",
+            whatsapp: "5493468507255",
+            address: "Corral de Bustos, Córdoba",
+          },
+          navigation: {
+            headerLinks: [],
+            footerColumns: [
+              {
+                title: "Tienda",
+                links: [{ href: "/catalogo", label: "Catálogo" }],
+              },
+            ],
+          },
+          storefrontExperience: {
+            key: "bym-custom-v1",
+            enabled: true,
+          },
+        }),
+        host: "bym.test",
+        issues: [],
+        children: createElement("section", { id: "bym-page" }, "custom"),
+      }),
+    );
+
+    expect(html).toContain('data-bym-footer="true"');
+    expect(html).toContain("https://cdn.example.com/bym-logo.svg");
+    expect(html).toContain("ventas@bym.test");
+    expect(html).toContain("Corral de Bustos, Córdoba");
+    expect(html).toContain("/catalogo");
+    expect(html).not.toContain('href="tel:+54 9 3468 50 7255"');
+    expect(html).not.toContain("+54 9 3468 50 7255");
+  });
+
   it("pasa categorías disponibles al menú mobile BYM", () => {
     const html = renderHtml(
       createElement(StorefrontShell, {

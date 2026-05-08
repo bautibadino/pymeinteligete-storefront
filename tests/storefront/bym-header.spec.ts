@@ -63,6 +63,8 @@ describe("BYM header", () => {
 
     expect(html).toContain("https://cdn.example.com/bym-logo.svg");
     expect(html).toContain('aria-label="Inicio de BYM SRL"');
+    expect(html).not.toContain("brightness-0");
+    expect(html).not.toContain("invert");
     expect(html).not.toContain(">BYM SRL<");
   });
 

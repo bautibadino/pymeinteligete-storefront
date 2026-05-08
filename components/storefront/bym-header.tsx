@@ -24,7 +24,6 @@ type BymHeaderProps = {
   displayName: string;
   links: StorefrontNavLink[];
   logoUrl?: string;
-  phone?: string;
 };
 
 export function BymHeader({
@@ -33,7 +32,6 @@ export function BymHeader({
   displayName,
   links,
   logoUrl,
-  phone,
 }: BymHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -110,7 +108,7 @@ export function BymHeader({
       <div className="mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:px-6 lg:grid-cols-[auto_minmax(0,1fr)_minmax(220px,320px)_auto] lg:gap-5 lg:px-8 lg:py-4">
         <Link href="/" className="flex min-w-0 items-center gap-3" aria-label={`Inicio de ${displayName}`}>
           {logoUrl ? (
-            <img className="h-10 w-auto max-w-32 object-contain brightness-0 invert" src={logoUrl} alt="" />
+            <img className="h-10 w-auto max-w-32 object-contain" src={logoUrl} alt="" />
           ) : (
             <>
               <span className="grid h-10 w-10 place-items-center rounded-full border border-white/25 text-sm font-bold">
@@ -161,14 +159,6 @@ export function BymHeader({
         </form>
 
         <div className="flex items-center justify-end gap-2" data-bym-mobile-actions="true">
-          {phone ? (
-            <a
-              href={`tel:${phone}`}
-              className="hidden min-h-10 items-center border border-white/18 px-4 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-white hover:text-black lg:inline-flex"
-            >
-              {phone}
-            </a>
-          ) : null}
           <Link
             href="/catalogo"
             className="hidden min-h-10 items-center border border-white/25 px-4 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-white hover:text-black sm:inline-flex"
