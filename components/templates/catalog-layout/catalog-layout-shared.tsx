@@ -57,6 +57,7 @@ type FilterOption = {
   active: boolean;
   href: string;
   id: string;
+  imageUrl?: string;
   label: string;
 };
 
@@ -296,16 +297,34 @@ function resolveFilterGroups(
 
   if (activeFilters.brand) {
     const selectedBrand = searchParams.get("brand");
-    const brandOptions = [...new Set(products.map((product) => product.brand?.trim()).filter(isNonEmptyString))]
-      .sort((left, right) => left.localeCompare(right, "es"))
+    const brandOptionsMap = new Map<string, { imageUrl?: string; label: string }>();
+
+    for (const product of products) {
+      const brand = product.brand?.trim();
+      if (!isNonEmptyString(brand)) {
+        continue;
+      }
+
+      const current = brandOptionsMap.get(brand);
+      brandOptionsMap.set(brand, {
+        label: brand,
+        ...(current?.imageUrl ?? product.brandLogoUrl
+          ? { imageUrl: current?.imageUrl ?? product.brandLogoUrl }
+          : {}),
+      });
+    }
+
+    const brandOptions = Array.from(brandOptionsMap.values())
+      .sort((left, right) => left.label.localeCompare(right.label, "es"))
       .map((brand) => ({
-        active: selectedBrand === brand,
+        active: selectedBrand === brand.label,
         href: buildHref(pathname, searchParams, {
-          brand,
+          brand: brand.label,
           page: undefined,
         }),
-        id: brand,
-        label: brand,
+        id: brand.label,
+        ...(brand.imageUrl ? { imageUrl: brand.imageUrl } : {}),
+        label: brand.label,
       }));
 
     if (brandOptions.length > 0) {
@@ -792,14 +811,7 @@ function FilterGroupContent({
                 : "text-[#e4e4e7] hover:bg-white/[0.08] hover:text-white",
             )}
           >
-            <span
-              className={cn(
-                "h-4 w-4 rounded-[4px] border transition",
-                option.active
-                  ? "border-white bg-black/90"
-                  : "border-[#71717a] bg-transparent",
-              )}
-            />
+            <FilterOptionMark option={option} />
             <span className={cn("truncate", option.active ? "font-semibold" : "font-medium")}>
               {option.label}
             </span>
@@ -822,10 +834,44 @@ function FilterGroupContent({
               : FILTER_CHIP_IDLE_CLASSNAME
           }
         >
+          {option.imageUrl ? (
+            <img
+              src={option.imageUrl}
+              alt=""
+              loading="lazy"
+              className="-ml-1 size-6 rounded-full border border-current/15 bg-white object-contain p-0.5"
+            />
+          ) : null}
           {option.label}
         </Link>
       ))}
     </div>
+  );
+}
+
+function FilterOptionMark({ option }: { option: FilterOption }) {
+  if (option.imageUrl) {
+    return (
+      <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg border border-white/14 bg-white">
+        <img
+          src={option.imageUrl}
+          alt=""
+          loading="lazy"
+          className="h-full w-full object-contain p-0.5"
+        />
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={cn(
+        "h-4 w-4 shrink-0 rounded-[4px] border transition",
+        option.active
+          ? "border-white bg-black/90"
+          : "border-[#71717a] bg-transparent",
+      )}
+    />
   );
 }
 
@@ -961,14 +1007,14 @@ function FilterPanelWrapper({
         </button>
 
         {isOpen ? (
-          <div className="fixed inset-0 z-50 md:hidden">
+          <div className="fixed inset-0 z-[90] !mt-0 h-dvh w-dvw overflow-hidden bg-black/82 backdrop-blur-sm md:hidden">
             <button
               type="button"
               aria-label="Cerrar filtros"
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0"
               onClick={() => setIsOpen(false)}
             />
-            <div className="absolute inset-y-0 left-0 w-[88vw] max-w-sm overflow-y-auto border-r border-white/10 bg-[#0b0c0d] px-4 py-5 shadow-2xl">
+            <div className="absolute left-0 top-0 h-dvh w-[88vw] max-w-sm overflow-y-auto border-r border-white/10 bg-[#0b0c0d] px-4 py-5 shadow-2xl">
               <button
                 type="button"
                 aria-label="Cerrar filtros"
@@ -1326,10 +1372,10 @@ export function ProductGrid({
   const resolvedDensity = resolveCatalogDensity(density);
   const gridCols =
     columns === 4
-      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      ? "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
       : columns === 2
-        ? "grid-cols-1 sm:grid-cols-2"
-        : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
+        ? "grid-cols-2"
+        : "grid-cols-2 lg:grid-cols-3";
 
   return (
     <div

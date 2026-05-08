@@ -27,7 +27,7 @@ export function SocialProofGrid({ empresaId, tenantSlug, className }: SocialProo
   }
 
   return (
-    <div className={cn("space-y-6", className)}>
+    <div className={cn("space-y-4", className)}>
       {summary && summary.totalReviews > 0 ? (
         <div className="flex flex-wrap items-center gap-3 rounded-[1.25rem] border border-border/70 bg-white/94 px-4 py-3 shadow-[0_10px_30px_-26px_rgba(15,23,42,0.22)]">
           <div className="flex items-center gap-0.5 text-amber-500" aria-hidden="true">

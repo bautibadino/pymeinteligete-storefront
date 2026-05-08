@@ -147,6 +147,7 @@ export interface ProductCardCashDiscount {
 export interface ProductCardBadge {
   label: string;
   tone?: "info" | "success" | "warning" | "accent";
+  icon?: "shipping";
 }
 
 export interface ProductCardStock {
@@ -182,6 +183,7 @@ export interface ProductCardData {
   name: string;
   slug: string;
   brand?: string;
+  brandLogoUrl?: string;
   imageUrl?: string;
   basePrice?: ProductCardPrice;
   price: ProductCardPrice;

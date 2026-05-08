@@ -131,6 +131,10 @@ export interface GlobalBlocks {
 
 export interface PageConfig {
   seo?: PresentationSeoConfig;
+  layout?: {
+    variant?: string;
+    content?: Record<string, unknown>;
+  };
   sections: SectionInstance[];
 }
 

@@ -3,6 +3,7 @@ import type { Route } from "next";
 
 import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
 import { resolveCartItemPrice } from "@/lib/cart/storefront-cart";
+import { ProductCardBadgeIcon } from "@/components/templates/product-card/product-card-badge-icon";
 import { ProductCardMediaFrame } from "@/components/templates/product-card/product-card-media-frame";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -81,6 +82,7 @@ export function ProductCardPremiumCommerce({
               variant={badge.tone ? BADGE_VARIANT_MAP[badge.tone] : "default"}
               className="text-[10px] font-semibold"
             >
+              <ProductCardBadgeIcon badge={badge} />
               {badge.label}
             </Badge>
           ))}

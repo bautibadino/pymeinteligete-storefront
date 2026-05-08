@@ -81,3 +81,15 @@ export function getVisibleDotIndexes(
 
   return Array.from({ length: end - start }, (_, index) => start + index);
 }
+
+export function getCarouselTrackTransform(
+  activeIndex: number,
+  measuredStepWidth: number | null | undefined,
+): string {
+  if (!measuredStepWidth || !Number.isFinite(measuredStepWidth) || measuredStepWidth <= 0) {
+    return "translate3d(0, 0, 0)";
+  }
+
+  const offset = Number((activeIndex * measuredStepWidth).toFixed(3));
+  return `translate3d(-${offset}px, 0, 0)`;
+}

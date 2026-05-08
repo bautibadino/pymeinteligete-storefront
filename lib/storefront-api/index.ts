@@ -7,6 +7,7 @@ export { getCatalog } from "@/lib/fetchers/catalog";
 export { getCategories } from "@/lib/fetchers/categories";
 export { getProduct } from "@/lib/fetchers/product";
 export { getPaymentMethods } from "@/lib/fetchers/payment-methods";
+export { postContactForm } from "@/lib/fetchers/contact";
 export { postCheckout, processPayment } from "@/lib/fetchers/checkout";
 export { getOrderByToken, postManualPayment } from "@/lib/fetchers/orders";
 export type {
@@ -23,6 +24,14 @@ export type {
   StorefrontCheckoutResult,
   StorefrontContentModule,
   StorefrontContact,
+  StorefrontContactForm,
+  StorefrontContactFormField,
+  StorefrontContactFormFieldOption,
+  StorefrontContactFormFieldType,
+  StorefrontContactFormFieldValidation,
+  StorefrontContactFormSubmissionRequest,
+  StorefrontContactFormSubmissionResult,
+  StorefrontContactFormValue,
   StorefrontCustomerInput,
   StorefrontErrorResponse,
   StorefrontFetchInput,

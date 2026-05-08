@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils/cn";
 import {
   clampCarouselIndex,
   getCarouselItemVisualState,
+  getCarouselTrackTransform,
   getVisibleDotIndexes,
 } from "@/lib/utils/offset-carousel";
 import { Button } from "@/components/ui/button";
@@ -91,6 +92,8 @@ export function OffsetCarousel<T>({
     clampCarouselIndex(defaultActiveIndex, items.length),
   );
   const [isHovering, setIsHovering] = useState(false);
+  const [trackStepWidth, setTrackStepWidth] = useState<number | null>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   const touchStartXRef = useRef<number | null>(null);
   const dotSetId = useId();
   const total = items.length;
@@ -177,6 +180,48 @@ export function OffsetCarousel<T>({
     [activeIndex, total],
   );
 
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || total === 0) {
+      setTrackStepWidth(null);
+      return;
+    }
+
+    const measure = () => {
+      const firstItem = track.querySelector<HTMLElement>("[data-carousel-item='true']");
+      if (!firstItem) {
+        setTrackStepWidth(null);
+        return;
+      }
+
+      const style = window.getComputedStyle(track);
+      const gap = Number.parseFloat(style.columnGap || style.gap || "0") || 0;
+      const width = firstItem.offsetWidth;
+      setTrackStepWidth(width > 0 ? width + gap : null);
+    };
+
+    measure();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(track);
+
+    const firstItem = track.querySelector<HTMLElement>("[data-carousel-item='true']");
+    if (firstItem) {
+      observer.observe(firstItem);
+    }
+
+    window.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [gap, itemWidth, total]);
+
   const containerStyle = {
     "--carousel-gap": gap,
     "--carousel-item-width": itemWidth,
@@ -185,7 +230,7 @@ export function OffsetCarousel<T>({
 
   const trackStyle = {
     paddingInline: "max(var(--carousel-peek), calc(50% - var(--carousel-item-width) / 2))",
-    transform: `translate3d(calc(-${activeIndex} * (var(--carousel-item-width) + var(--carousel-gap))), 0, 0)`,
+    transform: getCarouselTrackTransform(activeIndex, trackStepWidth),
     transition: "transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
   } as CSSProperties;
 
@@ -206,6 +251,7 @@ export function OffsetCarousel<T>({
           onTouchEnd={handleTouchEnd}
         >
         <div
+          ref={trackRef}
           className={cn(
             "flex items-stretch gap-[var(--carousel-gap)]",
             trackClassName,
@@ -227,6 +273,7 @@ export function OffsetCarousel<T>({
                 key={getItemKey ? getItemKey(item, index) : `${index}`}
                 aria-hidden={visualState.hidden ? "true" : undefined}
                 className={cn("shrink-0 basis-[var(--carousel-item-width)]", itemClassName)}
+                data-carousel-item="true"
                 style={{
                   opacity: visualState.opacity,
                   transform: `scale(${visualState.scale})`,

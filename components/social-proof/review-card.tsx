@@ -31,7 +31,7 @@ export function ReviewCard({ review, className }: ReviewCardProps) {
   return (
     <article
       className={cn(
-        "flex h-full flex-col gap-4 rounded-[1.25rem] border border-border/70 bg-white/94 p-5 shadow-[0_12px_32px_-26px_rgba(15,23,42,0.28)]",
+        "flex h-full flex-col gap-3 rounded-[1.1rem] border border-border/70 bg-white/96 p-4 shadow-[0_14px_34px_-28px_rgba(15,23,42,0.34)]",
         className,
       )}
     >
@@ -54,7 +54,7 @@ export function ReviewCard({ review, className }: ReviewCardProps) {
 
           <div className="min-w-0">
             <p className="truncate text-sm font-medium text-foreground">{review.author.name}</p>
-            <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <div className="mt-1 grid gap-0.5 text-[11px] leading-tight text-muted-foreground">
               {review.metadata?.isLocalGuide ? (
                 <span className="inline-flex items-center gap-1">
                   <MapPin className="size-3" aria-hidden="true" />

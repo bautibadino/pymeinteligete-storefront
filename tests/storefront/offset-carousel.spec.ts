@@ -6,6 +6,7 @@ import { OffsetCarousel } from "@/components/ui/offset-carousel";
 import {
   clampCarouselIndex,
   getCarouselItemVisualState,
+  getCarouselTrackTransform,
   getVisibleDotIndexes,
 } from "@/lib/utils/offset-carousel";
 
@@ -70,6 +71,11 @@ describe("offset carousel helpers", () => {
     expect(getVisibleDotIndexes(9, 0)).toEqual([0, 1, 2, 3, 4]);
     expect(getVisibleDotIndexes(9, 4)).toEqual([2, 3, 4, 5, 6]);
     expect(getVisibleDotIndexes(9, 8)).toEqual([4, 5, 6, 7, 8]);
+  });
+
+  it("mueve el track con pixeles medidos para mantener centrados indices avanzados", () => {
+    expect(getCarouselTrackTransform(4, 296)).toBe("translate3d(-1184px, 0, 0)");
+    expect(getCarouselTrackTransform(4, null)).toBe("translate3d(0, 0, 0)");
   });
 
   it("renderiza el carrusel con activeIndex inicial, botones clampados y ventana de dots reducida", () => {

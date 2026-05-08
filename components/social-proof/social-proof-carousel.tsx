@@ -28,7 +28,7 @@ export function SocialProofCarousel({ empresaId, tenantSlug, className }: Social
   }
 
   return (
-    <section className={cn("space-y-6 py-8 sm:py-10", className)} data-template="social-proof-carousel">
+    <section className={cn("space-y-4 py-0", className)} data-template="social-proof-carousel">
       {summary && summary.totalReviews > 0 ? (
         <header className="space-y-2 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-white/92 px-4 py-2">
@@ -54,8 +54,8 @@ export function SocialProofCarousel({ empresaId, tenantSlug, className }: Social
         ariaLabel="Reseñas de clientes"
         items={reviews}
         getItemKey={(review) => review.reviewId}
-        itemWidth="clamp(18rem, 32vw, 24rem)"
-        peek="1.5rem"
+        itemWidth="clamp(17.5rem, 30vw, 22rem)"
+        peek="0.75rem"
         gap="1rem"
         scaleStep={0.06}
         opacityStep={0.22}

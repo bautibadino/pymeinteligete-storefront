@@ -12,10 +12,10 @@ export function SocialProofSectionShell({
   template: string;
 }) {
   return (
-    <section className="py-10 sm:py-12" data-template={template}>
+    <section className="py-6 sm:py-8" data-template={template}>
       <div className="mx-auto max-w-[90rem] px-4 sm:px-6">
         {(title || subtitle) ? (
-          <header className="mb-6 max-w-2xl">
+          <header className="mb-4 max-w-2xl">
             {title ? (
               <h2 className="font-heading text-[1.55rem] font-semibold tracking-tight text-foreground sm:text-[2rem]">
                 {title}

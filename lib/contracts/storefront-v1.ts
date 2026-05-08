@@ -14,6 +14,7 @@ export const STOREFRONT_API_PATHS = {
   categories: `${STOREFRONT_API_PREFIX}/categories`,
   shippingQuote: `${STOREFRONT_API_PREFIX}/shipping/quote`,
   paymentMethods: `${STOREFRONT_API_PREFIX}/payment-methods`,
+  contact: `${STOREFRONT_API_PREFIX}/contact`,
   checkout: `${STOREFRONT_API_PREFIX}/checkout`,
   processPayment: `${STOREFRONT_API_PREFIX}/payments/process`,
   product(slug: string) {

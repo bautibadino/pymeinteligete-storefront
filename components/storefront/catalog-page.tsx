@@ -8,6 +8,7 @@ import {
 } from "@/components/templates/catalog-layout/catalog-layout-shared";
 import { mapCatalogProductsToCardData } from "@/components/presentation/render-context";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
+import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
 import { shouldUsePresentation } from "@/lib/presentation/render-utils";
 import type { StorefrontPagination } from "@/lib/types/storefront";
 import type {
@@ -102,7 +103,8 @@ export function CatalogPageContent({
   const totalResults = pagination?.total ?? renderedProductsCount;
   const activeFilters = buildActiveFilters(query, selectedCategory);
   const hasPreview = Boolean(previewToken);
-  const usePresentation = shouldUsePresentation(bootstrap?.presentation, "catalog");
+  const usePresentation =
+    !isBymCustomExperience(bootstrap) && shouldUsePresentation(bootstrap?.presentation, "catalog");
   const displayName = resolveTenantDisplayName(bootstrap, host);
   const heading = selectedCategory?.name ?? displayName;
   const description = selectedCategory

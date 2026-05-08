@@ -8,6 +8,7 @@ import type {
 import { getEnabledSortedSections, type PresentationPageKey } from "@/lib/presentation/render-utils";
 import { adaptSectionToModule } from "@/components/presentation/section-adapter";
 import type { PresentationRenderContext } from "@/components/presentation/render-context";
+import { BymImmersiveHomeLayout } from "@/components/presentation/home-layouts/bym-immersive-home-layout";
 
 // Registry resolvers
 import {
@@ -169,6 +170,27 @@ export function PresentationRenderer({
 }: PresentationRendererProps) {
   const pageConfig = presentation.pages[page];
   const sections = getEnabledSortedSections(pageConfig.sections);
+  const shouldRenderBymImmersiveHome =
+    page === "home" && pageConfig.layout?.variant === "bym-immersive-home-v1";
+  const visibleSections = shouldRenderBymImmersiveHome
+    ? sections.filter((section) => section.type !== "hero")
+    : sections;
+  const renderedSections = visibleSections.map((section) => (
+    <div
+      key={section.id}
+      className="presentation-renderer-section"
+      data-section-id={section.id}
+      data-section-type={section.type}
+    >
+      <SectionRenderer section={section} context={context} />
+    </div>
+  ));
+  const bymHeroChrome = includeGlobals && shouldRenderBymImmersiveHome ? (
+    <>
+      <PresentationGlobalAnnouncementBar presentation={presentation} context={context} />
+      <PresentationGlobalHeader presentation={presentation} context={context} />
+    </>
+  ) : null;
 
   return (
     <div
@@ -177,22 +199,25 @@ export function PresentationRenderer({
       data-page={page}
       data-presentation-scope={includeGlobals ? "document" : "page"}
     >
-      {includeGlobals ? (
+      {includeGlobals && !shouldRenderBymImmersiveHome ? (
         <PresentationGlobalAnnouncementBar presentation={presentation} context={context} />
       ) : null}
-      {includeGlobals ? <PresentationGlobalHeader presentation={presentation} context={context} /> : null}
+      {includeGlobals && !shouldRenderBymImmersiveHome ? (
+        <PresentationGlobalHeader presentation={presentation} context={context} />
+      ) : null}
 
       <main className="presentation-renderer-content">
-        {sections.map((section) => (
-          <div
-            key={section.id}
-            className="presentation-renderer-section"
-            data-section-id={section.id}
-            data-section-type={section.type}
-          >
-            <SectionRenderer section={section} context={context} />
-          </div>
-        ))}
+        {shouldRenderBymImmersiveHome ? (
+          <BymImmersiveHomeLayout
+            presentation={presentation}
+            sections={visibleSections}
+            chrome={bymHeroChrome}
+            context={context}
+            renderSections={renderedSections}
+          />
+        ) : (
+          renderedSections
+        )}
       </main>
 
       {includeGlobals ? <PresentationGlobalFooter presentation={presentation} context={context} /> : null}

@@ -156,6 +156,37 @@ img {
   margin: 0 auto;
 }
 
+.bym-custom-shell {
+  --bym-content-width: 1180px;
+  --bym-shell-header-height: 96px;
+}
+
+.bym-custom-shell-content {
+  min-width: 0;
+  width: 100%;
+}
+
+.bym-custom-shell-content > :not([data-bym-fullbleed="true"]) {
+  width: min(calc(100% - 28px), var(--bym-content-width));
+  margin-inline: auto;
+  margin-block: calc(var(--bym-shell-header-height) + clamp(18px, 3vw, 36px)) clamp(18px, 3vw, 36px);
+}
+
+@keyframes bym-announcement-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.bym-announcement-track--animated {
+  animation-name: bym-announcement-marquee;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
 .storefront-shell {
   overflow: hidden;
   border: 1px solid var(--line);

@@ -4,7 +4,9 @@ import { loadHomeExperience } from "@/app/(storefront)/_lib/storefront-shell-dat
 import { ModuleRenderer } from "@/components/modules/ModuleRenderer";
 import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
 import { PreviewBridge } from "@/components/presentation/PreviewBridge";
+import { BymHomePage } from "@/components/storefront/bym-home-page";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
+import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
 import { normalizeModules } from "@/lib/modules";
 import { shouldUsePresentation } from "@/lib/presentation/render-utils";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
@@ -32,6 +34,19 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const theme = resolveEffectiveTenantTheme(experience.bootstrap);
   const hasPreview = Boolean(experience.runtime.context.previewToken);
   const usePresentation = shouldUsePresentation(experience.bootstrap?.presentation, "home");
+
+  if (isBymCustomExperience(experience.bootstrap)) {
+    return (
+      <>
+        {hasPreview ? <PreviewBridge /> : null}
+        <BymHomePage
+          bootstrap={experience.bootstrap}
+          categories={experience.categories}
+          products={experience.catalog?.products ?? []}
+        />
+      </>
+    );
+  }
 
   if (usePresentation) {
     const presentationContext = {

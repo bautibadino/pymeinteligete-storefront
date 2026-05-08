@@ -4,6 +4,10 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
 import { resolveCartItemPrice } from "@/lib/cart/storefront-cart";
+import {
+  isProductCardShippingBadge,
+  ProductCardBadgeIcon,
+} from "@/components/templates/product-card/product-card-badge-icon";
 import { ProductCardMediaFrame } from "@/components/templates/product-card/product-card-media-frame";
 import { ProductCardStockBadge } from "@/components/templates/product-card/product-card-stock-badge";
 import { Badge } from "@/components/ui/badge";
@@ -90,7 +94,10 @@ export function ProductCardSpotlightCommerce({
                     variant={badge.tone ? BADGE_VARIANT_MAP[badge.tone] : "outline"}
                     className="border border-white/70 bg-white/88 text-[10px] text-slate-700 shadow-none"
                   >
-                    {index === 0 ? <Sparkles className="size-3" aria-hidden="true" /> : null}
+                    <ProductCardBadgeIcon badge={badge} />
+                    {index === 0 && !isProductCardShippingBadge(badge) ? (
+                      <Sparkles className="size-3" aria-hidden="true" />
+                    ) : null}
                     {badge.label}
                   </Badge>
                 ))}

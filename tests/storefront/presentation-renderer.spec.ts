@@ -341,6 +341,27 @@ describe("presentation renderer logic", () => {
     expect(module.tenantSlug).toBe(bootstrap.tenant.tenantSlug);
   });
 
+  it("normaliza socialProof usando aliases de encabezado cuando el contenido llega legacy", () => {
+    const module = adaptSectionToModule(
+      buildSection({
+        id: "social-proof-legacy",
+        type: "socialProof",
+        variant: "carousel",
+        content: {
+          heading: "Clientes reales",
+          description: "Opiniones verificadas desde Google.",
+        },
+      }),
+    ) as {
+      content: { title?: string; subtitle?: string };
+    };
+
+    expect(module.content).toEqual({
+      title: "Clientes reales",
+      subtitle: "Opiniones verificadas desde Google.",
+    });
+  });
+
   it("adapta productGrid con defaults seguros para source y cardVariant", () => {
     const module = adaptSectionToModule(
       buildSection({
@@ -586,7 +607,11 @@ describe("presentation renderer logic", () => {
         _id: "mongo-prod-catalog",
         ecommerceSlug: "catalogo-real",
         name: "Producto de catálogo real",
-        brand: "BYM",
+        brandId: {
+          name: "BYM",
+          slug: "bym",
+          logo: { url: "https://cdn.example.com/brands/bym.webp" },
+        },
         priceWithTax: 123456,
         stock: 3,
         images: [{ url: "https://cdn.example.com/catalogo-real.webp" }],
@@ -606,6 +631,7 @@ describe("presentation renderer logic", () => {
     ) as {
       products: Array<{
         id: string;
+        brandLogoUrl?: string;
         href: string;
         imageUrl?: string;
         price: { amount: number; formatted: string };
@@ -616,6 +642,7 @@ describe("presentation renderer logic", () => {
     expect(module.products).toHaveLength(1);
     expect(module.products[0]).toMatchObject({
       id: "mongo-prod-catalog",
+      brandLogoUrl: "https://cdn.example.com/brands/bym.webp",
       href: "/producto/catalogo-real",
       imageUrl: "https://cdn.example.com/catalogo-real.webp",
       price: { amount: 123456 },

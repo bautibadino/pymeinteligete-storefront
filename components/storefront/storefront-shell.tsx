@@ -4,6 +4,7 @@ import type { Route } from "next";
 import type { ReactNode } from "react";
 
 import { HeaderCartButton } from "@/components/storefront/cart/header-cart-button";
+import { BymStorefrontShell } from "@/components/storefront/bym-storefront-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ import {
   type FetchIssue,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
 import type { StorefrontBootstrap, StorefrontNavLink } from "@/lib/storefront-api";
+import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
 
 const FALLBACK_NAVIGATION: StorefrontNavLink[] = [
   { href: "/", label: "Inicio" },
@@ -58,13 +60,26 @@ export function StorefrontShell({ bootstrap, host, children, issues }: Storefron
   const headerLinks = bootstrap?.navigation?.headerLinks ?? FALLBACK_NAVIGATION;
   const footerColumns = bootstrap?.navigation?.footerColumns ?? [];
 
+  if (isBymCustomExperience(bootstrap)) {
+    return (
+      <BymStorefrontShell bootstrap={bootstrap} host={host} issues={issues}>
+        {children}
+      </BymStorefrontShell>
+    );
+  }
+
   if (presentation) {
     const presentationContext = { bootstrap, host };
 
     return (
       <main className="presentation-shell" data-storefront-mode="presentation">
-        <PresentationGlobalAnnouncementBar presentation={presentation} context={presentationContext} />
-        <PresentationGlobalHeader presentation={presentation} context={presentationContext} />
+        <div
+          className="sticky top-0 z-50 bg-paper/84 shadow-sm backdrop-blur-xl"
+          data-presentation-chrome="sticky-stack"
+        >
+          <PresentationGlobalAnnouncementBar presentation={presentation} context={presentationContext} />
+          <PresentationGlobalHeader presentation={presentation} context={presentationContext} />
+        </div>
         <div className="presentation-shell-content">{children}</div>
         <PresentationGlobalFooter presentation={presentation} context={presentationContext} />
       </main>

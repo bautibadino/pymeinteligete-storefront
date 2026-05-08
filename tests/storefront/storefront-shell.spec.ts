@@ -31,6 +31,12 @@ vi.mock("@/components/presentation/PresentationRenderer", () => ({
   },
 }));
 
+vi.mock("@/components/storefront/cart/header-cart-button", () => ({
+  HeaderCartButton: function HeaderCartButton() {
+    return createElement("button", { type: "button", "data-template": "mock-cart-button" }, "cart");
+  },
+}));
+
 function renderHtml(element: ReturnType<typeof createElement>): string {
   return renderToStaticMarkup(element).replaceAll("&amp;", "&");
 }
@@ -142,5 +148,113 @@ describe("StorefrontShell presentation mode", () => {
     expect(html).toContain('class="presentation-shell-content"');
     expect(html).toContain('id="checkout-surface"');
     expect(html).not.toContain('data-presentation-renderer="true"');
+  });
+
+  it("agrupa announcement y header en un chrome sticky en presentation mode", () => {
+    const html = renderHtml(
+      createElement(StorefrontShell, {
+        bootstrap: buildBootstrap(),
+        host: "acme.test",
+        issues: [],
+        children: createElement("section", null, "contenido"),
+      }),
+    );
+
+    expect(html).toContain('data-presentation-chrome="sticky-stack"');
+    expect(html.indexOf('data-template="mock-announcement-bar"')).toBeLessThan(
+      html.indexOf('data-template="mock-header"'),
+    );
+  });
+
+  it("usa la shell BYM cuando el bootstrap trae una experiencia codeada", () => {
+    const html = renderHtml(
+      createElement(StorefrontShell, {
+        bootstrap: buildBootstrap({
+          storefrontExperience: {
+            key: "bym-custom-v1",
+            enabled: true,
+          },
+        }),
+        host: "bym.test",
+        issues: [],
+        children: createElement("section", { id: "bym-page" }, "custom"),
+      }),
+    );
+
+    expect(html).toContain('data-storefront-mode="bym-custom-v1"');
+    expect(html).toContain('class="bym-custom-shell-content"');
+    expect(html).toContain('id="bym-page"');
+    expect(html).not.toContain('class="presentation-shell"');
+    expect(html).not.toContain('data-presentation-chrome="sticky-stack"');
+  });
+
+  it("muestra todos los mensajes del announcement bar en la shell BYM", () => {
+    const presentation = buildPresentation();
+    presentation.globals.announcementBar = {
+      ...presentation.globals.announcementBar,
+      variant: "rotating",
+      enabled: true,
+      content: {
+        messages: [
+          { text: "6 cuotas sin interés" },
+          { text: "Envío gratis en seleccionados" },
+          { text: "Armado y balanceado bonificado" },
+        ],
+      },
+    };
+
+    const html = renderHtml(
+      createElement(StorefrontShell, {
+        bootstrap: buildBootstrap({
+          presentation,
+          storefrontExperience: {
+            key: "bym-custom-v1",
+            enabled: true,
+          },
+        }),
+        host: "bym.test",
+        issues: [],
+        children: createElement("section", null, "custom"),
+      }),
+    );
+
+    expect(html).toContain("6 cuotas sin interés");
+    expect(html).toContain("Envío gratis en seleccionados");
+    expect(html).toContain("Armado y balanceado bonificado");
+  });
+
+  it("no mezcla items default cuando existen mensajes explícitos en announcement bar", () => {
+    const presentation = buildPresentation();
+    presentation.globals.announcementBar = {
+      ...presentation.globals.announcementBar,
+      variant: "rotating",
+      enabled: true,
+      content: {
+        messages: [{ text: "Texto cargado por el usuario" }],
+        items: [
+          { label: "Envíos" },
+          { label: "Garantía" },
+        ],
+      },
+    };
+
+    const html = renderHtml(
+      createElement(StorefrontShell, {
+        bootstrap: buildBootstrap({
+          presentation,
+          storefrontExperience: {
+            key: "bym-custom-v1",
+            enabled: true,
+          },
+        }),
+        host: "bym.test",
+        issues: [],
+        children: createElement("section", null, "custom"),
+      }),
+    );
+
+    expect(html).toContain("Texto cargado por el usuario");
+    expect(html).not.toContain("Envíos");
+    expect(html).not.toContain("Garantía");
   });
 });

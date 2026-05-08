@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { CatalogLayoutInfiniteScroll } from "@/components/templates/catalog-layout/catalog-layout-infinite-scroll";
 import { CatalogLayoutPaginatedClassic } from "@/components/templates/catalog-layout/catalog-layout-paginated-classic";
+import { ProductCardPremiumCommerce } from "@/components/templates/product-card/product-card-premium-commerce";
 import {
   CatalogToolbar,
   FilterSidebar,
@@ -166,6 +167,7 @@ describe("catalog layout shared layer", () => {
             slug: "prod-2",
             href: "/prod-2",
             brand: "Pirelli",
+            brandLogoUrl: "https://cdn.example.com/brands/pirelli.webp",
             price: { amount: 152000, currency: "ARS", formatted: "$152.000" },
           },
         ],
@@ -176,9 +178,30 @@ describe("catalog layout shared layer", () => {
     expect(html).toContain("Auto");
     expect(html).toContain("Michelin");
     expect(html).toContain("Pirelli");
+    expect(html).toContain('src="https://cdn.example.com/brands/pirelli.webp"');
+    expect(html).toContain('alt=""');
     expect(html).toContain("Entrega inmediata");
     expect(html).toContain("Buscar categoría...");
     expect(html).not.toContain("No hay filtros activos.");
+  });
+
+  it("muestra camioncito en badges de envío gratis de las cards comerciales", () => {
+    const product = createProducts(1)[0]!;
+    const html = renderHtml(
+      createElement(ProductCardPremiumCommerce, {
+        product: {
+          ...product,
+          badges: [{ label: "Envío gratis", tone: "success" }],
+        },
+        displayOptions: {
+          showAddToCart: false,
+          showBadges: true,
+        },
+      }),
+    );
+
+    expect(html).toContain("Envío gratis");
+    expect(html).toContain('data-badge-icon="shipping"');
   });
 
   it("muestra el nombre de la categoría seleccionada en filtros aplicados cuando la query usa categoryId", () => {

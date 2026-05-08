@@ -269,6 +269,15 @@ function readProductBrand(product: ProductRecord): string | undefined {
   );
 }
 
+function readProductBrandLogoUrl(product: ProductRecord): string | undefined {
+  const brand = readRecord(product.brand) ?? readRecord(product.brandId);
+  const logo = readRecord(brand?.logo);
+
+  return logo
+    ? readStringFromRecord(logo, ["url", "src", "imageUrl"])
+    : undefined;
+}
+
 function readProductCategory(product: ProductRecord): string | undefined {
   return (
     readNestedString(product, "category", ["name", "label", "slug"]) ??
@@ -666,7 +675,7 @@ function readBadges(
   if (readBoolean(product.isOnSale)) pushUniqueBadge(badges, seen, { label: "Oferta", tone: "warning" });
   if (readBoolean(product.isOutlet)) pushUniqueBadge(badges, seen, { label: "Outlet", tone: "warning" });
   if (hasFreeShipping(product, bootstrap, amount)) {
-    pushUniqueBadge(badges, seen, { label: "Envío gratis", tone: "success" });
+    pushUniqueBadge(badges, seen, { label: "Envío gratis", tone: "success", icon: "shipping" });
   }
 
   const dispatchLabel = readDispatchLabel(product);
@@ -760,6 +769,7 @@ function normalizeRelatedProductCandidate(candidate: unknown): StorefrontCatalog
   const currency = readCurrency(candidate);
   const compareAt = readCompareAtPrice(candidate);
   const brand = readProductBrand(candidate);
+  const brandLogoUrl = readProductBrandLogoUrl(candidate);
   const category = readProductCategory(candidate);
   const imageUrl =
     readProductPrimaryImageUrl(candidate) ??
@@ -778,6 +788,7 @@ function normalizeRelatedProductCandidate(candidate: unknown): StorefrontCatalog
     ...(sku ? { sku } : {}),
     ...(imageUrl ? { imageUrl } : {}),
     ...(brand ? { brand } : {}),
+    ...(brandLogoUrl ? { brandLogoUrl } : {}),
     ...(category ? { category } : {}),
     ...(amount !== undefined ? { price: { amount, currency, ...(compareAt !== undefined ? { compareAt } : {}) } } : {}),
     ...(discountedPrice !== undefined ? { discountedPrice } : {}),
@@ -839,6 +850,7 @@ export function mapCatalogProductToCardData(
   const stock = resolveProductStock(record);
   const imageUrl = readProductPrimaryImageUrl(record);
   const brand = readProductBrand(record);
+  const brandLogoUrl = readProductBrandLogoUrl(record);
   const category = readProductCategory(record);
   const installments =
     readInstallments(record, compareAt ?? effectiveAmount, currency) ??
@@ -851,6 +863,7 @@ export function mapCatalogProductToCardData(
     name,
     slug,
     ...(brand ? { brand } : category ? { brand: category } : {}),
+    ...(brandLogoUrl ? { brandLogoUrl } : {}),
     ...(imageUrl ? { imageUrl } : {}),
     ...(typeof listAmount === "number"
       ? {

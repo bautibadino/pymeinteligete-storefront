@@ -173,6 +173,66 @@ export interface StorefrontContact {
   social?: StorefrontSocialLinks;
 }
 
+export type StorefrontContactFormFieldType =
+  | "text"
+  | "textarea"
+  | "email"
+  | "phone"
+  | "select"
+  | "checkbox"
+  | "number"
+  | "hidden";
+
+export type StorefrontContactFormValue = string | number | boolean | null;
+
+export interface StorefrontContactFormFieldOption {
+  label: string;
+  value: string;
+}
+
+export interface StorefrontContactFormFieldValidation {
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+  pattern?: string;
+}
+
+export interface StorefrontContactFormField {
+  id: string;
+  key: string;
+  type: StorefrontContactFormFieldType;
+  label?: string;
+  placeholder?: string;
+  helperText?: string;
+  required: boolean;
+  order: number;
+  options?: StorefrontContactFormFieldOption[];
+  defaultValue?: string | number | boolean;
+  validation?: StorefrontContactFormFieldValidation;
+  metadata?: Record<string, unknown>;
+}
+
+export interface StorefrontContactForm {
+  enabled: boolean;
+  title?: string;
+  description?: string;
+  submitLabel?: string;
+  successMessage?: string;
+  fields: StorefrontContactFormField[];
+  version?: number;
+}
+
+export interface StorefrontContactFormSubmissionRequest {
+  values: Record<string, StorefrontContactFormValue>;
+  website?: string;
+}
+
+export interface StorefrontContactFormSubmissionResult {
+  message?: string;
+  submissionId?: string;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Commerce
 // ─────────────────────────────────────────────────────────────
@@ -248,15 +308,23 @@ export interface StorefrontBootstrap {
   tenant: StorefrontTenantIdentity;
   branding: StorefrontBranding;
   presentation?: Presentation;
+  storefrontExperience?: StorefrontExperienceConfig;
   theme: StorefrontTheme;
   seo: StorefrontSeoConfig;
   navigation: StorefrontNavigation;
   home: StorefrontHomeConfig;
   contact?: StorefrontContact;
+  contactForm?: StorefrontContactForm;
   commerce: StorefrontCommerceConfig;
   features: StorefrontFeatures;
   pages: StorefrontPage[];
   analytics?: StorefrontAnalytics;
+}
+
+export interface StorefrontExperienceConfig {
+  key: string;
+  enabled: boolean;
+  settings?: Record<string, unknown>;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -298,6 +366,8 @@ export interface StorefrontPrice {
 }
 
 export interface StorefrontBrandReference {
+  _id?: string;
+  id?: string;
   name?: string;
   label?: string;
   slug?: string;
