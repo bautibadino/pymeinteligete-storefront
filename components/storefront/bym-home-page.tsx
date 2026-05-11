@@ -144,22 +144,22 @@ function getHeroContent(bootstrap: StorefrontBootstrap | null) {
     {
       kind: "installments",
       title: "Cuotas sin interés con Mercado Pago",
-      description: `Pagá en ${installmentsCount} cuotas con Visa, Mastercard y Amex. La cantidad de cuotas se toma de la configuración de pagos de la tienda.`,
+      description: `Pagá en ${installmentsCount} cuotas con Visa, Mastercard y Amex.`,
     },
     {
       kind: "shipping",
       title: "Envíos gratis a todo el país",
-      description: "Despachos con Andreani y Vía Cargo en productos seleccionados, según condiciones comerciales vigentes.",
+      description: "Despachos con Andreani y Vía Cargo en productos seleccionados",
     },
     {
       kind: "discounts",
       title: "Descuentos activos",
-      description: "Promociones por transferencia y oportunidades comerciales destacadas para compras concretas.",
+      description: "Promociones por transferencia y oportunidades comerciales",
     },
     {
       kind: "service",
       title: "Armado y balanceado bonificado",
-      description: "Comprando neumáticos, el armado y balanceado puede quedar bonificado según la operación.",
+      description: "Comprando neumáticos, el armado y balanceado está 100% bonificado",
     },
   ];
 
