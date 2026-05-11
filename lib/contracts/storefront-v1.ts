@@ -11,7 +11,9 @@ export const STOREFRONT_HEADERS = {
 export const STOREFRONT_API_PATHS = {
   bootstrap: `${STOREFRONT_API_PREFIX}/bootstrap`,
   catalog: `${STOREFRONT_API_PREFIX}/catalog`,
+  cartValidate: `${STOREFRONT_API_PREFIX}/cart/validate`,
   categories: `${STOREFRONT_API_PREFIX}/categories`,
+  facebookCatalog: `${STOREFRONT_API_PREFIX}/catalog/facebook`,
   shippingQuote: `${STOREFRONT_API_PREFIX}/shipping/quote`,
   paymentMethods: `${STOREFRONT_API_PREFIX}/payment-methods`,
   contact: `${STOREFRONT_API_PREFIX}/contact`,
