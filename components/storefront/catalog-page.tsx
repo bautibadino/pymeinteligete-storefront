@@ -41,6 +41,8 @@ const ACTIVE_FILTER_LABELS: Partial<Record<keyof StorefrontCatalogQuery, string>
   category: "Categoría",
   categoryId: "Categoría",
   family: "Familia",
+  page: "Página",
+  pageSize: "Productos por página",
   minPrice: "Precio mínimo",
   maxPrice: "Precio máximo",
   onlyImmediate: "Entrega inmediata",
@@ -120,6 +122,29 @@ function readFacetCategoryLabel(
   return null;
 }
 
+function readFacetBrandLabel(
+  facets: StorefrontCatalogFacets | undefined,
+  value: string,
+): string | null {
+  const normalizedValue = value.trim().toLowerCase();
+  const options = [
+    ...(Array.isArray(facets?.brands) ? facets.brands : []),
+    ...(Array.isArray(facets?.brand) ? facets.brand : []),
+  ];
+
+  for (const option of options) {
+    const matches = [option.id, option.value, option.slug, option.label, option.name].some(
+      (candidate) => typeof candidate === "string" && candidate.trim().toLowerCase() === normalizedValue,
+    );
+
+    if (matches) {
+      return option.label ?? option.name ?? option.value ?? option.slug ?? null;
+    }
+  }
+
+  return null;
+}
+
 function resolveCategoryFilterLabel(
   value: string,
   selectedCategory: StorefrontCategory | null | undefined,
@@ -150,6 +175,8 @@ function buildActiveFilters(
         ? value
           ? "Si"
           : "No"
+        : key === "brand"
+          ? readFacetBrandLabel(facets, String(value)) ?? String(value)
         : key === "categoryId" || key === "category"
           ? resolveCategoryFilterLabel(String(value), selectedCategory, categories, facets)
         : key === "minPrice" || key === "maxPrice"

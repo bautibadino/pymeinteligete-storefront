@@ -84,7 +84,7 @@ describe("CatalogPageContent", () => {
 
     setCurrentUrl(
       "/catalogo",
-      `brand=Shell&categoryId=${activeCategoryId}&page=2&pageSize=24&sort=priceAsc`,
+      `brand=brand-shell&categoryId=${activeCategoryId}&page=2&pageSize=24&sort=priceAsc`,
     );
 
     const html = renderHtml(
@@ -93,7 +93,7 @@ describe("CatalogPageContent", () => {
         categories: [],
         facets: {
           brands: [
-            { value: "Shell", label: "Shell" },
+            { id: "brand-shell", name: "Shell", slug: "shell" },
             { value: "Pirelli", label: "Pirelli" },
           ],
           categories: [
@@ -115,7 +115,7 @@ describe("CatalogPageContent", () => {
         },
         products: [],
         query: {
-          brand: "Shell",
+          brand: "brand-shell",
           categoryId: activeCategoryId,
           page: 2,
           pageSize: 24,
@@ -127,9 +127,12 @@ describe("CatalogPageContent", () => {
     expect(html).toContain('data-bym-fullbleed="true"');
     expect(html).toContain("Página 2 de 5");
     expect(html).toContain("97 productos");
+    expect(html).toContain("Productos por página");
+    expect(html).toContain("Shell");
     expect(html).toContain("Lubricantes");
     expect(html).toContain("Pirelli");
-    expect(html).toContain(`href="/catalogo?brand=Shell&categoryId=${activeCategoryId}&page=3&pageSize=24&sort=priceAsc"`);
+    expect(html).toContain(`href="/catalogo?brand=brand-shell&categoryId=${activeCategoryId}&page=3&pageSize=24&sort=priceAsc"`);
+    expect(html).not.toContain(">brand-shell<");
     expect(html).not.toContain(`>${activeCategoryId}<`);
   });
 });

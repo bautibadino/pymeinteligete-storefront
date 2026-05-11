@@ -163,6 +163,37 @@ function resolveFacetText(
   return undefined;
 }
 
+function normalizeFacetMatchValue(value: string | null | undefined): string | null {
+  const normalized = value?.trim().toLowerCase();
+  return normalized ? normalized : null;
+}
+
+function facetOptionMatchesValue(option: StorefrontCatalogFacetOption, value: string | null): boolean {
+  const normalizedValue = normalizeFacetMatchValue(value);
+  if (!normalizedValue) {
+    return false;
+  }
+
+  return (["value", "id", "slug", "label", "name"] as Array<keyof StorefrontCatalogFacetOption>).some((key) => {
+    const candidate = option[key];
+    return typeof candidate === "string" && normalizeFacetMatchValue(candidate) === normalizedValue;
+  });
+}
+
+function resolveFacetOptionLabel(
+  facets: StorefrontCatalogFacets | undefined,
+  keys: string[],
+  value: string | null,
+): string | null {
+  for (const option of readFacetOptions(facets, keys)) {
+    if (facetOptionMatchesValue(option, value)) {
+      return resolveFacetText(option, ["label", "name", "value", "slug", "id"]) ?? null;
+    }
+  }
+
+  return null;
+}
+
 function normalizeFacetCategories(facets: StorefrontCatalogFacets | undefined): StorefrontCategory[] {
   const options = readFacetOptions(facets, ["categories", "category"]);
 
@@ -388,7 +419,7 @@ function resolveFilterGroups(
   if (activeFilters.brand) {
     const selectedBrand = searchParams.get("brand");
     const brandFacetOptions = readFacetOptions(facets, ["brands", "brand"]).flatMap((option) => {
-      const value = resolveFacetText(option, ["value", "id", "slug", "label", "name"]);
+      const value = resolveFacetText(option, ["value", "name", "label", "slug", "id"]);
       const label = resolveFacetText(option, ["label", "name", "value", "slug", "id"]);
       const imageUrl = resolveFacetImageUrl(option);
 
@@ -398,12 +429,12 @@ function resolveFilterGroups(
 
       return [
         {
-          active: selectedBrand === value || selectedBrand === label,
+          active: facetOptionMatchesValue(option, selectedBrand),
           href: buildHref(pathname, searchParams, {
             brand: value,
             page: undefined,
           }),
-          id: value,
+          id: resolveFacetText(option, ["id", "value", "slug", "label", "name"]) ?? value,
           ...(imageUrl ? { imageUrl } : {}),
           label,
         },
@@ -632,7 +663,8 @@ function resolveFilterValue(
 
     case "brand": {
       const brand = searchParams.get("brand");
-      return brand ? { value: brand, clearKeys: ["brand", "page"] } : null;
+      const brandLabel = resolveFacetOptionLabel(facets, ["brands", "brand"], brand);
+      return brand ? { value: brandLabel ?? brand, clearKeys: ["brand", "page"] } : null;
     }
 
     case "priceRange": {

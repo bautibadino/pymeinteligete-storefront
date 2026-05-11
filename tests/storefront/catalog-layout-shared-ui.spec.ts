@@ -274,7 +274,7 @@ describe("catalog layout shared layer", () => {
 
   it("arma opciones de marca desde facets globales aunque la página actual no tenga esas marcas", () => {
     const activeCategoryId = createCategories()[0]?.children?.[0]?.categoryId ?? "category";
-    setCurrentUrl("/catalogo", `categoryId=${activeCategoryId}&brand=Pirelli&page=2&sort=priceAsc`);
+    setCurrentUrl("/catalogo", `categoryId=${activeCategoryId}&brand=brand-pirelli&page=2&sort=priceAsc`);
     const product = createProducts(1)[0]!;
 
     const html = renderHtml(
@@ -290,8 +290,8 @@ describe("catalog layout shared layer", () => {
         ],
         facets: {
           brands: [
-            { value: "Pirelli", label: "Pirelli", imageUrl: "https://cdn.example.com/pirelli.svg" },
-            { value: "Shell", label: "Shell" },
+            { id: "brand-pirelli", name: "Pirelli", slug: "pirelli", imageUrl: "https://cdn.example.com/pirelli.svg" },
+            { id: "brand-shell", name: "Shell", slug: "shell" },
           ],
         },
       }),
@@ -303,6 +303,8 @@ describe("catalog layout shared layer", () => {
     expect(html).not.toContain("Michelin");
     expect(html).toContain('aria-current="true"');
     expect(html).toContain(`href="/catalogo?categoryId=${activeCategoryId}&brand=Shell&sort=priceAsc"`);
+    expect(html).toContain("<span>Pirelli</span>");
+    expect(html).not.toContain(">brand-pirelli<");
   });
 
   it("resuelve el label de categoría activa desde facets cuando no hay árbol de categorías local", () => {
