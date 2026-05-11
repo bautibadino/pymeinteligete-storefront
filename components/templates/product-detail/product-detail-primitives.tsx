@@ -6,14 +6,13 @@ import {
   CircleAlert,
   CreditCard,
   Info,
-  MessageSquareText,
   Package,
   Sparkles,
-  Truck,
 } from "lucide-react";
 
 import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
 import { ShippingQuoteCalculator } from "@/components/storefront/shipping/shipping-quote-calculator";
+import { ProductDetailGoogleTrust } from "@/components/storefront/product-detail-google-trust";
 import { resolveCartItemPrice } from "@/lib/cart/storefront-cart";
 import { buildShippingQuotePackageFromProductDetailData } from "@/lib/shipping/product-package";
 import { ProductCardCompact } from "@/components/templates/product-card/product-card-compact";
@@ -35,6 +34,7 @@ export type ProductDetailTabSection = {
   eyebrow: string;
   title: string;
   paragraphs: string[];
+  brandLogoUrl?: string | undefined;
   notes?: string[] | undefined;
   specifications?: ProductDetailSpecification[] | undefined;
 };
@@ -85,8 +85,9 @@ type ProductDetailFallbackCardProps = {
 
 type ProductDetailCommercialData = {
   paymentMethods: string[];
-  shippingMessage?: string | undefined;
   reviewsEnabled?: boolean | undefined;
+  reviewsEmpresaId?: string | undefined;
+  reviewsTenantSlug?: string | undefined;
 };
 
 type ProductDetailCommercialSignal = {
@@ -300,29 +301,6 @@ function getCommercialSignals(
     });
   }
 
-  if (product.freeShipping || product.dispatch || commercialData?.shippingMessage) {
-    signals.push({
-      id: "shipping",
-      label: "Entrega",
-      value: product.freeShipping
-        ? "Envío gratis"
-        : product.dispatch?.label ?? "Logística publicada",
-      detail: commercialData?.shippingMessage ?? product.dispatch?.label,
-      icon: <Truck className="size-4" aria-hidden="true" />,
-      emphasized: Boolean(product.freeShipping),
-    });
-  }
-
-  if (commercialData?.reviewsEnabled) {
-    signals.push({
-      id: "reviews",
-      label: "Opiniones",
-      value: "Reseñas habilitadas",
-      detail: "Signal comercial del canal",
-      icon: <MessageSquareText className="size-4" aria-hidden="true" />,
-    });
-  }
-
   return signals;
 }
 
@@ -335,21 +313,24 @@ export function resolveProductDetailCommercialData(
 
   const record = content as Record<string, unknown>;
   const paymentMethods = readPaymentMethods(record.paymentMethods);
-  const shippingMessage = readString(record.shippingMessage);
   const reviewsEnabled = readBoolean(record.reviewsEnabled);
+  const reviewsEmpresaId = readString(record.reviewsEmpresaId);
+  const reviewsTenantSlug = readString(record.reviewsTenantSlug);
 
   if (
     paymentMethods.length === 0 &&
-    !shippingMessage &&
-    typeof reviewsEnabled !== "boolean"
+    typeof reviewsEnabled !== "boolean" &&
+    !reviewsEmpresaId &&
+    !reviewsTenantSlug
   ) {
     return undefined;
   }
 
   return {
     paymentMethods,
-    ...(shippingMessage ? { shippingMessage } : {}),
     ...(typeof reviewsEnabled === "boolean" ? { reviewsEnabled } : {}),
+    ...(reviewsEmpresaId ? { reviewsEmpresaId } : {}),
+    ...(reviewsTenantSlug ? { reviewsTenantSlug } : {}),
   };
 }
 
@@ -554,8 +535,10 @@ export function ProductDetailPurchaseCard({
   const commercialSignals = getCommercialSignals(product, commercialData);
   const primaryFacts = facts.slice(0, 1);
   const secondaryFacts = facts.slice(1);
-  const secondarySignals = commercialSignals.slice(2);
   const quotePackage = buildShippingQuotePackageFromProductDetailData(product);
+  const showReviewsTrust =
+    commercialData?.reviewsEnabled &&
+    (commercialData.reviewsEmpresaId || commercialData.reviewsTenantSlug);
 
   return (
     <aside
@@ -611,6 +594,13 @@ export function ProductDetailPurchaseCard({
       />
 
       <ShippingQuoteCalculator quotePackage={quotePackage} />
+
+      {showReviewsTrust ? (
+        <ProductDetailGoogleTrust
+          empresaId={commercialData.reviewsEmpresaId}
+          tenantSlug={commercialData.reviewsTenantSlug}
+        />
+      ) : null}
 
       {(commercialSignals.length > 0 || primaryFacts.length > 0) ? (
         <div className={productDetailInnerPanelClassName("grid gap-2.5 p-3")}>
@@ -679,38 +669,6 @@ export function ProductDetailPurchaseCard({
               </div>
             </div>
           ))}
-        </div>
-      ) : null}
-
-      {secondarySignals.length > 0 ? (
-        <div className="hidden gap-2 xl:grid">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Más señales comerciales
-          </p>
-          <div className="grid gap-2">
-            {secondarySignals.map((signal) => (
-              <div
-                key={signal.id}
-                className={cn(
-                  "grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 rounded-[18px] border px-3 py-3",
-                  signal.emphasized
-                    ? "border-black/12 bg-black/[0.04]"
-                    : "border-black/10 bg-black/[0.02]",
-                )}
-              >
-                <div className="mt-0.5 text-muted-foreground">{signal.icon}</div>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    {signal.label}
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-foreground">{signal.value}</p>
-                  {signal.detail ? (
-                    <p className="text-xs leading-5 text-muted-foreground">{signal.detail}</p>
-                  ) : null}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       ) : null}
 
@@ -857,22 +815,10 @@ export function buildProductDetailTabs(
   product: ProductDetailData,
   commercialData?: ProductDetailCommercialData | undefined,
 ): ProductDetailTabSection[] {
-  const uniqueBadges = uniqueProductBadges(product.badges);
   const descriptionParagraphs = splitParagraphs(
     product.description,
     "La descripción comercial todavía no fue cargada para este producto.",
   );
-  const shippingParagraphs = [
-    product.freeShipping
-      ? "Este producto participa de beneficios logísticos publicados por la tienda, incluyendo envío gratis cuando aplica."
-      : null,
-    product.dispatch?.label
-      ? `Modalidad de despacho actual: ${product.dispatch.label}.`
-      : null,
-    commercialData?.shippingMessage
-      ? commercialData.shippingMessage
-      : null,
-  ].filter((paragraph): paragraph is string => Boolean(paragraph));
 
   return [
     {
@@ -881,26 +827,11 @@ export function buildProductDetailTabs(
       eyebrow: "Producto",
       title: "Descripción y especificaciones",
       paragraphs: descriptionParagraphs,
+      ...(product.brandLogoUrl ? { brandLogoUrl: product.brandLogoUrl } : {}),
       notes: [
         product.brand ? `Marca: ${product.brand}` : "Marca pendiente de publicación",
-        uniqueBadges.length > 0
-          ? `Distinciones: ${uniqueBadges.map((badge) => badge.label).join(" · ")}`
-          : "Sin badges comerciales configurados",
       ],
       specifications: product.specifications,
-    },
-    {
-      id: "shipping",
-      label: "Envíos",
-      eyebrow: "Logística",
-      title: "Entrega y disponibilidad",
-      paragraphs:
-        shippingParagraphs.length > 0
-          ? shippingParagraphs
-          : [
-              "La información logística todavía no está publicada para este producto dentro del storefront.",
-              "Cuando el canal exponga cobertura, tiempos y retiro, aparecerán en esta sección.",
-            ],
     },
   ];
 }

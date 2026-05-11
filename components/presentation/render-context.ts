@@ -920,6 +920,7 @@ export function mapProductDetailToData(
   const badges = readBadges(record, bootstrap, effectiveAmount);
   const specifications = readSpecifications(record);
   const brand = readProductBrand(record);
+  const brandLogoUrl = readProductBrandLogoUrl(record);
   const description = readString(product.description);
   const dispatchType = readDispatchType(record);
   const dispatchLabel = readDispatchLabel(record);
@@ -930,6 +931,7 @@ export function mapProductDetailToData(
     name,
     slug,
     ...(brand ? { brand } : {}),
+    ...(brandLogoUrl ? { brandLogoUrl } : {}),
     ...(description ? { description } : {}),
     images: readProductImageItems(record, name),
     ...(typeof listAmount === "number"

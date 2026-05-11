@@ -45,8 +45,9 @@ export type ProductDetailContent = z.infer<typeof ProductDetailContentSchema>;
  */
 export interface ProductDetailRuntimeContent {
   paymentMethods?: StorefrontPaymentMethod[];
-  shippingMessage?: string;
   reviewsEnabled?: boolean;
+  reviewsEmpresaId?: string;
+  reviewsTenantSlug?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -106,6 +107,7 @@ export interface ProductDetailData {
   name: string;
   slug: string;
   brand?: string;
+  brandLogoUrl?: string;
   description?: string;
   images: ProductDetailImage[];
   basePrice?: ProductDetailPrice;

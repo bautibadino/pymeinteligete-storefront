@@ -19,6 +19,7 @@ const PRODUCT_FIXTURE: ProductDetailData = {
   name: "Linglong Greenmax ET 145/70R13",
   slug: "linglong-greenmax-et-14570r13-001-300-221000024",
   brand: "Linglong",
+  brandLogoUrl: "https://example.com/linglong-logo.webp",
   description: "Neumático urbano con buen balance entre durabilidad y confort.",
   images: [{ url: "https://example.com/tire.webp", alt: "Neumático Linglong" }],
   price: { amount: 118825, currency: "ARS", formatted: "$ 118.825" },
@@ -81,32 +82,39 @@ describe("ProductDetailGallerySpecs mobile/tablet contract", () => {
     expect(primitivesSource).toContain('"min-w-0 rounded-none border-y');
     expect(primitivesSource).toContain('"mx-auto max-w-7xl px-3 sm:px-0"');
   });
+
+  it("quita señales comerciales secundarias y agrega confianza compacta", () => {
+    const primitivesSource = readFileSync(PRIMITIVES_PATH, "utf8");
+
+    expect(primitivesSource).not.toContain("Más señales comerciales");
+    expect(primitivesSource).not.toContain('label: "Entrega"');
+    expect(primitivesSource).not.toContain('label: "Opiniones"');
+    expect(primitivesSource).toContain("ProductDetailGoogleTrust");
+  });
 });
 
 describe("ProductDetailGallerySpecs tab content", () => {
   it("combina descripción y especificaciones en una sola pestaña", () => {
     const tabs = buildProductDetailTabs(PRODUCT_FIXTURE, {
       paymentMethods: ["Mercado Pago", "Contado"],
-      shippingMessage: "Envíos a todo el país",
       reviewsEnabled: true,
     });
 
-    expect(tabs.map((tab) => tab.label)).toEqual(["Detalle", "Envíos"]);
+    expect(tabs.map((tab) => tab.label)).toEqual(["Detalle"]);
     expect(findSection(tabs, "details")?.title).toBe("Descripción y especificaciones");
+    expect(findSection(tabs, "details")?.brandLogoUrl).toBe("https://example.com/linglong-logo.webp");
     expect(findSection(tabs, "details")?.specifications).toEqual(PRODUCT_FIXTURE.specifications);
     expect(findSection(tabs, "specs")).toBeUndefined();
+    expect(findSection(tabs, "shipping")).toBeUndefined();
   });
 
-  it("limpia badges duplicados y no expone notas internas en envíos", () => {
+  it("no expone distinciones comerciales como notas de descripción", () => {
     const tabs = buildProductDetailTabs(PRODUCT_FIXTURE, {
       paymentMethods: ["Mercado Pago", "Contado"],
-      shippingMessage: "Envíos a todo el país",
       reviewsEnabled: true,
     });
 
-    expect(findSection(tabs, "details")?.notes).toContain(
-      "Distinciones: Envío gratis · Instalación incluida",
-    );
-    expect(findSection(tabs, "shipping")?.notes).toEqual(undefined);
+    expect(findSection(tabs, "details")?.notes).toEqual(["Marca: Linglong"]);
+    expect(findSection(tabs, "details")?.notes?.join(" ")).not.toContain("Distinciones:");
   });
 });

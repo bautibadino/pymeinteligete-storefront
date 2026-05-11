@@ -1147,6 +1147,10 @@ describe("presentation renderer logic", () => {
               { fieldName: "dimensions", displayLabel: "Dimensiones" },
             ],
           },
+          brandId: {
+            name: "Hankook",
+            logo: { url: "https://cdn.example.com/brands/hankook.svg" },
+          },
         }),
       },
     ) as {
@@ -1158,6 +1162,7 @@ describe("presentation renderer logic", () => {
         compareAtPrice?: { amount: number };
         installments?: { count: number; interestFree: boolean };
         cashDiscount?: { percent: number; formatted: string };
+        brandLogoUrl?: string;
         freeShipping?: boolean;
         dispatch?: { type: string; label: string };
         badges?: Array<{ label: string }>;
@@ -1176,6 +1181,7 @@ describe("presentation renderer logic", () => {
       compareAtPrice: { amount: 461374 },
       installments: { count: 6, interestFree: true },
       cashDiscount: { percent: 20, formatted: "20% OFF contado" },
+      brandLogoUrl: "https://cdn.example.com/brands/hankook.svg",
       freeShipping: true,
       dispatch: { type: "IMMEDIATE", label: "Despacho inmediato" },
     });
@@ -1282,7 +1288,7 @@ describe("presentation renderer logic", () => {
     ]);
   });
 
-  it("hidrata presentation del PDP con paymentMethods, shipping message y reviews enabled", () => {
+  it("hidrata presentation del PDP con paymentMethods, reviews y tenant para social proof", () => {
     const presentation = buildPresentation({
       pages: {
         home: { sections: [] },
@@ -1304,7 +1310,7 @@ describe("presentation renderer logic", () => {
 
     const hydrated = hydrateProductPresentationWithRuntimeSignals(presentation, {
       bootstrap: {
-        tenant: { status: "active" },
+        tenant: { empresaId: "empresa-123", status: "active", tenantSlug: "bym-srl" },
         commerce: {
           payment: { visibleMethods: [] },
           shipping: { message: "Envíos a todo el país" },
@@ -1341,8 +1347,9 @@ describe("presentation renderer logic", () => {
     expect(hydrated?.pages.product.sections[0]).toMatchObject({
       content: {
         showRelated: true,
-        shippingMessage: "Envíos a todo el país",
         reviewsEnabled: true,
+        reviewsEmpresaId: "empresa-123",
+        reviewsTenantSlug: "bym-srl",
         paymentMethods: [
           expect.objectContaining({
             methodId: "pm-mp",

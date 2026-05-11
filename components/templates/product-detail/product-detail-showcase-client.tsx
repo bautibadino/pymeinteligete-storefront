@@ -282,10 +282,18 @@ export function ProductDetailSegmentedTabs({
               <li
                 key={`${activeSection.id}-note-${index}`}
                 className={productDetailInnerPanelClassName(
-                  "px-4 py-3 text-sm leading-6 text-muted-foreground",
+                  "flex min-h-16 items-center gap-3 px-4 py-3 text-sm leading-6 text-muted-foreground",
                 )}
               >
-                {note}
+                {index === 0 && activeSection.brandLogoUrl ? (
+                  <img
+                    src={activeSection.brandLogoUrl}
+                    alt=""
+                    className="h-8 w-16 shrink-0 object-contain"
+                    loading="lazy"
+                  />
+                ) : null}
+                <span>{note}</span>
               </li>
             ))}
           </ul>

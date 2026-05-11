@@ -26,15 +26,25 @@ type ProductExperienceLike = {
 function buildProductDetailRuntimeContent(
   experience: ProductExperienceLike,
 ): ProductDetailRuntimeContent {
+  const reviewsEnabled =
+    typeof experience.bootstrap?.features.reviewsEnabled === "boolean"
+      ? experience.bootstrap.features.reviewsEnabled
+      : undefined;
+
   return {
     ...(experience.paymentMethods?.paymentMethods?.length
       ? { paymentMethods: experience.paymentMethods.paymentMethods }
       : {}),
-    ...(experience.bootstrap?.commerce.shipping?.message
-      ? { shippingMessage: experience.bootstrap.commerce.shipping.message }
-      : {}),
-    ...(typeof experience.bootstrap?.features.reviewsEnabled === "boolean"
-      ? { reviewsEnabled: experience.bootstrap.features.reviewsEnabled }
+    ...(typeof reviewsEnabled === "boolean"
+      ? {
+          reviewsEnabled,
+          ...(experience.bootstrap?.tenant.empresaId
+            ? { reviewsEmpresaId: experience.bootstrap.tenant.empresaId }
+            : {}),
+          ...(experience.bootstrap?.tenant.tenantSlug
+            ? { reviewsTenantSlug: experience.bootstrap.tenant.tenantSlug }
+            : {}),
+        }
       : {}),
   };
 }
