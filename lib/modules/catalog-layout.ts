@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { StorefrontCategory } from "@/lib/storefront-api";
+import type { StorefrontCatalogFacets, StorefrontCategory } from "@/lib/storefront-api";
 
 import {
   isProductCardStockBadgeTone,
@@ -101,6 +101,11 @@ export interface CatalogLayoutModule {
    * Runtime-only: se usan para construir filtros descubribles.
    */
   categories?: StorefrontCategory[];
+  /**
+   * Facets globales resueltos desde el catálogo activo.
+   * Runtime-only: evitan derivar filtros desde la página parcial de productos.
+   */
+  facets?: StorefrontCatalogFacets;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

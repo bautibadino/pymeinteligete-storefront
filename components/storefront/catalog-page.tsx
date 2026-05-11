@@ -3,6 +3,7 @@ import { CatalogGrid } from "@/components/storefront/catalog-grid";
 import { PreviewBridge } from "@/components/presentation/PreviewBridge";
 import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
 import {
+  CatalogPagination,
   CatalogToolbar,
   FilterSidebar,
 } from "@/components/templates/catalog-layout/catalog-layout-shared";
@@ -14,6 +15,7 @@ import { cn } from "@/lib/utils/cn";
 import type { StorefrontPagination } from "@/lib/types/storefront";
 import type {
   StorefrontBootstrap,
+  StorefrontCatalogFacets,
   StorefrontCatalogQuery,
   StorefrontCatalogProduct,
   StorefrontCategory,
@@ -23,6 +25,7 @@ type CatalogPageContentProps = {
   bootstrap: StorefrontBootstrap | null;
   categories: StorefrontCategory[];
   host: string;
+  facets?: StorefrontCatalogFacets | undefined;
   pagination?: StorefrontPagination | undefined;
   previewToken?: string | null | undefined;
   products: StorefrontCatalogProduct[];
@@ -35,6 +38,8 @@ const ACTIVE_FILTER_LABELS: Partial<Record<keyof StorefrontCatalogQuery, string>
   sortBy: "Orden",
   sortOrder: "Dirección",
   brand: "Marca",
+  category: "Categoría",
+  categoryId: "Categoría",
   family: "Familia",
   minPrice: "Precio mínimo",
   maxPrice: "Precio máximo",
@@ -61,12 +66,82 @@ function resolveTenantDisplayName(bootstrap: StorefrontBootstrap | null, host: s
   return bootstrap?.branding?.storeName ?? bootstrap?.tenant?.tenantSlug ?? host;
 }
 
+function findCategoryLabel(
+  categories: StorefrontCategory[] | undefined,
+  matcher: (category: StorefrontCategory) => boolean,
+): string | null {
+  if (!categories) {
+    return null;
+  }
+
+  for (const category of categories) {
+    if (matcher(category)) {
+      return category.name;
+    }
+
+    const nested = findCategoryLabel(category.children, matcher);
+    if (nested) {
+      return nested;
+    }
+  }
+
+  return null;
+}
+
+function readFacetCategoryLabel(
+  facets: StorefrontCatalogFacets | undefined,
+  value: string,
+): string | null {
+  const options = [
+    ...(Array.isArray(facets?.categories) ? facets.categories : []),
+    ...(Array.isArray(facets?.category) ? facets.category : []),
+  ];
+
+  for (const option of options) {
+    const matches =
+      option.categoryId === value ||
+      option.id === value ||
+      option.value === value ||
+      option.slug === value;
+
+    if (matches) {
+      return option.label ?? option.name ?? option.slug ?? null;
+    }
+
+    const nested = readFacetCategoryLabel(
+      option.children?.length ? { categories: option.children } : undefined,
+      value,
+    );
+    if (nested) {
+      return nested;
+    }
+  }
+
+  return null;
+}
+
+function resolveCategoryFilterLabel(
+  value: string,
+  selectedCategory: StorefrontCategory | null | undefined,
+  categories: StorefrontCategory[],
+  facets: StorefrontCatalogFacets | undefined,
+): string {
+  return (
+    selectedCategory?.name ??
+    findCategoryLabel(categories, (category) => category.categoryId === value || category.slug === value) ??
+    readFacetCategoryLabel(facets, value) ??
+    (value.includes("-") ? value.replaceAll("-", " ") : "Categoría seleccionada")
+  );
+}
+
 function buildActiveFilters(
   query: StorefrontCatalogQuery,
+  categories: StorefrontCategory[],
+  facets: StorefrontCatalogFacets | undefined,
   selectedCategory?: StorefrontCategory | null,
 ): Array<{ key: string; label: string; value: string }> {
   return Object.entries(query).flatMap(([key, value]) => {
-    if (value === undefined || (key === "categoryId" && selectedCategory)) {
+    if (value === undefined) {
       return [];
     }
 
@@ -75,6 +150,8 @@ function buildActiveFilters(
         ? value
           ? "Si"
           : "No"
+        : key === "categoryId" || key === "category"
+          ? resolveCategoryFilterLabel(String(value), selectedCategory, categories, facets)
         : key === "minPrice" || key === "maxPrice"
           ? formatPrice(Number(value))
           : String(value);
@@ -92,6 +169,7 @@ function buildActiveFilters(
 export function CatalogPageContent({
   bootstrap,
   categories,
+  facets,
   host,
   pagination,
   previewToken,
@@ -102,7 +180,7 @@ export function CatalogPageContent({
   const normalizedProducts = mapCatalogProductsToCardData(products, products.length, bootstrap);
   const renderedProductsCount = normalizedProducts.length;
   const totalResults = pagination?.total ?? renderedProductsCount;
-  const activeFilters = buildActiveFilters(query, selectedCategory);
+  const activeFilters = buildActiveFilters(query, categories, facets, selectedCategory);
   const hasPreview = Boolean(previewToken);
   const isBymCustom = isBymCustomExperience(bootstrap);
   const usePresentation =
@@ -194,6 +272,7 @@ export function CatalogPageContent({
               activeFilters={DEFAULT_PUBLIC_FILTERS}
               categories={categories}
               density="compact"
+              facets={facets}
               products={normalizedProducts}
             />
           </div>
@@ -234,6 +313,10 @@ export function CatalogPageContent({
               emptyDescription="No encontramos productos para la búsqueda actual. Proba ajustar los filtros o volve mas tarde."
               showHeader={!isBymCustom}
             />
+
+            {pagination ? (
+              <CatalogPagination pagination={pagination} />
+            ) : null}
           </div>
         </div>
 

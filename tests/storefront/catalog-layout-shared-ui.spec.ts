@@ -6,6 +6,7 @@ import { CatalogLayoutInfiniteScroll } from "@/components/templates/catalog-layo
 import { CatalogLayoutPaginatedClassic } from "@/components/templates/catalog-layout/catalog-layout-paginated-classic";
 import { ProductCardPremiumCommerce } from "@/components/templates/product-card/product-card-premium-commerce";
 import {
+  CatalogPagination,
   FilterBar,
   CatalogToolbar,
   FilterSidebar,
@@ -269,6 +270,88 @@ describe("catalog layout shared layer", () => {
     expect(html).toContain("Categoría");
     expect(html).toContain('<span>Auto</span>');
     expect(html).not.toContain(">cat-auto<");
+  });
+
+  it("arma opciones de marca desde facets globales aunque la página actual no tenga esas marcas", () => {
+    const activeCategoryId = createCategories()[0]?.children?.[0]?.categoryId ?? "category";
+    setCurrentUrl("/catalogo", `categoryId=${activeCategoryId}&brand=Pirelli&page=2&sort=priceAsc`);
+    const product = createProducts(1)[0]!;
+
+    const html = renderHtml(
+      createElement(FilterSidebar, {
+        activeFilters: {
+          brand: true,
+        },
+        products: [
+          {
+            ...product,
+            brand: "Michelin",
+          },
+        ],
+        facets: {
+          brands: [
+            { value: "Pirelli", label: "Pirelli", imageUrl: "https://cdn.example.com/pirelli.svg" },
+            { value: "Shell", label: "Shell" },
+          ],
+        },
+      }),
+    );
+
+    expect(html).toContain("Pirelli");
+    expect(html).toContain("Shell");
+    expect(html).toContain('src="https://cdn.example.com/pirelli.svg"');
+    expect(html).not.toContain("Michelin");
+    expect(html).toContain('aria-current="true"');
+    expect(html).toContain(`href="/catalogo?categoryId=${activeCategoryId}&brand=Shell&sort=priceAsc"`);
+  });
+
+  it("resuelve el label de categoría activa desde facets cuando no hay árbol de categorías local", () => {
+    const activeCategoryId = ["cat", "lubricantes", "facet"].join("-");
+    setCurrentUrl("/catalogo", `categoryId=${activeCategoryId}`);
+
+    const html = renderHtml(
+      createElement(FilterSidebar, {
+        activeFilters: {
+          category: true,
+        },
+        facets: {
+          categories: [
+            {
+              categoryId: activeCategoryId,
+              slug: "lubricantes",
+              label: "Lubricantes",
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(html).toContain("Categoría");
+    expect(html).toContain("<span>Lubricantes</span>");
+    expect(html).not.toContain(activeCategoryId);
+  });
+
+  it("muestra paginación visible con total de páginas y preserva filtros al navegar", () => {
+    const activeCategoryId = createCategories()[0]?.children?.[0]?.categoryId ?? "category";
+    setCurrentUrl("/catalogo", `brand=Shell&categoryId=${activeCategoryId}&page=2&pageSize=24&sort=priceAsc`);
+
+    const html = renderHtml(
+      createElement(CatalogPagination, {
+        pagination: {
+          page: 2,
+          pageSize: 24,
+          total: 97,
+          totalPages: 5,
+        },
+      }),
+    );
+
+    expect(html).toContain("Página 2 de 5");
+    expect(html).toContain("97 productos");
+    expect(html).toContain("Anterior");
+    expect(html).toContain("Siguiente");
+    expect(html).toContain(`href="/catalogo?brand=Shell&categoryId=${activeCategoryId}&page=1&pageSize=24&sort=priceAsc"`);
+    expect(html).toContain(`href="/catalogo?brand=Shell&categoryId=${activeCategoryId}&page=3&pageSize=24&sort=priceAsc"`);
   });
 
   it("usa la página pública actual para construir la navegación del paginado clásico", () => {

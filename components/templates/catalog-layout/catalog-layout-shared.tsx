@@ -9,7 +9,12 @@ import Link from "next/link";
 
 import { Input } from "@/components/ui/input";
 import type { CatalogLayoutDensity } from "@/lib/modules/catalog-layout";
-import type { StorefrontCategory } from "@/lib/storefront-api";
+import type {
+  StorefrontCatalogFacetOption,
+  StorefrontCatalogFacets,
+  StorefrontCategory,
+  StorefrontPagination,
+} from "@/lib/storefront-api";
 import { resolveProductCardTemplate } from "@/lib/templates/product-card-registry";
 import type { ProductCardData, ProductCardDisplayOptions } from "@/lib/templates/product-card-catalog";
 import { cn } from "@/lib/utils/cn";
@@ -120,6 +125,79 @@ function isNonEmptyString(value: string | undefined): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+function readFacetOptions(
+  facets: StorefrontCatalogFacets | undefined,
+  keys: string[],
+): StorefrontCatalogFacetOption[] {
+  if (!facets) {
+    return [];
+  }
+
+  for (const key of keys) {
+    const value = facets[key];
+    if (Array.isArray(value)) {
+      return value.filter((option): option is StorefrontCatalogFacetOption => {
+        return typeof option === "object" && option !== null;
+      });
+    }
+  }
+
+  return [];
+}
+
+function resolveFacetImageUrl(option: StorefrontCatalogFacetOption): string | undefined {
+  return option.imageUrl ?? option.logoUrl ?? option.logo?.url ?? option.logo?.src ?? option.logo?.imageUrl;
+}
+
+function resolveFacetText(
+  option: StorefrontCatalogFacetOption,
+  keys: Array<keyof StorefrontCatalogFacetOption>,
+): string | undefined {
+  for (const key of keys) {
+    const value = option[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return undefined;
+}
+
+function normalizeFacetCategories(facets: StorefrontCatalogFacets | undefined): StorefrontCategory[] {
+  const options = readFacetOptions(facets, ["categories", "category"]);
+
+  return options.flatMap((option) => {
+    const categoryId = resolveFacetText(option, ["categoryId", "id", "value", "slug"]);
+    const label = resolveFacetText(option, ["label", "name", "slug", "categoryId", "id", "value"]);
+
+    if (!categoryId || !label) {
+      return [];
+    }
+
+    return [
+      {
+        categoryId,
+        slug: option.slug ?? categoryId,
+        name: label,
+        ...(option.imageUrl ? { imageUrl: option.imageUrl } : {}),
+        ...(option.children?.length ? { children: normalizeFacetCategories({ categories: option.children }) } : {}),
+      },
+    ];
+  });
+}
+
+function resolveAvailableCategories(
+  categories: StorefrontCategory[] | undefined,
+  facets: StorefrontCatalogFacets | undefined,
+): StorefrontCategory[] | undefined {
+  if (categories && categories.length > 0) {
+    return categories;
+  }
+
+  const facetCategories = normalizeFacetCategories(facets);
+  return facetCategories.length > 0 ? facetCategories : categories;
+}
+
 function resolvePriceRangeOptions(products: ProductCardData[]): Array<{
   label: string;
   maxPrice?: number;
@@ -178,26 +256,36 @@ function buildCategoryTreeOptions(
     return [];
   }
 
-  return categories.map((category) => ({
-    active:
-      selectedCategoryId === category.categoryId ||
-      selectedCategorySlug === category.slug,
-    children: buildCategoryTreeOptions(
-      category.children,
-      pathname,
-      searchParams,
-      selectedCategoryId,
-      selectedCategorySlug,
-    ),
-    href: buildHref(pathname, searchParams, {
-      category: undefined,
-      categoryId: category.categoryId,
-      page: undefined,
-    }),
-    id: category.categoryId,
-    label: category.name,
-    slug: category.slug,
-  }));
+  return categories.map((category) => {
+    const categoryHrefUpdates = category.slug && category.slug !== category.categoryId
+      ? {
+          category: category.slug,
+          categoryId: undefined,
+          page: undefined,
+        }
+      : {
+          category: undefined,
+          categoryId: category.categoryId,
+          page: undefined,
+        };
+
+    return {
+      active:
+        selectedCategoryId === category.categoryId ||
+        selectedCategorySlug === category.slug,
+      children: buildCategoryTreeOptions(
+        category.children,
+        pathname,
+        searchParams,
+        selectedCategoryId,
+        selectedCategorySlug,
+      ),
+      href: buildHref(pathname, searchParams, categoryHrefUpdates),
+      id: category.categoryId,
+      label: category.name,
+      slug: category.slug,
+    };
+  });
 }
 
 function findCategoryLabel(
@@ -261,18 +349,20 @@ function resolveFilterGroups(
   searchParams: URLSearchParams | ReadonlyURLSearchParams,
   products: ProductCardData[],
   categories?: StorefrontCategory[],
+  facets?: StorefrontCatalogFacets,
 ): FilterGroup[] {
   if (!activeFilters) {
     return [];
   }
 
   const groups: FilterGroup[] = [];
+  const availableCategories = resolveAvailableCategories(categories, facets);
 
   if (activeFilters.category) {
     const selectedCategoryId = searchParams.get("categoryId");
     const selectedCategorySlug = searchParams.get("category");
     const categoryTree = buildCategoryTreeOptions(
-      categories,
+      availableCategories,
       pathname,
       searchParams,
       selectedCategoryId,
@@ -297,35 +387,62 @@ function resolveFilterGroups(
 
   if (activeFilters.brand) {
     const selectedBrand = searchParams.get("brand");
-    const brandOptionsMap = new Map<string, { imageUrl?: string; label: string }>();
+    const brandFacetOptions = readFacetOptions(facets, ["brands", "brand"]).flatMap((option) => {
+      const value = resolveFacetText(option, ["value", "id", "slug", "label", "name"]);
+      const label = resolveFacetText(option, ["label", "name", "value", "slug", "id"]);
+      const imageUrl = resolveFacetImageUrl(option);
 
-    for (const product of products) {
-      const brand = product.brand?.trim();
-      if (!isNonEmptyString(brand)) {
-        continue;
+      if (!value || !label) {
+        return [];
       }
 
-      const current = brandOptionsMap.get(brand);
-      brandOptionsMap.set(brand, {
-        label: brand,
-        ...(current?.imageUrl ?? product.brandLogoUrl
-          ? { imageUrl: current?.imageUrl ?? product.brandLogoUrl }
-          : {}),
-      });
-    }
+      return [
+        {
+          active: selectedBrand === value || selectedBrand === label,
+          href: buildHref(pathname, searchParams, {
+            brand: value,
+            page: undefined,
+          }),
+          id: value,
+          ...(imageUrl ? { imageUrl } : {}),
+          label,
+        },
+      ];
+    });
 
-    const brandOptions = Array.from(brandOptionsMap.values())
-      .sort((left, right) => left.label.localeCompare(right.label, "es"))
-      .map((brand) => ({
-        active: selectedBrand === brand.label,
-        href: buildHref(pathname, searchParams, {
-          brand: brand.label,
-          page: undefined,
-        }),
-        id: brand.label,
-        ...(brand.imageUrl ? { imageUrl: brand.imageUrl } : {}),
-        label: brand.label,
-      }));
+    const brandOptions = brandFacetOptions.length > 0
+      ? brandFacetOptions.sort((left, right) => left.label.localeCompare(right.label, "es"))
+      : (() => {
+          const brandOptionsMap = new Map<string, { imageUrl?: string; label: string }>();
+
+          for (const product of products) {
+            const brand = product.brand?.trim();
+            if (!isNonEmptyString(brand)) {
+              continue;
+            }
+
+            const current = brandOptionsMap.get(brand);
+            brandOptionsMap.set(brand, {
+              label: brand,
+              ...(current?.imageUrl ?? product.brandLogoUrl
+                ? { imageUrl: current?.imageUrl ?? product.brandLogoUrl }
+                : {}),
+            });
+          }
+
+          return Array.from(brandOptionsMap.values())
+            .sort((left, right) => left.label.localeCompare(right.label, "es"))
+            .map((brand) => ({
+              active: selectedBrand === brand.label,
+              href: buildHref(pathname, searchParams, {
+                brand: brand.label,
+                page: undefined,
+              }),
+              id: brand.label,
+              ...(brand.imageUrl ? { imageUrl: brand.imageUrl } : {}),
+              label: brand.label,
+            }));
+        })();
 
     if (brandOptions.length > 0) {
       groups.push({
@@ -503,7 +620,10 @@ function resolveFilterValue(
   key: string,
   searchParams: URLSearchParams | ReadonlyURLSearchParams,
   categories?: StorefrontCategory[],
+  facets?: StorefrontCatalogFacets,
 ): { clearKeys: string[]; value: string } | null {
+  const availableCategories = resolveAvailableCategories(categories, facets);
+
   switch (key) {
     case "search": {
       const search = searchParams.get("search");
@@ -537,11 +657,11 @@ function resolveFilterValue(
       const categorySlug = searchParams.get("category");
       const categoryId = searchParams.get("categoryId");
       const categoryLabel = categoryId
-        ? findCategoryLabel(categories, (category) => category.categoryId === categoryId)
+        ? findCategoryLabel(availableCategories, (category) => category.categoryId === categoryId)
         : categorySlug
-          ? findCategoryLabel(categories, (category) => category.slug === categorySlug)
+          ? findCategoryLabel(availableCategories, (category) => category.slug === categorySlug)
           : null;
-      const category = categoryLabel ?? categorySlug ?? categoryId;
+      const category = categoryLabel ?? categorySlug?.replaceAll("-", " ") ?? (categoryId ? "Categoría seleccionada" : null);
 
       return category
         ? { value: category, clearKeys: ["category", "categoryId", "page"] }
@@ -576,6 +696,7 @@ function resolveConfiguredFilters(
   pathname: string,
   searchParams: URLSearchParams | ReadonlyURLSearchParams,
   categories?: StorefrontCategory[],
+  facets?: StorefrontCatalogFacets,
 ): ResolvedFilter[] {
   if (!activeFilters) {
     return [];
@@ -592,7 +713,7 @@ function resolveConfiguredFilters(
   }
 
   return Array.from(enabledKeys).flatMap((key) => {
-      const filterValue = resolveFilterValue(key, searchParams, categories);
+      const filterValue = resolveFilterValue(key, searchParams, categories, facets);
       if (!filterValue) {
         return [];
       }
@@ -1076,23 +1197,26 @@ export function FilterSidebar({
   activeFilters,
   categories,
   density,
+  facets,
   products = [],
 }: {
   activeFilters?: Record<string, boolean | undefined> | undefined;
   categories?: StorefrontCategory[] | undefined;
   density?: CatalogLayoutDensity | undefined;
+  facets?: StorefrontCatalogFacets | undefined;
   products?: ProductCardData[] | undefined;
 }) {
   const pathname = usePathname() || "/catalogo";
   const searchParams = useSearchParams();
   const resolvedDensity = resolveCatalogDensity(density);
-  const filters = resolveConfiguredFilters(activeFilters, pathname, searchParams, categories);
+  const filters = resolveConfiguredFilters(activeFilters, pathname, searchParams, categories, facets);
   const groups = resolveFilterGroups(
     activeFilters,
     pathname,
     searchParams,
     products,
     categories,
+    facets,
   );
   const clearAllHref = buildClearAllFiltersHref(pathname, searchParams);
 
@@ -1165,23 +1289,26 @@ export function FilterBar({
   activeFilters,
   categories,
   density,
+  facets,
   products = [],
 }: {
   activeFilters?: Record<string, boolean | undefined> | undefined;
   categories?: StorefrontCategory[] | undefined;
   density?: CatalogLayoutDensity | undefined;
+  facets?: StorefrontCatalogFacets | undefined;
   products?: ProductCardData[] | undefined;
 }) {
   const pathname = usePathname() || "/catalogo";
   const searchParams = useSearchParams();
   const resolvedDensity = resolveCatalogDensity(density);
-  const filters = resolveConfiguredFilters(activeFilters, pathname, searchParams, categories);
+  const filters = resolveConfiguredFilters(activeFilters, pathname, searchParams, categories, facets);
   const groups = resolveFilterGroups(
     activeFilters,
     pathname,
     searchParams,
     products,
     categories,
+    facets,
   );
   const clearAllHref = buildClearAllFiltersHref(pathname, searchParams);
 
@@ -1283,48 +1410,81 @@ export function FilterBar({
 /**
  * Navegación de paginado basada en query pública.
  */
-export function CatalogPagination({ pageSize }: { pageSize?: number | undefined }) {
+export function CatalogPagination({
+  pageSize,
+  pagination,
+}: {
+  pageSize?: number | undefined;
+  pagination?: StorefrontPagination | undefined;
+}) {
   const pathname = usePathname() || "/catalogo";
   const searchParams = useSearchParams();
-  const currentPage = parsePositiveInteger(searchParams.get("page")) ?? 1;
-  const resolvedPageSize = resolvePageSize(searchParams, pageSize);
+  const currentPage = pagination?.page ?? parsePositiveInteger(searchParams.get("page")) ?? 1;
+  const resolvedPageSize = pagination?.pageSize ?? resolvePageSize(searchParams, pageSize);
+  const totalPages = pagination?.totalPages && pagination.totalPages > 0 ? pagination.totalPages : undefined;
+  const totalResults = pagination?.total;
   const previousPageHref =
     currentPage > 1
       ? buildPageHref(pathname, searchParams, currentPage - 1, resolvedPageSize)
       : undefined;
-  const nextPageHref = buildPageHref(pathname, searchParams, currentPage + 1, resolvedPageSize);
+  const nextPageHref =
+    totalPages === undefined || currentPage < totalPages
+      ? buildPageHref(pathname, searchParams, currentPage + 1, resolvedPageSize)
+      : undefined;
 
   return (
-    <nav aria-label="Paginación" className="flex items-center justify-center gap-3 pt-4">
-      {previousPageHref ? (
-        <Link
-          href={previousPageHref as Route}
-          className="inline-flex h-9 min-w-9 items-center justify-center rounded-md border border-line bg-panel px-3 text-sm text-foreground hover:bg-panel-strong"
-          aria-label="Página anterior"
-        >
-          ‹
-        </Link>
-      ) : (
+    <nav
+      aria-label="Paginación"
+      className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-raised)] px-3 py-4 text-center sm:flex-row sm:justify-between sm:text-left"
+    >
+      <p className="text-sm font-medium text-foreground">
+        Página {currentPage}{totalPages ? ` de ${totalPages}` : ""}
+        {typeof totalResults === "number" ? (
+          <span className="ml-2 text-muted">
+            {totalResults} {totalResults === 1 ? "producto" : "productos"}
+          </span>
+        ) : null}
+      </p>
+      <div className="flex items-center justify-center gap-2">
+        {previousPageHref ? (
+          <Link
+            href={previousPageHref as Route}
+            className="inline-flex h-9 items-center justify-center rounded-md border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-3 text-sm font-medium text-foreground transition hover:bg-[color:var(--surface-raised)]"
+            aria-label="Página anterior"
+          >
+            Anterior
+          </Link>
+        ) : (
+          <span
+            aria-disabled="true"
+            className="inline-flex h-9 items-center justify-center rounded-md border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-3 text-sm font-medium text-muted opacity-50"
+          >
+            Anterior
+          </span>
+        )}
         <span
-          aria-disabled="true"
-          className="inline-flex h-9 min-w-9 items-center justify-center rounded-md border border-line bg-panel px-3 text-sm text-muted opacity-50"
+          className="inline-flex h-9 min-w-9 items-center justify-center rounded-md bg-[color:var(--accent)] px-3 text-sm font-semibold text-[color:var(--action-contrast)]"
+          aria-current="page"
         >
-          ‹
+          {currentPage}
         </span>
-      )}
-      <span
-        className="inline-flex h-9 min-w-9 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground"
-        aria-current="page"
-      >
-        {currentPage}
-      </span>
-      <Link
-        href={nextPageHref as Route}
-        className="inline-flex h-9 min-w-9 items-center justify-center rounded-md border border-line bg-panel px-3 text-sm text-foreground hover:bg-panel-strong"
-        aria-label="Página siguiente"
-      >
-        ›
-      </Link>
+        {nextPageHref ? (
+          <Link
+            href={nextPageHref as Route}
+            className="inline-flex h-9 items-center justify-center rounded-md border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-3 text-sm font-medium text-foreground transition hover:bg-[color:var(--surface-raised)]"
+            aria-label="Página siguiente"
+          >
+            Siguiente
+          </Link>
+        ) : (
+          <span
+            aria-disabled="true"
+            className="inline-flex h-9 items-center justify-center rounded-md border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-3 text-sm font-medium text-muted opacity-50"
+          >
+            Siguiente
+          </span>
+        )}
+      </div>
     </nav>
   );
 }

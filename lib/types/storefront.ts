@@ -478,13 +478,39 @@ export interface StorefrontCatalogProduct {
 export interface StorefrontPagination {
   page: number;
   pageSize: number;
+  limit?: number;
   total: number;
   totalPages: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+}
+
+export interface StorefrontCatalogFacetOption {
+  id?: string;
+  value?: string;
+  label?: string;
+  name?: string;
+  slug?: string;
+  categoryId?: string;
+  count?: number;
+  imageUrl?: string;
+  logoUrl?: string;
+  logo?: StorefrontImageAsset;
+  children?: StorefrontCatalogFacetOption[];
+}
+
+export interface StorefrontCatalogFacets {
+  brands?: StorefrontCatalogFacetOption[];
+  brand?: StorefrontCatalogFacetOption[];
+  categories?: StorefrontCatalogFacetOption[];
+  category?: StorefrontCatalogFacetOption[];
+  [key: string]: unknown;
 }
 
 export interface StorefrontCatalog {
   products: StorefrontCatalogProduct[];
   pagination: StorefrontPagination;
+  facets?: StorefrontCatalogFacets;
 }
 
 // ─────────────────────────────────────────────────────────────

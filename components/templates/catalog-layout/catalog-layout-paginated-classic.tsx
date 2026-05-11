@@ -30,6 +30,7 @@ export function CatalogLayoutPaginatedClassic({ module }: { module: CatalogLayou
               activeFilters={filters}
               categories={module.categories}
               density={resolvedDensity}
+              facets={module.facets}
               products={products}
             />
           </div>

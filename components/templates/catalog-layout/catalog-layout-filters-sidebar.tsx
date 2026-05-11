@@ -28,6 +28,7 @@ export function CatalogLayoutFiltersSidebar({ module }: { module: CatalogLayoutM
               activeFilters={filters}
               categories={module.categories}
               density={resolvedDensity}
+              facets={module.facets}
               products={products}
             />
           </div>

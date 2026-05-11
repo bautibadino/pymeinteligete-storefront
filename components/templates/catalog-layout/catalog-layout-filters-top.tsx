@@ -26,6 +26,7 @@ export function CatalogLayoutFiltersTop({ module }: { module: CatalogLayoutModul
           activeFilters={filters}
           categories={module.categories}
           density={resolvedDensity}
+          facets={module.facets}
           products={products}
         />
 

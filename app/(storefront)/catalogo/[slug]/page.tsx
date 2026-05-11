@@ -53,7 +53,9 @@ export default async function CatalogCategoryPage({
     <CatalogPageContent
       bootstrap={routeData.experience.bootstrap}
       categories={routeData.categories}
+      facets={routeData.experience.catalog?.facets}
       host={routeData.experience.runtime.context.host}
+      pagination={routeData.experience.catalog?.pagination}
       previewToken={routeData.experience.runtime.context.previewToken}
       products={routeData.experience.catalog?.products ?? []}
       query={routeData.query}

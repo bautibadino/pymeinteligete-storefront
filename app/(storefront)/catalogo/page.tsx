@@ -58,6 +58,7 @@ export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
     <CatalogPageContent
       bootstrap={routeData.experience.bootstrap}
       categories={routeData.categories}
+      facets={routeData.experience.catalog?.facets}
       host={routeData.experience.runtime.context.host}
       pagination={pagination}
       previewToken={routeData.experience.runtime.context.previewToken}
