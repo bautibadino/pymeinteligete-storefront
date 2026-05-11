@@ -4,6 +4,8 @@ import { ShoppingCart } from "lucide-react";
 
 import { useStorefrontCart } from "@/components/storefront/cart/storefront-cart-provider";
 import { Button, type ButtonProps } from "@/components/ui/button";
+import { trackStorefrontAnalyticsEvent } from "@/lib/analytics/client";
+import { buildAddToCartPayload } from "@/lib/analytics/events";
 import type { StorefrontCartItem } from "@/lib/cart/storefront-cart";
 
 type AddToCartButtonProps = Omit<ButtonProps, "onClick"> & {
@@ -31,6 +33,27 @@ export function AddToCartButton({
       onClick={() => {
         if (!disabled) {
           addItem(item, quantity);
+          const payload = buildAddToCartPayload({
+            eventId: `add_cart_${item.productId}_${Date.now()}`,
+            item: {
+              id: item.productId,
+              name: item.name,
+              price: item.price.amount,
+              ...(item.brand ? { brand: item.brand } : {}),
+            },
+            quantity,
+          });
+
+          trackStorefrontAnalyticsEvent({
+            event: "AddToCart",
+            googleEvent: "add_to_cart",
+            metaEvent: "AddToCart",
+            metaPayload: payload,
+            googlePayload: payload,
+            options: {
+              eventId: payload.eventId,
+            },
+          });
         }
       }}
     >

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import type { ReactNode } from "react";
 
 import { loadBootstrapExperience } from "@/app/(storefront)/_lib/storefront-shell-data";
@@ -6,9 +7,25 @@ import { StorefrontAnalyticsProvider } from "@/components/analytics/storefront-a
 import { StorefrontCartProvider } from "@/components/storefront/cart/storefront-cart-provider";
 import { TenantThemeProvider } from "@/components/theme/TenantThemeProvider";
 import { StorefrontShell } from "@/components/storefront/storefront-shell";
+import { isPymeStoreMarketingHost } from "@/lib/marketing/pyme-store-host";
+import { resolveRequestHostFromHeaders } from "@/lib/tenancy/resolve-request-host";
 import { resolveEffectiveTenantTheme } from "@/lib/theme";
 
+async function isPymeStoreMarketingRequest(): Promise<boolean> {
+  try {
+    const host = resolveRequestHostFromHeaders(await headers());
+
+    return isPymeStoreMarketingHost(host);
+  } catch {
+    return false;
+  }
+}
+
 export default async function StorefrontLayout({ children }: { children: ReactNode }) {
+  if (await isPymeStoreMarketingRequest()) {
+    return <>{children}</>;
+  }
+
   const experience = await loadBootstrapExperience();
 
   if (experience.bootstrap?.tenant.status === "disabled") {

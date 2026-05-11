@@ -6,6 +6,8 @@ import { Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { trackStorefrontAnalyticsEvent } from "@/lib/analytics/client";
+import { buildLeadPayload } from "@/lib/analytics/events";
 
 type BymContactFallbackFormProps = {
   email?: string;
@@ -76,6 +78,23 @@ export function BymContactFallbackForm({
       values,
       ...(email ? { email } : {}),
       ...(whatsapp ? { whatsapp } : {}),
+    });
+    const payload = buildLeadPayload({
+      eventId: `contact_bym_${Date.now()}`,
+      label: "Formulario rápido BYM",
+      method: href.startsWith("https://") ? "whatsapp" : "email",
+      surface: "contact-page",
+    });
+
+    trackStorefrontAnalyticsEvent({
+      event: "Contact",
+      googleEvent: "generate_lead",
+      metaEvent: "Contact",
+      metaPayload: payload,
+      googlePayload: payload,
+      options: {
+        eventId: payload.eventId,
+      },
     });
 
     if (href.startsWith("https://")) {

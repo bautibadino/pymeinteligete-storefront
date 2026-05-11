@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 import type { Route } from "next";
 import type { ReadonlyURLSearchParams } from "next/navigation";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -18,6 +18,8 @@ import type {
 import { resolveProductCardTemplate } from "@/lib/templates/product-card-registry";
 import type { ProductCardData, ProductCardDisplayOptions } from "@/lib/templates/product-card-catalog";
 import { cn } from "@/lib/utils/cn";
+import { trackStorefrontAnalyticsEvent } from "@/lib/analytics/client";
+import { buildSelectItemPayload } from "@/lib/analytics/events";
 
 /**
  * Opciones de ordenamiento disponibles.
@@ -1559,12 +1561,14 @@ export function ProductGrid({
   products,
   cardVariant,
   cardDisplayOptions,
+  analyticsList,
   columns = 3,
   density,
 }: {
   products: ProductCardData[];
   cardVariant: string;
   cardDisplayOptions?: ProductCardDisplayOptions | undefined;
+  analyticsList?: { id: string; name: string } | undefined;
   columns?: 2 | 3 | 4;
   density?: CatalogLayoutDensity | undefined;
 }) {
@@ -1584,14 +1588,51 @@ export function ProductGrid({
         resolvedDensity === "comfortable" ? "gap-4 md:gap-5" : "gap-3 md:gap-4",
       )}
     >
-      {products.map((product) => {
+      {products.map((product, index) => {
         const ProductCard = resolveProductCardTemplate(cardVariant);
+        const handleProductClickCapture = (event: MouseEvent<HTMLDivElement>) => {
+          if (!analyticsList) {
+            return;
+          }
+
+          const target = event.target instanceof Element ? event.target : null;
+          const productLink = target?.closest('a[href*="/producto/"]');
+
+          if (!productLink) {
+            return;
+          }
+
+          const payload = buildSelectItemPayload({
+            eventId: `select_${analyticsList.id}_${product.id}`,
+            index,
+            item: {
+              id: product.id,
+              name: product.name,
+              price: product.price.amount,
+              ...(product.brand ? { brand: product.brand } : {}),
+            },
+            listId: analyticsList.id,
+            listName: analyticsList.name,
+          });
+
+          trackStorefrontAnalyticsEvent({
+            event: "select_item",
+            googleEvent: "select_item",
+            serverEvent: null,
+            googlePayload: payload,
+            options: {
+              eventId: payload.eventId,
+            },
+          });
+        };
+
         return (
-          <ProductCard
-            key={product.id}
-            product={product}
-            {...(cardDisplayOptions ? { displayOptions: cardDisplayOptions } : {})}
-          />
+          <div key={product.id} onClickCapture={handleProductClickCapture}>
+            <ProductCard
+              product={product}
+              {...(cardDisplayOptions ? { displayOptions: cardDisplayOptions } : {})}
+            />
+          </div>
         );
       })}
     </div>

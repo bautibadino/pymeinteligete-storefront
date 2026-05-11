@@ -10,6 +10,8 @@ import {
 } from "@/app/(storefront)/contacto/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { trackStorefrontAnalyticsEvent } from "@/lib/analytics/client";
+import { buildLeadPayload } from "@/lib/analytics/events";
 import { cn } from "@/lib/utils/cn";
 import type {
   StorefrontContactForm,
@@ -222,6 +224,7 @@ export function DynamicContactForm({ contactForm, className }: DynamicContactFor
   );
   const [values, setValues] = useState<ContactFormValues>(initialValues);
   const [fieldErrors, setFieldErrors] = useState<ContactFormFieldErrors>({});
+  const contactFormEventKey = contactForm.title?.trim().toLowerCase().replace(/\s+/g, "-") ?? "contact";
 
   useEffect(() => {
     setValues(initialValues);
@@ -232,8 +235,25 @@ export function DynamicContactForm({ contactForm, className }: DynamicContactFor
     if (state.status === "success") {
       setValues(initialValues);
       setFieldErrors({});
+      const payload = buildLeadPayload({
+        eventId: `lead_${contactFormEventKey}_${Date.now()}`,
+        label: contactForm.title ?? "Formulario de contacto",
+        method: "form",
+        surface: "contact-page",
+      });
+
+      trackStorefrontAnalyticsEvent({
+        event: "Lead",
+        googleEvent: "generate_lead",
+        metaEvent: "Lead",
+        metaPayload: payload,
+        googlePayload: payload,
+        options: {
+          eventId: payload.eventId,
+        },
+      });
     }
-  }, [initialValues, state.status]);
+  }, [contactForm.title, contactFormEventKey, initialValues, state.status]);
 
   function setFieldValue(key: string, value: ContactFormInputValue) {
     setValues((currentValues) => ({

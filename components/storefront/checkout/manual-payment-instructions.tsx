@@ -51,6 +51,8 @@ function trackContact(
 
   trackStorefrontAnalyticsEvent({
     event: "Contact",
+    googleEvent: "generate_lead",
+    metaEvent: "Contact",
     metaPayload: payload,
     googlePayload: payload,
   });

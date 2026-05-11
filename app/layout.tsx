@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import "./globals.css";
 import { getBootstrap } from "@/lib/storefront-api";
+import { isPymeStoreMarketingHost } from "@/lib/marketing/pyme-store-host";
 import { getStorefrontRuntimeSnapshot } from "@/lib/runtime/storefront-request-context";
 import { applyPresentationTheme } from "@/lib/theme/apply-presentation-theme";
 
@@ -11,10 +12,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   try {
     const runtime = await getStorefrontRuntimeSnapshot();
 
-    const bootstrap = await getBootstrap(runtime.context);
+    if (!isPymeStoreMarketingHost(runtime.context.host)) {
+      const bootstrap = await getBootstrap(runtime.context);
 
-    if (bootstrap.presentation?.theme) {
-      htmlStyle = applyPresentationTheme(bootstrap.presentation.theme);
+      if (bootstrap.presentation?.theme) {
+        htmlStyle = applyPresentationTheme(bootstrap.presentation.theme);
+      }
     }
   } catch {
     // El storefront layout maneja el estado de error; aquí silenciamos

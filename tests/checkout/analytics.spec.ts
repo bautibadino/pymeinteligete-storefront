@@ -1,7 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { extractAnalyticsCookies } from "@/lib/analytics/cookies";
-import { buildAddPaymentInfoPayload, buildContactPayload, buildInitiateCheckoutPayload, buildPurchasePayload } from "@/lib/analytics/events";
+import {
+  buildAddPaymentInfoPayload,
+  buildAddShippingInfoPayload,
+  buildAddToCartPayload,
+  buildContactPayload,
+  buildInitiateCheckoutPayload,
+  buildLeadPayload,
+  buildPurchasePayload,
+  buildSearchPayload,
+  buildSelectItemPayload,
+  buildViewItemListPayload,
+  buildViewItemPayload,
+} from "@/lib/analytics/events";
 import { resolveStorefrontAnalyticsConfig } from "@/lib/analytics/config";
 import { getOrCreateStoredValue, markTrackedEvent } from "@/lib/analytics/storage";
 import type { StorefrontOrderByTokenResult } from "@/lib/storefront-api";
@@ -161,6 +173,125 @@ describe("storage helpers", () => {
 });
 
 describe("analytics payload builders", () => {
+  const catalogItems = [
+    {
+      id: "prod_1",
+      name: "Cubierta 205/55R16",
+      price: 5000,
+      quantity: 1,
+      brand: "Hankook",
+      category: "Neumaticos",
+    },
+    {
+      id: "prod_2",
+      name: "Aceite 10W40",
+      price: 5200,
+      quantity: 1,
+      brand: "Elaion",
+      category: "Lubricantes",
+    },
+  ];
+
+  it("arma ViewItemList para catálogo con datos reales de productos", () => {
+    const payload = buildViewItemListPayload({
+      eventId: "list_catalogo_1",
+      listId: "catalogo",
+      listName: "Catalogo",
+      items: catalogItems,
+    });
+
+    expect(payload).toMatchObject({
+      eventId: "list_catalogo_1",
+      item_list_id: "catalogo",
+      item_list_name: "Catalogo",
+      content_type: "product_group",
+      content_ids: ["prod_1", "prod_2"],
+      currency: "ARS",
+    });
+    expect(payload.items[0]).toMatchObject({
+      id: "prod_1",
+      name: "Cubierta 205/55R16",
+      brand: "Hankook",
+      category: "Neumaticos",
+    });
+  });
+
+  it("arma SelectItem preservando posición/lista", () => {
+    const payload = buildSelectItemPayload({
+      eventId: "select_prod_1",
+      index: 3,
+      item: catalogItems[0],
+      listId: "catalogo",
+      listName: "Catalogo",
+    });
+
+    expect(payload).toMatchObject({
+      eventId: "select_prod_1",
+      item_list_id: "catalogo",
+      item_list_name: "Catalogo",
+      index: 3,
+      content_ids: ["prod_1"],
+      value: 5000,
+    });
+  });
+
+  it("arma ViewItem/ViewContent para PDP", () => {
+    const payload = buildViewItemPayload({
+      eventId: "view_prod_1",
+      item: catalogItems[0],
+    });
+
+    expect(payload).toMatchObject({
+      eventId: "view_prod_1",
+      value: 5000,
+      currency: "ARS",
+      content_type: "product",
+      content_ids: ["prod_1"],
+      content_name: "Cubierta 205/55R16",
+    });
+  });
+
+  it("arma AddToCart con cantidad y valor total", () => {
+    const payload = buildAddToCartPayload({
+      eventId: "cart_prod_1",
+      item: catalogItems[0],
+      quantity: 2,
+    });
+
+    expect(payload).toMatchObject({
+      eventId: "cart_prod_1",
+      value: 10000,
+      currency: "ARS",
+      content_ids: ["prod_1"],
+      num_items: 2,
+    });
+    expect(payload.items).toEqual([
+      {
+        id: "prod_1",
+        name: "Cubierta 205/55R16",
+        price: 5000,
+        quantity: 2,
+        brand: "Hankook",
+        category: "Neumaticos",
+      },
+    ]);
+  });
+
+  it("arma Search con término y cantidad de resultados", () => {
+    const payload = buildSearchPayload({
+      eventId: "search_205",
+      searchTerm: "205/55 r16",
+      resultsCount: 12,
+    });
+
+    expect(payload).toEqual({
+      eventId: "search_205",
+      search_string: "205/55 r16",
+      content_category: "catalog",
+      results_count: 12,
+    });
+  });
+
   it("arma InitiateCheckout con items y total", () => {
     const payload = buildInitiateCheckoutPayload({
       eventId: "checkout_tok_1",
@@ -197,6 +328,25 @@ describe("analytics payload builders", () => {
     expect(payload.order_token).toBe("tok_1");
   });
 
+  it("arma AddShippingInfo con método y costo de envío", () => {
+    const payload = buildAddShippingInfoPayload({
+      eventId: "shipping_andreani_1",
+      shippingTier: "Andreani domicilio",
+      shippingAmount: 4200,
+      value: 19400,
+      items: catalogItems,
+    });
+
+    expect(payload).toMatchObject({
+      eventId: "shipping_andreani_1",
+      shipping_tier: "Andreani domicilio",
+      shipping: 4200,
+      value: 19400,
+      currency: "ARS",
+      content_ids: ["prod_1", "prod_2"],
+    });
+  });
+
   it("arma Purchase desde la orden confirmada", () => {
     const payload = buildPurchasePayload(order());
 
@@ -228,6 +378,22 @@ describe("analytics payload builders", () => {
       contact_method: "whatsapp",
       order_token: "tok_1",
       order_number: "000123",
+    });
+  });
+
+  it("arma Lead para formulario de contacto general", () => {
+    const payload = buildLeadPayload({
+      eventId: "lead_contacto_1",
+      label: "Formulario de contacto",
+      method: "form",
+      surface: "contact-page",
+    });
+
+    expect(payload).toEqual({
+      eventId: "lead_contacto_1",
+      content_name: "Formulario de contacto",
+      content_category: "contact-page",
+      contact_method: "form",
     });
   });
 });

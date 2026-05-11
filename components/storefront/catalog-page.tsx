@@ -1,4 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  ProductListViewTracker,
+  SearchTracker,
+} from "@/components/analytics/storefront-commerce-analytics";
 import { CatalogGrid } from "@/components/storefront/catalog-grid";
 import { PreviewBridge } from "@/components/presentation/PreviewBridge";
 import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
@@ -205,6 +209,12 @@ export function CatalogPageContent({
   selectedCategory,
 }: CatalogPageContentProps) {
   const normalizedProducts = mapCatalogProductsToCardData(products, products.length, bootstrap);
+  const analyticsProducts = normalizedProducts.map((product) => ({
+    id: product.id,
+    name: product.name,
+    price: product.price.amount,
+    ...(product.brand ? { brand: product.brand } : {}),
+  }));
   const renderedProductsCount = normalizedProducts.length;
   const totalResults = pagination?.total ?? renderedProductsCount;
   const activeFilters = buildActiveFilters(query, categories, facets, selectedCategory);
@@ -256,6 +266,12 @@ export function CatalogPageContent({
           ],
       )}
     >
+      <ProductListViewTracker
+        listId={selectedCategory?.slug ?? "catalogo"}
+        listName={selectedCategory?.name ?? "Catalogo"}
+        products={analyticsProducts}
+      />
+      <SearchTracker resultsCount={totalResults} searchTerm={query.search ?? null} />
       <div className={cn("grid gap-4", isBymCustom && "mx-auto w-full max-w-[1180px]")}>
         <SurfaceStateCard
           shopStatus={bootstrap?.tenant.status ?? null}
@@ -335,6 +351,10 @@ export function CatalogPageContent({
             <CatalogGrid
               bootstrap={bootstrap}
               density="compact"
+              analyticsList={{
+                id: selectedCategory?.slug ?? "catalogo",
+                name: selectedCategory?.name ?? "Catalogo",
+              }}
               products={products}
               emptyTitle="Sin productos para mostrar"
               emptyDescription="No encontramos productos para la búsqueda actual. Proba ajustar los filtros o volve mas tarde."

@@ -30,6 +30,8 @@ export function CheckoutPostPurchaseEffects({
       const payload = buildPurchasePayload(order);
       trackStorefrontAnalyticsEvent({
         event: "Purchase",
+        googleEvent: "purchase",
+        metaEvent: "Purchase",
         metaPayload: payload,
         googlePayload: payload,
         options: {

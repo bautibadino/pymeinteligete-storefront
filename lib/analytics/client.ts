@@ -27,8 +27,11 @@ type ServerAnalyticsPayload = {
 
 export type StorefrontAnalyticsTrackCommand = {
   event: string;
+  googleEvent?: string;
   metaPayload?: AnalyticsPayload;
+  metaEvent?: string;
   googlePayload?: AnalyticsPayload;
+  serverEvent?: string | null;
   options?: {
     eventId?: string;
   };
@@ -203,7 +206,7 @@ function createAnalyticsBridge(
       identity = nextIdentity;
       return identity;
     },
-    track: ({ event, googlePayload, metaPayload, options }) => {
+    track: ({ event, googleEvent, googlePayload, metaEvent, metaPayload, options, serverEvent }) => {
       if (typeof window === "undefined") {
         return;
       }
@@ -211,13 +214,16 @@ function createAnalyticsBridge(
       const analyticsPayload = metaPayload ?? googlePayload;
       const eventId = options?.eventId;
 
+      const metaEventName = metaEvent ?? event;
+      const googleEventName = googleEvent ?? event;
+
       if (config.meta.enabled && config.meta.pixelId && typeof window.fbq === "function") {
         const eventOptions = eventId ? { eventID: eventId } : undefined;
 
         if (eventOptions) {
-          window.fbq("track", event, metaPayload ?? {}, eventOptions);
+          window.fbq("track", metaEventName, metaPayload ?? {}, eventOptions);
         } else {
-          window.fbq("track", event, metaPayload ?? {});
+          window.fbq("track", metaEventName, metaPayload ?? {});
         }
       }
 
@@ -227,10 +233,12 @@ function createAnalyticsBridge(
           ...(eventId ? { event_id: eventId } : {}),
         };
 
-        window.gtag("event", event, payload);
+        window.gtag("event", googleEventName, payload);
       }
 
-      postStorefrontServerAnalytics(event, analyticsPayload, identity, eventId);
+      if (serverEvent !== null) {
+        postStorefrontServerAnalytics(serverEvent ?? metaEvent ?? event, analyticsPayload, identity, eventId);
+      }
     },
   };
 }

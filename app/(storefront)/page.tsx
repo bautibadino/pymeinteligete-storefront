@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 
 import { loadHomeExperience } from "@/app/(storefront)/_lib/storefront-shell-data";
+import { PymeStoreLanding } from "@/components/marketing/pyme-store-landing";
 import { ModuleRenderer } from "@/components/modules/ModuleRenderer";
 import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
 import { PreviewBridge } from "@/components/presentation/PreviewBridge";
 import { BymHomePage } from "@/components/storefront/bym-home-page";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
 import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
+import { isPymeStoreMarketingHost } from "@/lib/marketing/pyme-store-host";
+import { buildPymeStoreMetadata } from "@/lib/marketing/pyme-store-seo";
 import { normalizeModules } from "@/lib/modules";
 import { shouldUsePresentation } from "@/lib/presentation/render-utils";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
+import { resolveRequestHostFromHeaders } from "@/lib/tenancy/resolve-request-host";
 import { applyTemplateOverrides } from "@/lib/templates/apply-overrides";
 import { resolveEffectiveTenantTheme } from "@/lib/theme";
 
@@ -18,6 +23,12 @@ type HomePageProps = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
+  const host = resolveRequestHostFromHeaders(await headers());
+
+  if (isPymeStoreMarketingHost(host)) {
+    return buildPymeStoreMetadata();
+  }
+
   const snapshot = await resolveTenantSeoSnapshot();
 
   return buildTenantMetadata(snapshot, {
@@ -26,6 +37,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
+  const requestHost = resolveRequestHostFromHeaders(await headers());
+
+  if (isPymeStoreMarketingHost(requestHost)) {
+    return <PymeStoreLanding />;
+  }
+
   const [experience, resolvedSearchParams] = await Promise.all([
     loadHomeExperience(),
     searchParams,

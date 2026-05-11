@@ -616,6 +616,8 @@ export function CheckoutForm({
 
     trackStorefrontAnalyticsEvent({
       event: "InitiateCheckout",
+      googleEvent: "begin_checkout",
+      metaEvent: "InitiateCheckout",
       metaPayload: payload,
       googlePayload: payload,
       options: {
@@ -679,6 +681,8 @@ export function CheckoutForm({
 
     trackStorefrontAnalyticsEvent({
       event: "AddPaymentInfo",
+      googleEvent: "add_payment_info",
+      metaEvent: "AddPaymentInfo",
       metaPayload: payload,
       googlePayload: payload,
       options: {

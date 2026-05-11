@@ -1,7 +1,8 @@
 "use client";
 
 import Script from "next/script";
-import { useEffect, useMemo, type ReactNode } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 
 import { installStorefrontAnalyticsBridge } from "@/lib/analytics/client";
 import { resolveStorefrontAnalyticsConfig } from "@/lib/analytics/config";
@@ -45,7 +46,6 @@ function renderMetaBootstrap(pixelId: string) {
     window.fbq.version = "2.0";
     window.fbq.queue = window.fbq.queue || [];
     window.fbq("init", ${JSON.stringify(pixelId)});
-    window.fbq("track", "PageView");
   `;
 }
 
@@ -54,7 +54,7 @@ function renderGoogleBootstrap(measurementId: string) {
     window.dataLayer = window.dataLayer || [];
     window.gtag = window.gtag || function(){window.dataLayer.push(arguments);};
     window.gtag("js", new Date());
-    window.gtag("config", ${JSON.stringify(measurementId)}, { send_page_view: true });
+    window.gtag("config", ${JSON.stringify(measurementId)}, { send_page_view: false });
   `;
 }
 
@@ -64,6 +64,9 @@ export function StorefrontAnalyticsProvider({
   host,
 }: StorefrontAnalyticsProviderProps) {
   const config = useMemo(() => resolveStorefrontAnalyticsConfig(bootstrap), [bootstrap]);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const lastTrackedPageRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -78,8 +81,27 @@ export function StorefrontAnalyticsProvider({
       storage: window.localStorage,
     });
 
-    installStorefrontAnalyticsBridge(config, identity);
-  }, [config, host]);
+    const bridge = installStorefrontAnalyticsBridge(config, identity);
+    const query = searchParams.toString();
+    const path = `${pathname}${query ? `?${query}` : ""}`;
+
+    if (bridge && lastTrackedPageRef.current !== path) {
+      lastTrackedPageRef.current = path;
+      bridge.track({
+        event: "PageView",
+        googleEvent: "page_view",
+        metaEvent: "PageView",
+        metaPayload: {
+          page_path: path,
+        },
+        googlePayload: {
+          page_path: path,
+          page_location: window.location.href,
+          page_title: document.title,
+        },
+      });
+    }
+  }, [config, host, pathname, searchParams]);
 
   return (
     <>

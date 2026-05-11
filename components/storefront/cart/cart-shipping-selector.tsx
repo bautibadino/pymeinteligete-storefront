@@ -1,9 +1,11 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { MapPin, Truck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { trackStorefrontAnalyticsEvent } from "@/lib/analytics/client";
+import { buildAddShippingInfoPayload } from "@/lib/analytics/events";
 import type { StorefrontCartItem } from "@/lib/cart/storefront-cart";
 import {
   isShippingCheckoutSnapshotExpired,
@@ -73,6 +75,7 @@ export function CartShippingSelector({
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isQuoting, setIsQuoting] = useState(false);
+  const trackedShippingRef = useRef<string | null>(null);
 
   const quotePackage = buildShippingQuotePackageFromCartItems(items);
   const options = quote?.options ?? [];
@@ -104,6 +107,42 @@ export function CartShippingSelector({
 
     if (selectedOption) {
       persistSelectedShippingOption(window.localStorage, selectedOption.checkoutSnapshot);
+      const analyticsItems = items.map((item) => ({
+        id: item.productId,
+        name: item.name,
+        price: item.price.amount,
+        quantity: item.quantity,
+        ...(item.brand ? { brand: item.brand } : {}),
+      }));
+      const cartSignature = analyticsItems
+        .map((item) => `${item.id}:${item.quantity}:${item.price}`)
+        .join("|");
+      const trackingKey = `${selectedOption.optionId}:${selectedOption.checkoutSnapshot.destinationPostalCode}:${cartSignature}`;
+
+      if (trackedShippingRef.current !== trackingKey && analyticsItems.length > 0) {
+        trackedShippingRef.current = trackingKey;
+        const cartValue = analyticsItems.reduce(
+          (total, item) => total + item.price * item.quantity,
+          0,
+        );
+        const payload = buildAddShippingInfoPayload({
+          eventId: `shipping_${selectedOption.optionId}_${Date.now()}`,
+          items: analyticsItems,
+          shippingAmount: selectedOption.priceWithTax,
+          shippingTier: `${selectedOption.carrierName} ${selectedOption.serviceName}`.trim(),
+          value: cartValue + selectedOption.priceWithTax,
+        });
+
+        trackStorefrontAnalyticsEvent({
+          event: "add_shipping_info",
+          googleEvent: "add_shipping_info",
+          serverEvent: null,
+          googlePayload: payload,
+          options: {
+            eventId: payload.eventId,
+          },
+        });
+      }
       return;
     }
 

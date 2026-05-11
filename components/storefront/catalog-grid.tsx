@@ -8,6 +8,7 @@ type CatalogGridProps = {
   products: StorefrontCatalogProduct[];
   emptyTitle: string;
   emptyDescription: string;
+  analyticsList?: { id: string; name: string } | undefined;
   density?: CatalogLayoutDensity;
   showHeader?: boolean;
 };
@@ -17,6 +18,7 @@ export function CatalogGrid({
   products,
   emptyTitle,
   emptyDescription,
+  analyticsList,
   density = "compact",
   showHeader = true,
 }: CatalogGridProps) {
@@ -52,6 +54,7 @@ export function CatalogGrid({
       <ProductGrid
         products={normalizedProducts}
         cardVariant="premium-commerce"
+        analyticsList={analyticsList}
         density={density}
         cardDisplayOptions={{
           showBrand: true,

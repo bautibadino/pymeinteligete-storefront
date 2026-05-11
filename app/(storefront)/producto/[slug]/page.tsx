@@ -19,6 +19,7 @@ import {
   getTenantSeoRequestContext,
   resolveTenantSeoSnapshotByRequest,
 } from "@/lib/seo";
+import { ProductViewTracker } from "@/components/analytics/storefront-commerce-analytics";
 import { StorefrontApiError, getProduct } from "@/lib/storefront-api";
 
 type ProductPageProps = {
@@ -77,10 +78,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
   );
 
   const usePresentation = shouldUsePresentation(hydratedPresentation ?? undefined, "product");
+  const productCard = experience.product
+    ? mapCatalogProductToCardData(experience.product, experience.bootstrap)
+    : null;
+  const analyticsProduct = productCard
+    ? {
+        id: productCard.id,
+        name: productCard.name,
+        price: productCard.price.amount,
+        ...(productCard.brand ? { brand: productCard.brand } : {}),
+      }
+    : null;
 
   if (usePresentation) {
     return (
       <Fragment>
+        <ProductViewTracker product={analyticsProduct} />
         {hasPreview ? <PreviewBridge /> : null}
         <PresentationRenderer
           presentation={hydratedPresentation!}
@@ -94,6 +107,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <Fragment>
+      <ProductViewTracker product={analyticsProduct} />
       <SurfaceStateCard
         shopStatus={experience.bootstrap?.tenant.status ?? null}
         surface="product"
