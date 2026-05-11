@@ -1,4 +1,5 @@
 import type { StorefrontAnalyticsConfig } from "@/lib/analytics/config";
+import { extractAnalyticsCookies } from "@/lib/analytics/cookies";
 import type { StorefrontAnalyticsInput } from "@/lib/types/storefront";
 
 type AnalyticsPayload = Record<string, unknown>;
@@ -153,12 +154,14 @@ function buildServerAnalyticsPayload(
     result.params = params;
   }
 
-  if (identity) {
+  const currentIdentity = resolveCurrentBrowserIdentity(identity);
+
+  if (currentIdentity) {
     const user = {
-      ...(identity.fbp ? { fbp: identity.fbp } : {}),
-      ...(identity.fbc ? { fbc: identity.fbc } : {}),
-      ...(identity.ga_client_id ? { clientId: identity.ga_client_id } : {}),
-      ...(identity.anonymous_id ? { externalId: identity.anonymous_id } : {}),
+      ...(currentIdentity.fbp ? { fbp: currentIdentity.fbp } : {}),
+      ...(currentIdentity.fbc ? { fbc: currentIdentity.fbc } : {}),
+      ...(currentIdentity.ga_client_id ? { clientId: currentIdentity.ga_client_id } : {}),
+      ...(currentIdentity.anonymous_id ? { externalId: currentIdentity.anonymous_id } : {}),
     };
 
     if (Object.keys(user).length > 0) {
@@ -167,6 +170,24 @@ function buildServerAnalyticsPayload(
   }
 
   return result;
+}
+
+function resolveCurrentBrowserIdentity(
+  identity: StorefrontAnalyticsInput | undefined,
+): StorefrontAnalyticsInput | undefined {
+  if (typeof document === "undefined") {
+    return identity;
+  }
+
+  const cookieIdentity = extractAnalyticsCookies({
+    cookie: document.cookie,
+  });
+  const currentIdentity = {
+    ...identity,
+    ...cookieIdentity,
+  };
+
+  return Object.keys(currentIdentity).length > 0 ? currentIdentity : undefined;
 }
 
 function postStorefrontServerAnalytics(
