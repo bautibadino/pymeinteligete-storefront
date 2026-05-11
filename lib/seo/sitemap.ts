@@ -60,7 +60,9 @@ function buildPageSitemapEntries(
 ): MetadataRoute.Sitemap {
   return pages
     .filter((page): page is { slug: string } =>
-      typeof page.slug === "string" && page.slug.trim().length > 0,
+      typeof page.slug === "string" &&
+      page.slug.trim().length > 0 &&
+      !page.slug.includes("/"),
     )
     .map((page) => ({
       url: buildCanonicalUrl(baseUrl, `/${encodeURIComponent(page.slug)}`),

@@ -65,6 +65,24 @@ describe("buildTenantSitemap", () => {
     expect(urls).not.toContain("https://acme.example.com/producto/");
   });
 
+  it("no publica páginas legacy con slashes codificados", () => {
+    const result = buildTenantSitemap(
+      snapshot({
+        bootstrap: {
+          pages: [
+            { slug: "politicas/envios", title: "Envíos" },
+            { slug: "sobre-nosotros", title: "Sobre nosotros" },
+          ],
+        } as never,
+      }),
+    );
+    const urls = result.map((entry) => entry.url);
+
+    expect(urls).toContain("https://acme.example.com/sobre-nosotros");
+    expect(urls).not.toContain("https://acme.example.com/politicas%2Fenvios");
+    expect(urls).not.toContain("https://acme.example.com/politicas/envios");
+  });
+
   it("no duplica rutas base", () => {
     const result = buildTenantSitemap(snapshot());
     const urls = result.map((entry) => entry.url);
