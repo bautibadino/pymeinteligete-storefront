@@ -9,8 +9,13 @@ import {
   humanizePaymentMethod,
   loadInstitutionalPageData,
 } from "@/app/(storefront)/_lib/institutional-page-data";
+import {
+  BymInstitutionalPage,
+  isBymInstitutionalPath,
+} from "@/components/storefront/bym-institutional-page";
 import { PageIntro } from "@/components/storefront/page-sections";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
+import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
 
 type InstitutionalPageShellProps = {
@@ -216,6 +221,10 @@ export async function InstitutionalPageShell({
   children,
 }: InstitutionalPageShellProps) {
   const data = await loadInstitutionalPageData(pathname);
+
+  if (!children && isBymCustomExperience(data.bootstrap) && isBymInstitutionalPath(pathname)) {
+    return <BymInstitutionalPage data={data} pathname={pathname} title={title} />;
+  }
 
   return (
     <>
