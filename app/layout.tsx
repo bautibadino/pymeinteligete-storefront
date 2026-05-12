@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/next";
 
 import "./globals.css";
 import { getBootstrap } from "@/lib/storefront-api";
@@ -26,7 +27,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
   return (
     <html lang="es" style={htmlStyle}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
