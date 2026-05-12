@@ -9,6 +9,7 @@ import { buildAddShippingInfoPayload } from "@/lib/analytics/events";
 import type { StorefrontCartItem } from "@/lib/cart/storefront-cart";
 import {
   getShippingBenefitLabel,
+  getShippingBenefitHintLabel,
   getShippingDeliveryMode,
   getShippingDeliveryModeLabel,
   getShippingFinalCost,
@@ -103,6 +104,16 @@ function getBranchDescription(branch: StorefrontCarrierBranch): string {
   ]
     .filter(Boolean)
     .join(" · ");
+}
+
+function getBenefitHintProgress(option: StorefrontShippingQuoteOption): number | null {
+  const hint = option.benefitHint ?? option.checkoutSnapshot.benefitHint;
+  if (!hint || hint.minSubtotal <= 0) {
+    return null;
+  }
+
+  const reachedSubtotal = Math.max(0, hint.minSubtotal - hint.remainingSubtotal);
+  return Math.max(0, Math.min(100, Math.round((reachedSubtotal / hint.minSubtotal) * 100)));
 }
 
 function withSelectedCarrierBranch(
@@ -423,6 +434,8 @@ export function CartShippingSelector({
               const originalCost = getShippingOriginalCost(option);
               const finalCost = getShippingFinalCost(option);
               const benefitLabel = getShippingBenefitLabel(option);
+              const benefitHintLabel = getShippingBenefitHintLabel(option);
+              const benefitHintProgress = getBenefitHintProgress(option);
               const showBenefit = hasExplicitShippingBenefit(option) && benefitLabel;
 
               return (
@@ -461,6 +474,33 @@ export function CartShippingSelector({
                           )}
                         >
                           {benefitLabel ?? option.displayMessage}
+                        </span>
+                      ) : null}
+                      {!showBenefit && benefitHintLabel && benefitHintProgress !== null ? (
+                        <span className="mt-1 grid gap-1.5">
+                          <span
+                            className={cn(
+                              "text-xs font-semibold",
+                              selected ? "text-background/80" : "text-amber-700",
+                            )}
+                          >
+                            {benefitHintLabel}
+                          </span>
+                          <span
+                            className={cn(
+                              "block h-1.5 overflow-hidden rounded-full",
+                              selected ? "bg-background/20" : "bg-amber-100",
+                            )}
+                            aria-hidden="true"
+                          >
+                            <span
+                              className={cn(
+                                "block h-full rounded-full",
+                                selected ? "bg-background" : "bg-amber-500",
+                              )}
+                              style={{ width: `${benefitHintProgress}%` }}
+                            />
+                          </span>
                         </span>
                       ) : null}
                     </span>

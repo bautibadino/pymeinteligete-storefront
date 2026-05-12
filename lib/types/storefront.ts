@@ -610,6 +610,16 @@ export interface StorefrontShippingBenefit {
   reason?: string;
 }
 
+export interface StorefrontShippingBenefitHint {
+  kind: "free_shipping_min_subtotal";
+  ruleId: string;
+  ruleName: string;
+  deliveryType: StorefrontShippingDeliveryMode;
+  minSubtotal: number;
+  remainingSubtotal: number;
+  label: string;
+}
+
 export interface StorefrontCarrierBranch {
   branchId?: string;
   id?: string;
@@ -658,6 +668,7 @@ export interface StorefrontShippingCheckoutSnapshot {
   isFreeShipping?: boolean;
   displayMessage?: string;
   benefit?: StorefrontShippingBenefit;
+  benefitHint?: StorefrontShippingBenefitHint;
   selectedCarrierBranch?: StorefrontCarrierBranch;
   pickupLocation?: StorefrontPickupLocation;
   billableWeightKg?: number;
@@ -685,6 +696,7 @@ export interface StorefrontShippingQuoteOption {
   isFreeShipping?: boolean;
   displayMessage?: string;
   benefit?: StorefrontShippingBenefit;
+  benefitHint?: StorefrontShippingBenefitHint;
   selectedCarrierBranch?: StorefrontCarrierBranch;
   pickupLocation?: StorefrontPickupLocation;
   billableWeightKg?: number;

@@ -14,6 +14,7 @@ type ShippingCostSource = Pick<StorefrontShippingCheckoutSnapshot, "deliveryType
       | "discountAmount"
       | "isFreeShipping"
       | "benefit"
+      | "benefitHint"
     >
   >;
 
@@ -56,6 +57,27 @@ function isValidBenefit(value: unknown): boolean {
   );
 }
 
+function isValidBenefitHint(value: unknown): boolean {
+  if (value === undefined) {
+    return true;
+  }
+
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    value.kind === "free_shipping_min_subtotal" &&
+    typeof value.ruleId === "string" &&
+    typeof value.ruleName === "string" &&
+    isDeliveryMode(value.deliveryType) &&
+    isFinitePrice(value.minSubtotal) &&
+    isFinitePrice(value.remainingSubtotal) &&
+    value.remainingSubtotal > 0 &&
+    typeof value.label === "string"
+  );
+}
+
 export function normalizeStoredShippingCheckoutSnapshot(
   value: unknown,
 ): StorefrontShippingCheckoutSnapshot | null {
@@ -85,7 +107,8 @@ export function normalizeStoredShippingCheckoutSnapshot(
     !isOptionalFinitePrice(snapshot.discountAmount) ||
     (snapshot.isFreeShipping !== undefined && typeof snapshot.isFreeShipping !== "boolean") ||
     !isOptionalString(snapshot.displayMessage) ||
-    !isValidBenefit(snapshot.benefit)
+    !isValidBenefit(snapshot.benefit) ||
+    !isValidBenefitHint(snapshot.benefitHint)
   ) {
     return null;
   }
@@ -158,6 +181,10 @@ export function getShippingBenefitLabel(value: ShippingCostSource): string | nul
   return null;
 }
 
+export function getShippingBenefitHintLabel(value: ShippingCostSource): string | null {
+  return value.benefitHint?.label ?? null;
+}
+
 export function requiresHomeShippingAddress(
   value: Pick<StorefrontShippingCheckoutSnapshot, "deliveryType"> | null | undefined,
 ): boolean {
@@ -175,6 +202,7 @@ export function normalizeShippingQuoteOptionCosts(
   const isFreeShipping = option.checkoutSnapshot.isFreeShipping ?? option.isFreeShipping;
   const displayMessage = option.checkoutSnapshot.displayMessage ?? option.displayMessage;
   const benefit = option.checkoutSnapshot.benefit ?? option.benefit;
+  const benefitHint = option.checkoutSnapshot.benefitHint ?? option.benefitHint;
   const selectedCarrierBranch =
     option.checkoutSnapshot.selectedCarrierBranch ?? option.selectedCarrierBranch;
   const pickupLocation = option.checkoutSnapshot.pickupLocation ?? option.pickupLocation;
@@ -190,6 +218,7 @@ export function normalizeShippingQuoteOptionCosts(
       ...(isFreeShipping !== undefined ? { isFreeShipping } : {}),
       ...(displayMessage !== undefined ? { displayMessage } : {}),
       ...(benefit !== undefined ? { benefit } : {}),
+      ...(benefitHint !== undefined ? { benefitHint } : {}),
       ...(selectedCarrierBranch !== undefined ? { selectedCarrierBranch } : {}),
       ...(pickupLocation !== undefined ? { pickupLocation } : {}),
     },
