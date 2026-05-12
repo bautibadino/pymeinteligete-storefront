@@ -593,7 +593,7 @@ export function ProductDetailPurchaseCard({
         unavailableLabel="No disponible"
       />
 
-      <ShippingQuoteCalculator quotePackage={quotePackage} />
+      <ShippingQuoteCalculator quotePackage={quotePackage} productId={product.id} />
 
       {showReviewsTrust ? (
         <ProductDetailGoogleTrust

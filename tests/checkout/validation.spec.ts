@@ -6,6 +6,58 @@ import {
   parseItems,
   readTrimmedString,
 } from "@/lib/checkout/validation";
+import type { StorefrontShippingCheckoutSnapshot } from "@/lib/types/storefront";
+
+const HOME_DELIVERY_SNAPSHOT: StorefrontShippingCheckoutSnapshot = {
+  contractVersion: "storefront.shipping.quote.v1",
+  provider: "andreani",
+  optionId: "andreani:home:standard",
+  carrierName: "Andreani",
+  serviceName: "Envío estándar",
+  deliveryType: "home_delivery",
+  priceWithTax: 14068,
+  priceWithoutTax: 11626.45,
+  currency: "ARS",
+  destinationPostalCode: "2645",
+  originPostalCode: "5000",
+  packages: [{ declaredValue: 100000, volumeCm3: 5000, weightKg: 1 }],
+  quotedAt: "2026-05-06T22:00:00.000Z",
+  expiresAt: "2026-05-06T22:15:00.000Z",
+};
+
+const CARRIER_BRANCH_SNAPSHOT: StorefrontShippingCheckoutSnapshot = {
+  ...HOME_DELIVERY_SNAPSHOT,
+  optionId: "andreani:branch:001",
+  serviceName: "Andreani - retiro en sucursal",
+  deliveryType: "carrier_branch",
+  selectedCarrierBranch: {
+    branchId: "AND-CBA-001",
+    name: "Andreani Córdoba Centro",
+    address: "Colón 123",
+    city: "Córdoba",
+    province: "Córdoba",
+    postalCode: "5000",
+  },
+};
+
+const PICKUP_SNAPSHOT: StorefrontShippingCheckoutSnapshot = {
+  ...HOME_DELIVERY_SNAPSHOT,
+  provider: "pickup",
+  optionId: "pickup:local:001",
+  carrierName: "Retiro local",
+  serviceName: "Retiro local",
+  deliveryType: "pickup",
+  priceWithTax: 0,
+  priceWithoutTax: 0,
+  pickupLocation: {
+    locationId: "sucursal-centro",
+    name: "Sucursal Centro",
+    address: "San Martín 100",
+    city: "Córdoba",
+    province: "Córdoba",
+    postalCode: "5000",
+  },
+};
 
 function createFormData(entries: Record<string, string | string[]>): FormData {
   const formData = new FormData();
@@ -21,6 +73,10 @@ function createFormData(entries: Record<string, string | string[]>): FormData {
   }
 
   return formData;
+}
+
+function stringifySnapshot(snapshot: StorefrontShippingCheckoutSnapshot): string {
+  return JSON.stringify(snapshot);
 }
 
 describe("readTrimmedString", () => {
@@ -77,11 +133,13 @@ describe("buildFieldErrors", () => {
     const formData = createFormData({
       customerName: "Juan Perez",
       customerEmail: "juan@mail.com",
+      customerPhone: "3515551234",
       shippingStreet: "Belgrano",
       shippingNumber: "123",
       shippingCity: "Corral de Bustos",
       shippingProvince: "Cordoba",
       shippingPostalCode: "2645",
+      shippingQuoteSnapshot: stringifySnapshot(HOME_DELIVERY_SNAPSHOT),
       itemProductId: ["prod_1"],
       itemQuantity: ["2"],
     });
@@ -108,11 +166,13 @@ describe("buildFieldErrors", () => {
     const formData = createFormData({
       customerName: "Juan",
       customerEmail: "juan@mail.com",
+      customerPhone: "3515551234",
       shippingStreet: "Belgrano",
       shippingNumber: "123",
       shippingCity: "Córdoba",
       shippingProvince: "Córdoba",
       shippingPostalCode: "5000",
+      shippingQuoteSnapshot: stringifySnapshot(HOME_DELIVERY_SNAPSHOT),
       itemProductId: ["prod_1"],
       itemQuantity: ["0"],
     });
@@ -126,11 +186,13 @@ describe("buildFieldErrors", () => {
       paymentStrategy: "none",
       customerName: "Juan Perez",
       customerEmail: "juan@mail.com",
+      customerPhone: "3515551234",
       shippingStreet: "Belgrano",
       shippingNumber: "123",
       shippingCity: "Corral de Bustos",
       shippingProvince: "Cordoba",
       shippingPostalCode: "2645",
+      shippingQuoteSnapshot: stringifySnapshot(HOME_DELIVERY_SNAPSHOT),
       itemProductId: ["prod_1"],
       itemQuantity: ["2"],
     });
@@ -145,11 +207,13 @@ describe("buildFieldErrors", () => {
       paymentStrategy: "auto",
       customerName: "Juan Perez",
       customerEmail: "juan@mail.com",
+      customerPhone: "3515551234",
       shippingStreet: "Belgrano",
       shippingNumber: "123",
       shippingCity: "Corral de Bustos",
       shippingProvince: "Cordoba",
       shippingPostalCode: "2645",
+      shippingQuoteSnapshot: stringifySnapshot(HOME_DELIVERY_SNAPSHOT),
       itemProductId: ["prod_1"],
       itemQuantity: ["2"],
     });
@@ -160,6 +224,62 @@ describe("buildFieldErrors", () => {
     expect(errors.payerEmail).toBeUndefined();
     expect(errors.payerIdType).toBeUndefined();
     expect(errors.payerIdNumber).toBeUndefined();
+    expect(hasFieldErrors(errors)).toBe(false);
+  });
+
+  it("exige un snapshot de envío válido para crear checkout", () => {
+    const formData = createFormData({
+      customerName: "Juan Perez",
+      customerEmail: "juan@mail.com",
+      customerPhone: "3515551234",
+      shippingStreet: "Belgrano",
+      shippingNumber: "123",
+      shippingCity: "Corral de Bustos",
+      shippingProvince: "Cordoba",
+      shippingPostalCode: "2645",
+      itemProductId: ["prod_1"],
+      itemQuantity: ["2"],
+    });
+    const errors = buildFieldErrors(formData);
+
+    expect(errors.shippingQuoteSnapshot).toBe("Seleccioná un envío válido desde el carrito.");
+  });
+
+  it("no exige dirección domiciliaria para retiro en sucursal Andreani", () => {
+    const formData = createFormData({
+      customerName: "Juan Perez",
+      customerEmail: "juan@mail.com",
+      customerPhone: "3515551234",
+      shippingQuoteSnapshot: stringifySnapshot(CARRIER_BRANCH_SNAPSHOT),
+      itemProductId: ["prod_1"],
+      itemQuantity: ["2"],
+    });
+    const errors = buildFieldErrors(formData);
+
+    expect(errors.shippingStreet).toBeUndefined();
+    expect(errors.shippingNumber).toBeUndefined();
+    expect(errors.shippingCity).toBeUndefined();
+    expect(errors.shippingProvince).toBeUndefined();
+    expect(errors.shippingPostalCode).toBeUndefined();
+    expect(hasFieldErrors(errors)).toBe(false);
+  });
+
+  it("no exige dirección domiciliaria para retiro local", () => {
+    const formData = createFormData({
+      customerName: "Juan Perez",
+      customerEmail: "juan@mail.com",
+      customerPhone: "3515551234",
+      shippingQuoteSnapshot: stringifySnapshot(PICKUP_SNAPSHOT),
+      itemProductId: ["prod_1"],
+      itemQuantity: ["2"],
+    });
+    const errors = buildFieldErrors(formData);
+
+    expect(errors.shippingStreet).toBeUndefined();
+    expect(errors.shippingNumber).toBeUndefined();
+    expect(errors.shippingCity).toBeUndefined();
+    expect(errors.shippingProvince).toBeUndefined();
+    expect(errors.shippingPostalCode).toBeUndefined();
     expect(hasFieldErrors(errors)).toBe(false);
   });
 });

@@ -343,7 +343,7 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
               </div>
             </div>
 
-            <ShippingQuoteCalculator quotePackage={quotePackage} />
+            <ShippingQuoteCalculator quotePackage={quotePackage} productId={productId} />
 
             {stockByBranch.length > 0 ? (
               <div className="grid gap-3 pt-1">

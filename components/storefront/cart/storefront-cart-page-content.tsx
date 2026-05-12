@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { CartShippingSelector } from "@/components/storefront/cart/cart-shipping-selector";
 import { useStorefrontCart } from "@/components/storefront/cart/storefront-cart-provider";
 import { buildCheckoutHrefFromCartItems } from "@/lib/cart/storefront-cart";
+import { getShippingFinalCost } from "@/lib/shipping/checkout-shipping";
 import type { StorefrontShippingQuoteOption } from "@/lib/types/storefront";
 
 function formatCurrency(amount: number) {
@@ -31,7 +32,7 @@ export function StorefrontCartPageContent() {
   const [selectedShippingOption, setSelectedShippingOption] =
     useState<StorefrontShippingQuoteOption | null>(null);
   const checkoutHref = buildCheckoutHrefFromCartItems(items);
-  const shippingCost = selectedShippingOption?.priceWithTax ?? 0;
+  const shippingCost = selectedShippingOption ? getShippingFinalCost(selectedShippingOption) : 0;
   const estimatedTotal = subtotal + shippingCost;
 
   const handleSelectedShippingOptionChange = useCallback(

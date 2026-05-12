@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   STOREFRONT_SHIPPING_POSTAL_CODE_STORAGE_KEY,
   STOREFRONT_SELECTED_SHIPPING_OPTION_STORAGE_KEY,
+  buildShippingStorageScope,
   clearSelectedShippingOption,
   normalizeShippingPostalCode,
   persistSelectedShippingOption,
@@ -63,5 +64,51 @@ describe("shipping postal code storage", () => {
       STOREFRONT_SELECTED_SHIPPING_OPTION_STORAGE_KEY,
     );
     expect(readStoredSelectedShippingOption(storage)).toBeNull();
+  });
+
+  it("asocia el snapshot seleccionado a host, carrito y modalidad para evitar selecciones stale", () => {
+    const snapshot = {
+      optionId: "andreani:branch:001",
+      serviceName: "Andreani - retiro en sucursal",
+      deliveryType: "carrier_branch",
+      priceWithTax: 15971.25,
+    };
+    const stored = new Map<string, string>();
+    const storage = {
+      getItem: vi.fn((key: string) => stored.get(key) ?? null),
+      setItem: vi.fn((key: string, value: string) => {
+        stored.set(key, value);
+      }),
+      removeItem: vi.fn((key: string) => {
+        stored.delete(key);
+      }),
+    };
+    const scope = buildShippingStorageScope({
+      host: "bym.pymeinteligente.com.ar",
+      cartKey: "prod-a:1|prod-b:2",
+      deliveryMode: "carrier_branch",
+    });
+
+    persistSelectedShippingOption(storage, snapshot, scope);
+
+    expect(readStoredSelectedShippingOption(storage, scope)).toEqual(snapshot);
+    expect(
+      readStoredSelectedShippingOption(storage, {
+        ...scope,
+        host: "otra-tienda.pymeinteligente.com.ar",
+      }),
+    ).toBeNull();
+    expect(
+      readStoredSelectedShippingOption(storage, {
+        ...scope,
+        cartKey: "prod-a:1",
+      }),
+    ).toBeNull();
+    expect(
+      readStoredSelectedShippingOption(storage, {
+        ...scope,
+        deliveryMode: "home_delivery",
+      }),
+    ).toBeNull();
   });
 });

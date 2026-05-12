@@ -19,6 +19,7 @@ import {
   type StorefrontCartItem,
   type StorefrontCartUiMode,
 } from "@/lib/cart/storefront-cart";
+import { getShippingFinalCost } from "@/lib/shipping/checkout-shipping";
 import type { StorefrontShippingQuoteOption } from "@/lib/types/storefront";
 import { cn } from "@/lib/utils/cn";
 
@@ -211,7 +212,7 @@ function StorefrontCartSurface({
     },
     [],
   );
-  const shippingCost = selectedShippingOption?.priceWithTax ?? 0;
+  const shippingCost = selectedShippingOption ? getShippingFinalCost(selectedShippingOption) : 0;
   const estimatedTotal = subtotal + shippingCost;
 
   return (

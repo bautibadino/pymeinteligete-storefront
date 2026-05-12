@@ -13,6 +13,7 @@ import {
   buildFieldErrors,
   hasFieldErrors,
   parseItems,
+  readValidShippingQuoteSnapshot,
   readTrimmedString,
 } from "@/lib/checkout/validation";
 import { getStorefrontRuntimeSnapshot } from "@/lib/runtime/storefront-request-context";
@@ -23,42 +24,88 @@ import {
   postManualPayment,
   processPayment,
 } from "@/lib/storefront-api";
-import type { StorefrontShippingCheckoutSnapshot } from "@/lib/types/storefront";
+import {
+  getShippingDeliveryMode,
+  requiresHomeShippingAddress,
+} from "@/lib/shipping/checkout-shipping";
+import type {
+  StorefrontAddressInput,
+  StorefrontShippingCheckoutSnapshot,
+} from "@/lib/types/storefront";
 
 type PaymentStrategy = "none" | "manual" | "auto";
 
 function readShippingQuoteSnapshot(
   formData: FormData,
 ): StorefrontShippingCheckoutSnapshot | null {
-  const rawSnapshot = readTrimmedString(formData, "shippingQuoteSnapshot");
+  return readValidShippingQuoteSnapshot(formData);
+}
 
-  if (!rawSnapshot) {
-    return null;
+function splitStreetAddress(value: string | undefined): { street: string; number: string } {
+  if (!value?.trim()) {
+    return { street: "", number: "" };
   }
 
-  try {
-    const parsed = JSON.parse(rawSnapshot) as Partial<StorefrontShippingCheckoutSnapshot>;
+  const trimmed = value.trim();
+  const match = trimmed.match(/^(.*?)(?:\s+(\d+[a-zA-Z]?))?$/);
 
-    if (
-      parsed.contractVersion !== "storefront.shipping.quote.v1" ||
-      parsed.provider !== "andreani" ||
-      parsed.currency !== "ARS" ||
-      typeof parsed.optionId !== "string" ||
-      typeof parsed.carrierName !== "string" ||
-      typeof parsed.serviceName !== "string" ||
-      typeof parsed.destinationPostalCode !== "string" ||
-      typeof parsed.quotedAt !== "string" ||
-      typeof parsed.expiresAt !== "string" ||
-      typeof parsed.priceWithTax !== "number" ||
-      typeof parsed.priceWithoutTax !== "number"
-    ) {
-      return null;
-    }
+  return {
+    street: match?.[1]?.trim() || trimmed,
+    number: match?.[2]?.trim() || "S/N",
+  };
+}
 
-    return parsed as StorefrontShippingCheckoutSnapshot;
-  } catch {
-    return null;
+function buildShippingAddress(
+  formData: FormData,
+  snapshot: StorefrontShippingCheckoutSnapshot | null,
+): StorefrontAddressInput | undefined {
+  if (!snapshot || requiresHomeShippingAddress(snapshot)) {
+    return {
+      street: readTrimmedString(formData, "shippingStreet"),
+      number: readTrimmedString(formData, "shippingNumber"),
+      city: readTrimmedString(formData, "shippingCity"),
+      province: readTrimmedString(formData, "shippingProvince"),
+      postalCode: readTrimmedString(formData, "shippingPostalCode"),
+      ...(readTrimmedString(formData, "shippingNotes")
+        ? { notes: readTrimmedString(formData, "shippingNotes") }
+        : {}),
+    };
   }
+
+  const mode = getShippingDeliveryMode(snapshot);
+  if (mode === "carrier_branch" && !snapshot.selectedCarrierBranch) {
+    return undefined;
+  }
+
+  const location =
+    mode === "carrier_branch" ? snapshot.selectedCarrierBranch : snapshot.pickupLocation;
+  const fallbackAddress = splitStreetAddress(location?.address);
+
+  return {
+    street: location?.street ?? fallbackAddress.street,
+    number: location?.number ?? fallbackAddress.number,
+    city: location?.city ?? "",
+    province: location?.province ?? "",
+    postalCode: location?.postalCode ?? snapshot.destinationPostalCode,
+    ...(readTrimmedString(formData, "shippingNotes")
+      ? { notes: readTrimmedString(formData, "shippingNotes") }
+      : {}),
+  };
+}
+
+function buildDeliverySelection(snapshot: StorefrontShippingCheckoutSnapshot | null) {
+  if (!snapshot) return undefined;
+  const deliveryType = getShippingDeliveryMode(snapshot);
+  return {
+    deliveryType,
+    provider: snapshot.provider,
+    carrierName: snapshot.carrierName,
+    serviceName: snapshot.serviceName,
+    ...(snapshot.selectedCarrierBranch
+      ? { selectedCarrierBranch: snapshot.selectedCarrierBranch }
+      : {}),
+    ...(snapshot.pickupLocation ? { selectedPickupLocation: snapshot.pickupLocation } : {}),
+  };
 }
 
 export async function submitCheckoutAction(
@@ -90,6 +137,8 @@ export async function submitCheckoutAction(
     const bootstrap = await getBootstrap(runtime.context);
     const analyticsIdentity = await readAnalyticsIdentityFromRequest();
     const shippingQuoteSnapshot = readShippingQuoteSnapshot(formData);
+    const shippingAddress = buildShippingAddress(formData, shippingQuoteSnapshot);
+    const deliverySelection = buildDeliverySelection(shippingQuoteSnapshot);
 
     if (!canAccessCheckout(bootstrap.tenant.status)) {
       return {
@@ -127,17 +176,9 @@ export async function submitCheckoutAction(
           ? { taxCondition: readTrimmedString(formData, "customerTaxCondition") }
           : {}),
       },
-      shippingAddress: {
-        street: readTrimmedString(formData, "shippingStreet"),
-        number: readTrimmedString(formData, "shippingNumber"),
-        city: readTrimmedString(formData, "shippingCity"),
-        province: readTrimmedString(formData, "shippingProvince"),
-        postalCode: readTrimmedString(formData, "shippingPostalCode"),
-        ...(readTrimmedString(formData, "shippingNotes")
-          ? { notes: readTrimmedString(formData, "shippingNotes") }
-          : {}),
-      },
+      ...(shippingAddress ? { shippingAddress } : {}),
       ...(shippingQuoteSnapshot ? { shippingQuoteSnapshot } : {}),
+      ...(deliverySelection ? { deliverySelection } : {}),
       items: parseItems(formData),
       ...(paymentStrategy === "manual" && selectedPaymentMethodId
         ? { paymentMethodId: selectedPaymentMethodId }

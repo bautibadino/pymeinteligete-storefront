@@ -1,6 +1,8 @@
 import { STOREFRONT_API_PATHS } from "@/lib/contracts/storefront-v1";
 import type {
   StorefrontErrorResponse,
+  StorefrontShippingBranchesRequest,
+  StorefrontShippingBranchesResponse,
   StorefrontShippingQuoteRequest,
   StorefrontShippingQuoteResponse,
   StorefrontSuccessResponse,
@@ -24,6 +26,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isSuccessEnvelope(
   value: unknown,
 ): value is StorefrontSuccessResponse<StorefrontShippingQuoteResponse> {
+  return isRecord(value) && value.success === true && "data" in value;
+}
+
+function isBranchesSuccessEnvelope(
+  value: unknown,
+): value is StorefrontSuccessResponse<StorefrontShippingBranchesResponse> {
   return isRecord(value) && value.success === true && "data" in value;
 }
 
@@ -76,6 +84,39 @@ export async function postStorefrontShippingQuote(
 
   if (!isSuccessEnvelope(payload)) {
     throw new StorefrontShippingQuoteError("La plataforma devolvió una cotización inválida.");
+  }
+
+  return payload.data;
+}
+
+export async function getStorefrontShippingBranches(
+  request: StorefrontShippingBranchesRequest,
+): Promise<StorefrontShippingBranchesResponse> {
+  const params = new URLSearchParams({
+    provider: request.provider ?? "andreani",
+    postalCode: request.postalCode,
+  });
+
+  if (request.contract) {
+    params.set("contract", request.contract);
+  }
+
+  const response = await fetch(`${STOREFRONT_API_PATHS.shippingBranches}?${params.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+    headers: {
+      accept: "application/json",
+    },
+  });
+  const payload = (await response.json().catch(() => null)) as unknown;
+
+  if (!response.ok) {
+    const { message, code } = readErrorMessage(payload);
+    throw new StorefrontShippingQuoteError(message, response.status, code);
+  }
+
+  if (!isBranchesSuccessEnvelope(payload)) {
+    throw new StorefrontShippingQuoteError("La plataforma devolvió sucursales inválidas.");
   }
 
   return payload.data;

@@ -587,16 +587,79 @@ export interface StorefrontShippingQuotePackage {
 export interface StorefrontShippingQuoteRequest {
   destinationPostalCode: string;
   packages: StorefrontShippingQuotePackage[];
+  subtotal?: number;
+  items?: Array<{
+    productId?: string;
+    categoryId?: string;
+    categoryIds?: string[];
+    brandId?: string;
+    lineTotal?: number;
+  }>;
+}
+
+export type StorefrontShippingDeliveryMode = "home_delivery" | "carrier_branch" | "pickup";
+
+export type StorefrontShippingBenefitKind = "none" | "free" | "partial";
+
+export interface StorefrontShippingBenefit {
+  kind: StorefrontShippingBenefitKind;
+  amount: number;
+  originalPriceWithTax: number;
+  finalPriceWithTax: number;
+  label: string;
+  reason?: string;
+}
+
+export interface StorefrontCarrierBranch {
+  branchId?: string;
+  id?: string;
+  code?: string;
+  name: string;
+  address?: string;
+  street?: string;
+  number?: string;
+  city?: string;
+  province?: string;
+  postalCode?: string;
+  phone?: string;
+  openingHours?: string;
+  [key: string]: unknown;
+}
+
+export interface StorefrontPickupLocation {
+  locationId?: string;
+  branchId?: string;
+  id?: string;
+  name: string;
+  address?: string;
+  street?: string;
+  number?: string;
+  city?: string;
+  province?: string;
+  postalCode?: string;
+  phone?: string;
+  openingHours?: string;
+  [key: string]: unknown;
 }
 
 export interface StorefrontShippingCheckoutSnapshot {
   contractVersion: "storefront.shipping.quote.v1";
-  provider: "andreani";
+  provider: string;
   optionId: string;
   carrierName: string;
   serviceName: string;
+  deliveryType?: StorefrontShippingDeliveryMode;
+  providerServiceCode?: string;
   priceWithTax: number;
   priceWithoutTax: number;
+  originalShippingCost?: number;
+  finalShippingCost?: number;
+  discountAmount?: number;
+  isFreeShipping?: boolean;
+  displayMessage?: string;
+  benefit?: StorefrontShippingBenefit;
+  selectedCarrierBranch?: StorefrontCarrierBranch;
+  pickupLocation?: StorefrontPickupLocation;
   billableWeightKg?: number;
   currency: "ARS";
   destinationPostalCode: string;
@@ -608,23 +671,33 @@ export interface StorefrontShippingCheckoutSnapshot {
 
 export interface StorefrontShippingQuoteOption {
   optionId: string;
-  provider: "andreani";
+  provider: string;
   carrierName: string;
   serviceName: string;
+  deliveryType?: StorefrontShippingDeliveryMode;
+  providerServiceCode?: string;
   currency: "ARS";
   priceWithTax: number;
   priceWithoutTax: number;
+  originalShippingCost?: number;
+  finalShippingCost?: number;
+  discountAmount?: number;
+  isFreeShipping?: boolean;
+  displayMessage?: string;
+  benefit?: StorefrontShippingBenefit;
+  selectedCarrierBranch?: StorefrontCarrierBranch;
+  pickupLocation?: StorefrontPickupLocation;
   billableWeightKg?: number;
   checkoutSnapshot: StorefrontShippingCheckoutSnapshot;
 }
 
 export interface StorefrontShippingQuoteResponse {
   contractVersion: "storefront.shipping.quote.v1";
-  provider: "andreani";
+  provider: string;
   available: boolean;
   currency: "ARS";
   destinationPostalCode: string;
-  originPostalCode: string;
+  originPostalCode?: string;
   quotedAt: string;
   expiresAt: string;
   options: StorefrontShippingQuoteOption[];
@@ -632,6 +705,18 @@ export interface StorefrontShippingQuoteResponse {
     | "SHIPPING_PROVIDER_NOT_CONFIGURED"
     | "ORIGIN_POSTAL_CODE_NOT_CONFIGURED"
     | "QUOTE_UNAVAILABLE";
+}
+
+export interface StorefrontShippingBranchesRequest {
+  provider?: "andreani";
+  postalCode: string;
+  contract?: string;
+}
+
+export interface StorefrontShippingBranchesResponse {
+  provider: "andreani";
+  postalCode: string;
+  branches: StorefrontCarrierBranch[];
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -694,10 +779,18 @@ export interface StorefrontAnalyticsInput {
 
 export interface StorefrontCheckoutRequest {
   customer: StorefrontCustomerInput;
-  shippingAddress: StorefrontAddressInput;
+  shippingAddress?: StorefrontAddressInput;
   billingAddress?: StorefrontAddressInput;
   items: StorefrontCheckoutItemInput[];
   shippingQuoteSnapshot?: StorefrontShippingCheckoutSnapshot;
+  deliverySelection?: {
+    deliveryType?: StorefrontShippingDeliveryMode;
+    provider?: string;
+    carrierName?: string;
+    serviceName?: string;
+    selectedCarrierBranch?: StorefrontCarrierBranch;
+    selectedPickupLocation?: StorefrontPickupLocation;
+  };
   paymentMethodId?: string;
   notes?: string;
   idempotencyKey?: string;

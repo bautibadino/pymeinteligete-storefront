@@ -15,6 +15,7 @@ export const STOREFRONT_API_PATHS = {
   categories: `${STOREFRONT_API_PREFIX}/categories`,
   facebookCatalog: `${STOREFRONT_API_PREFIX}/catalog/facebook`,
   shippingQuote: `${STOREFRONT_API_PREFIX}/shipping/quote`,
+  shippingBranches: `${STOREFRONT_API_PREFIX}/shipping/branches`,
   paymentMethods: `${STOREFRONT_API_PREFIX}/payment-methods`,
   contact: `${STOREFRONT_API_PREFIX}/contact`,
   checkout: `${STOREFRONT_API_PREFIX}/checkout`,
