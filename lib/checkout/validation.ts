@@ -1,3 +1,8 @@
+import {
+  normalizeStoredShippingCheckoutSnapshot,
+  requiresHomeShippingAddress,
+} from "@/lib/shipping/checkout-shipping";
+
 export type CheckoutFieldName =
   | "customerName"
   | "customerEmail"
@@ -7,6 +12,7 @@ export type CheckoutFieldName =
   | "shippingCity"
   | "shippingProvince"
   | "shippingPostalCode"
+  | "shippingQuoteSnapshot"
   | "items"
   | "paymentToken"
   | "paymentMethodId"
@@ -55,9 +61,25 @@ function isAutoPaymentStrategy(formData: FormData): boolean {
   return readTrimmedString(formData, "paymentStrategy") === "auto";
 }
 
+export function readValidShippingQuoteSnapshot(formData: FormData) {
+  const rawSnapshot = readTrimmedString(formData, "shippingQuoteSnapshot");
+
+  if (!rawSnapshot) {
+    return null;
+  }
+
+  try {
+    return normalizeStoredShippingCheckoutSnapshot(JSON.parse(rawSnapshot) as unknown);
+  } catch {
+    return null;
+  }
+}
+
 export function buildFieldErrors(formData: FormData): CheckoutFieldErrors {
   const errors: CheckoutFieldErrors = {};
   const items = parseItems(formData);
+  const shippingQuoteSnapshot = readValidShippingQuoteSnapshot(formData);
+  const mustValidateHomeAddress = requiresHomeShippingAddress(shippingQuoteSnapshot);
 
   if (!readTrimmedString(formData, "customerName")) {
     errors.customerName = "Ingresá el nombre del cliente.";
@@ -71,23 +93,27 @@ export function buildFieldErrors(formData: FormData): CheckoutFieldErrors {
     errors.customerPhone = "Ingresá un teléfono o WhatsApp para coordinar la compra.";
   }
 
-  if (!readTrimmedString(formData, "shippingStreet")) {
+  if (!shippingQuoteSnapshot) {
+    errors.shippingQuoteSnapshot = "Seleccioná un envío válido desde el carrito.";
+  }
+
+  if (mustValidateHomeAddress && !readTrimmedString(formData, "shippingStreet")) {
     errors.shippingStreet = "Ingresá la calle de entrega.";
   }
 
-  if (!readTrimmedString(formData, "shippingNumber")) {
+  if (mustValidateHomeAddress && !readTrimmedString(formData, "shippingNumber")) {
     errors.shippingNumber = "Ingresá la numeración.";
   }
 
-  if (!readTrimmedString(formData, "shippingCity")) {
+  if (mustValidateHomeAddress && !readTrimmedString(formData, "shippingCity")) {
     errors.shippingCity = "Ingresá la ciudad.";
   }
 
-  if (!readTrimmedString(formData, "shippingProvince")) {
+  if (mustValidateHomeAddress && !readTrimmedString(formData, "shippingProvince")) {
     errors.shippingProvince = "Ingresá la provincia.";
   }
 
-  if (!readTrimmedString(formData, "shippingPostalCode")) {
+  if (mustValidateHomeAddress && !readTrimmedString(formData, "shippingPostalCode")) {
     errors.shippingPostalCode = "Ingresá el código postal.";
   }
 

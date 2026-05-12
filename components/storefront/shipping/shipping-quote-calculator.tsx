@@ -22,6 +22,7 @@ import type {
 
 type ShippingQuoteCalculatorProps = {
   quotePackage: StorefrontShippingQuotePackage;
+  productId?: string | undefined;
   className?: string | undefined;
 };
 
@@ -60,21 +61,37 @@ function ShippingQuoteOptionRow({
   option: StorefrontShippingQuoteOption;
   currency: string;
 }) {
+  const finalCost = option.finalShippingCost ?? option.priceWithTax;
+  const discountAmount = option.discountAmount ?? 0;
+  const benefitLabel = option.displayMessage ?? option.benefit?.label;
+  const hasBenefit = option.isFreeShipping || discountAmount > 0 || Boolean(option.benefit);
+
   return (
     <li className="grid gap-1 rounded-[14px] border border-border bg-background/70 px-3 py-2.5">
       <div className="flex items-start justify-between gap-3">
         <span className="text-sm font-semibold text-foreground">{option.serviceName}</span>
-        <strong className="text-sm font-black text-foreground">
-          {formatMoney(option.priceWithTax, currency)}
-        </strong>
+        <span className="grid justify-items-end gap-0.5">
+          {hasBenefit && option.priceWithTax > finalCost ? (
+            <span className="text-xs font-semibold text-muted-foreground line-through">
+              {formatMoney(option.priceWithTax, currency)}
+            </span>
+          ) : null}
+          <strong className="text-sm font-black text-foreground">
+            {finalCost === 0 ? "Gratis" : formatMoney(finalCost, currency)}
+          </strong>
+        </span>
       </div>
       <span className="text-xs text-muted-foreground">{option.carrierName}</span>
+      {benefitLabel ? (
+        <span className="text-xs font-semibold text-emerald-700">{benefitLabel}</span>
+      ) : null}
     </li>
   );
 }
 
 export function ShippingQuoteCalculator({
   quotePackage,
+  productId,
   className,
 }: ShippingQuoteCalculatorProps) {
   const [postalCode, setPostalCode] = useState("");
@@ -110,6 +127,10 @@ export function ShippingQuoteCalculator({
         const result = await postStorefrontShippingQuote({
           destinationPostalCode: normalizedPostalCode,
           packages: [quotePackage],
+          subtotal: quotePackage.declaredValue,
+          ...(productId
+            ? { items: [{ productId, lineTotal: quotePackage.declaredValue }] }
+            : {}),
         });
 
         setQuote(result);

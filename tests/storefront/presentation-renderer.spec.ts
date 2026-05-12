@@ -694,7 +694,7 @@ describe("presentation renderer logic", () => {
     });
   });
 
-  it("muestra envío gratis cuando el producto supera el umbral global del shop", () => {
+  it("no muestra envío gratis cuando sólo supera el umbral global del shop", () => {
     const products = [
       {
         productId: "prod-envio-threshold",
@@ -732,7 +732,9 @@ describe("presentation renderer logic", () => {
       }>;
     };
 
-    expect(module.products[0]?.badges?.map((badge) => badge.label)).toContain("Envío gratis");
+    expect(module.products[0]?.badges?.map((badge) => badge.label) ?? []).not.toContain(
+      "Envío gratis",
+    );
   });
 
   it("filtra productos sin slug estable para evitar /producto/undefined", () => {

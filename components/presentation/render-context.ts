@@ -556,19 +556,28 @@ function readCashDiscount(
 
 function hasFreeShipping(
   product: ProductRecord,
-  bootstrap: ProductPaymentContext,
+  _bootstrap: ProductPaymentContext,
   amount: number | undefined,
 ): boolean {
   if (readBoolean(product.freeShipping) === true) {
     return true;
   }
 
-  if (readBoolean(readDeliveryInfo(product)?.freeShipping) === true) {
+  const deliveryInfo = readDeliveryInfo(product);
+
+  if (readBoolean(deliveryInfo?.freeShipping) === true) {
     return true;
   }
 
-  const threshold = readNumber(bootstrap?.commerce?.shipping?.freeShippingThreshold);
-  return typeof threshold === "number" && threshold > 0 && typeof amount === "number" && amount >= threshold;
+  if (readBoolean(deliveryInfo?.isFreeShipping) === true) {
+    return true;
+  }
+
+  const benefit = readRecord(deliveryInfo?.benefit);
+  const benefitKind = readString(benefit?.kind);
+  const finalPrice = readNumber(benefit?.finalPriceWithTax);
+
+  return benefitKind === "free" || (typeof amount === "number" && finalPrice === 0);
 }
 
 function readDispatchType(product: ProductRecord): string | undefined {

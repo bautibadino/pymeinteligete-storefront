@@ -43,6 +43,43 @@ describe("shipping checkout snapshot", () => {
     ).toBeNull();
   });
 
+  it("normaliza snapshots extendidos con beneficio y retiro en sucursal de Andreani", () => {
+    const snapshot = {
+      ...VALID_SNAPSHOT,
+      deliveryType: "carrier_branch",
+      originalShippingCost: 15971.25,
+      finalShippingCost: 0,
+      discountAmount: 15971.25,
+      isFreeShipping: true,
+      displayMessage: "Retirá gratis en sucursal Andreani",
+      benefit: {
+        kind: "free",
+        amount: 15971.25,
+        originalPriceWithTax: 15971.25,
+        finalPriceWithTax: 0,
+        label: "Envío gratis a sucursal",
+        reason: "Regla activa",
+      },
+      selectedCarrierBranch: {
+        branchId: "AND-ROS-001",
+        name: "Andreani Rosario Centro",
+        address: "Córdoba 123",
+        city: "Rosario",
+        province: "Santa Fe",
+        postalCode: "2000",
+      },
+    } satisfies StorefrontShippingCheckoutSnapshot;
+
+    expect(normalizeStoredShippingCheckoutSnapshot(snapshot)).toEqual(snapshot);
+  });
+
+  it("mantiene compatibilidad con snapshots legacy que sólo traen priceWithTax", () => {
+    const normalized = normalizeStoredShippingCheckoutSnapshot(VALID_SNAPSHOT);
+
+    expect(normalized?.priceWithTax).toBe(14068);
+    expect(normalized?.finalShippingCost).toBeUndefined();
+  });
+
   it("detecta cotizaciones vencidas", () => {
     expect(
       isShippingCheckoutSnapshotExpired(
@@ -59,4 +96,3 @@ describe("shipping checkout snapshot", () => {
     ).toBe(true);
   });
 });
-
