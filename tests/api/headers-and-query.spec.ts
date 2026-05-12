@@ -6,6 +6,10 @@ import {
   buildStorefrontSearchParams,
 } from "@/lib/api/query";
 import {
+  buildStorefrontGetNextOptions,
+  getStorefrontFetchRevalidate,
+} from "@/lib/fetchers/cache";
+import {
   STOREFRONT_LEGACY_PREVIEW_HEADER,
   STOREFRONT_PREVIEW_COOKIE,
   STOREFRONT_PREVIEW_HEADER,
@@ -57,6 +61,42 @@ describe("buildStorefrontSearchParams", () => {
 
   it("devuelve firma base cuando no hay query", () => {
     expect(buildStorefrontQuerySignature()).toBe("base");
+  });
+});
+
+describe("storefront fetch cache", () => {
+  it("usa una revalidación por defecto cuando STORE_REVALIDATE_SECONDS no está configurado", () => {
+    const previousValue = process.env.STORE_REVALIDATE_SECONDS;
+    delete process.env.STORE_REVALIDATE_SECONDS;
+
+    try {
+      expect(getStorefrontFetchRevalidate()).toBe(300);
+      expect(buildStorefrontGetNextOptions("catalog", "acme.com", { pageSize: 24 })).toEqual({
+        revalidate: 300,
+        tags: ["catalog:acme.com", "catalog:acme.com:pageSize=24"],
+      });
+    } finally {
+      if (previousValue === undefined) {
+        delete process.env.STORE_REVALIDATE_SECONDS;
+      } else {
+        process.env.STORE_REVALIDATE_SECONDS = previousValue;
+      }
+    }
+  });
+
+  it("respeta STORE_REVALIDATE_SECONDS cuando está configurado", () => {
+    const previousValue = process.env.STORE_REVALIDATE_SECONDS;
+    process.env.STORE_REVALIDATE_SECONDS = "60";
+
+    try {
+      expect(getStorefrontFetchRevalidate()).toBe(60);
+    } finally {
+      if (previousValue === undefined) {
+        delete process.env.STORE_REVALIDATE_SECONDS;
+      } else {
+        process.env.STORE_REVALIDATE_SECONDS = previousValue;
+      }
+    }
   });
 });
 

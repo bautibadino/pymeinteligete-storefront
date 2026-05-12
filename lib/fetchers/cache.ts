@@ -3,6 +3,8 @@ import type { StorefrontQueryParams } from "@/lib/types/storefront";
 import { buildStorefrontQuerySignature } from "@/lib/api/query";
 import type { StorefrontNextOptions } from "@/lib/api/client";
 
+const DEFAULT_STOREFRONT_REVALIDATE_SECONDS = 300;
+
 function readOptionalPositiveInteger(name: string): number | undefined {
   const rawValue = process.env[name]?.trim();
 
@@ -23,7 +25,7 @@ export function getStorefrontFetchRevalidate(): number | false | undefined {
   const value = readOptionalPositiveInteger("STORE_REVALIDATE_SECONDS");
 
   if (value === undefined) {
-    return undefined;
+    return DEFAULT_STOREFRONT_REVALIDATE_SECONDS;
   }
 
   return value;

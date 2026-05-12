@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 
 import { installStorefrontAnalyticsBridge } from "@/lib/analytics/client";
+import type { StorefrontAnalyticsTrackCommand } from "@/lib/analytics/client";
 import { resolveStorefrontAnalyticsConfig } from "@/lib/analytics/config";
 import { resolveAnalyticsIdentity } from "@/lib/analytics/identity";
 import type { StorefrontBootstrap } from "@/lib/storefront-api";
@@ -58,6 +59,31 @@ function renderGoogleBootstrap(measurementId: string) {
   `;
 }
 
+export function buildPageViewAnalyticsCommand({
+  href,
+  path,
+  title,
+}: {
+  href: string;
+  path: string;
+  title: string;
+}): StorefrontAnalyticsTrackCommand {
+  return {
+    event: "PageView",
+    googleEvent: "page_view",
+    metaEvent: "PageView",
+    serverEvent: null,
+    metaPayload: {
+      page_path: path,
+    },
+    googlePayload: {
+      page_path: path,
+      page_location: href,
+      page_title: title,
+    },
+  };
+}
+
 export function StorefrontAnalyticsProvider({
   bootstrap,
   children,
@@ -87,19 +113,13 @@ export function StorefrontAnalyticsProvider({
 
     if (bridge && lastTrackedPageRef.current !== path) {
       lastTrackedPageRef.current = path;
-      bridge.track({
-        event: "PageView",
-        googleEvent: "page_view",
-        metaEvent: "PageView",
-        metaPayload: {
-          page_path: path,
-        },
-        googlePayload: {
-          page_path: path,
-          page_location: window.location.href,
-          page_title: document.title,
-        },
-      });
+      bridge.track(
+        buildPageViewAnalyticsCommand({
+          href: window.location.href,
+          path,
+          title: document.title,
+        }),
+      );
     }
   }, [config, host, pathname, searchParams]);
 

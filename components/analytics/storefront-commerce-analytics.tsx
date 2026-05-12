@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 
 import { trackStorefrontAnalyticsEvent } from "@/lib/analytics/client";
+import type { StorefrontAnalyticsTrackCommand } from "@/lib/analytics/client";
 import {
   buildSearchPayload,
   buildViewItemListPayload,
@@ -21,6 +22,53 @@ function buildProductSignature(products: StorefrontAnalyticsProduct[]) {
   return products.map((product) => product.id).join("|");
 }
 
+export function buildProductViewAnalyticsCommand(
+  product: StorefrontAnalyticsProduct,
+): StorefrontAnalyticsTrackCommand {
+  const payload = buildViewItemPayload({
+    eventId: `view_${product.id}`,
+    item: product,
+  });
+
+  return {
+    event: "ViewContent",
+    googleEvent: "view_item",
+    metaEvent: "ViewContent",
+    serverEvent: null,
+    metaPayload: payload,
+    googlePayload: payload,
+    options: {
+      eventId: payload.eventId,
+    },
+  };
+}
+
+export function buildSearchAnalyticsCommand({
+  resultsCount,
+  searchTerm,
+}: {
+  resultsCount?: number;
+  searchTerm: string;
+}): StorefrontAnalyticsTrackCommand {
+  const payload = buildSearchPayload({
+    eventId: `search_${searchTerm.toLowerCase().replace(/\s+/g, "_")}`,
+    searchTerm,
+    ...(resultsCount !== undefined ? { resultsCount } : {}),
+  });
+
+  return {
+    event: "Search",
+    googleEvent: "search",
+    metaEvent: "Search",
+    serverEvent: null,
+    metaPayload: payload,
+    googlePayload: payload,
+    options: {
+      eventId: payload.eventId,
+    },
+  };
+}
+
 export function ProductViewTracker({ product }: { product: StorefrontAnalyticsProduct | null }) {
   const trackedRef = useRef<string | null>(null);
 
@@ -30,21 +78,7 @@ export function ProductViewTracker({ product }: { product: StorefrontAnalyticsPr
     }
 
     trackedRef.current = product.id;
-    const payload = buildViewItemPayload({
-      eventId: `view_${product.id}`,
-      item: product,
-    });
-
-    trackStorefrontAnalyticsEvent({
-      event: "ViewContent",
-      googleEvent: "view_item",
-      metaEvent: "ViewContent",
-      metaPayload: payload,
-      googlePayload: payload,
-      options: {
-        eventId: payload.eventId,
-      },
-    });
+    trackStorefrontAnalyticsEvent(buildProductViewAnalyticsCommand(product));
   }, [product]);
 
   return null;
@@ -105,22 +139,12 @@ export function SearchTracker({
     }
 
     trackedRef.current = normalizedTerm;
-    const payload = buildSearchPayload({
-      eventId: `search_${normalizedTerm.toLowerCase().replace(/\s+/g, "_")}`,
-      searchTerm: normalizedTerm,
-      ...(resultsCount !== undefined ? { resultsCount } : {}),
-    });
-
-    trackStorefrontAnalyticsEvent({
-      event: "Search",
-      googleEvent: "search",
-      metaEvent: "Search",
-      metaPayload: payload,
-      googlePayload: payload,
-      options: {
-        eventId: payload.eventId,
-      },
-    });
+    trackStorefrontAnalyticsEvent(
+      buildSearchAnalyticsCommand({
+        searchTerm: normalizedTerm,
+        ...(resultsCount !== undefined ? { resultsCount } : {}),
+      }),
+    );
   }, [normalizedTerm, resultsCount]);
 
   return null;
