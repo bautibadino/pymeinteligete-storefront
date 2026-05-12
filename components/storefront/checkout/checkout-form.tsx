@@ -31,6 +31,7 @@ import { markTrackedEvent } from "@/lib/analytics/storage";
 import type { StorefrontCartItem } from "@/lib/cart/storefront-cart";
 import {
   getShippingBenefitLabel,
+  getShippingBenefitHintLabel,
   getShippingDeliveryMode,
   getShippingDeliveryModeLabel,
   getShippingFinalCost,
@@ -477,6 +478,7 @@ function ShippingSummary({
   const originalCost = getShippingOriginalCost(snapshot);
   const finalCost = getShippingFinalCost(snapshot);
   const benefitLabel = getShippingBenefitLabel(snapshot);
+  const benefitHintLabel = getShippingBenefitHintLabel(snapshot);
   const showBenefit = hasExplicitShippingBenefit(snapshot) && benefitLabel;
   const location =
     getShippingDeliveryMode(snapshot) === "carrier_branch"
@@ -507,6 +509,11 @@ function ShippingSummary({
           {snapshot.displayMessage || showBenefit ? (
             <p className="text-sm font-semibold text-emerald-700">
               {benefitLabel ?? snapshot.displayMessage}
+            </p>
+          ) : null}
+          {!showBenefit && benefitHintLabel ? (
+            <p className="text-sm font-semibold text-amber-700">
+              {benefitHintLabel}
             </p>
           ) : null}
         </div>
@@ -613,25 +620,27 @@ export function CheckoutForm({
   const hasPaymentOptions = paymentOptions.length > 0;
   const selectedPaymentMethod =
     paymentOptions.find((method) => method.methodId === selectedPaymentMethodId) ?? null;
-  const selectedDiscountAmount = calculateDiscountAmount(
-    checkoutValue,
-    selectedPaymentMethod?.discount ?? null,
-  );
-  const selectedDiscountedTotal = Math.max(0, checkoutValue - selectedDiscountAmount);
   const selectedShippingAmount =
     selectedShippingSnapshot && !isSelectedShippingExpired
       ? getShippingFinalCost(selectedShippingSnapshot)
       : 0;
   const hasValidSelectedShipping =
     Boolean(selectedShippingSnapshot) && !isSelectedShippingExpired;
-  const selectedDiscountedTotalWithShipping = selectedDiscountedTotal + selectedShippingAmount;
   const checkoutValueWithShipping = checkoutValue + selectedShippingAmount;
+  const selectedDiscountAmount = calculateDiscountAmount(
+    checkoutValueWithShipping,
+    selectedPaymentMethod?.discount ?? null,
+  );
+  const selectedDiscountedTotalWithShipping = Math.max(
+    0,
+    checkoutValueWithShipping - selectedDiscountAmount,
+  );
   const selectedInstallmentAmount =
     selectedPaymentMethod?.methodType === "automatic" &&
     installmentsCount &&
     installmentsCount > 0 &&
-    checkoutValueWithShipping > 0
-      ? Math.round(checkoutValueWithShipping / installmentsCount)
+    selectedDiscountedTotalWithShipping > 0
+      ? Math.round(selectedDiscountedTotalWithShipping / installmentsCount)
       : null;
   const shippingStorageScope = useMemo(
     (): StorefrontShippingStorageScope => ({
@@ -1277,7 +1286,7 @@ export function CheckoutForm({
                   <p className="text-sm leading-6 text-muted-foreground">
                     {selectedPaymentMethod.methodType === "automatic"
                       ? selectedInstallmentAmount && installmentsCount
-                        ? `${installmentsCount} cuotas de ${formatCurrency(selectedInstallmentAmount)} sin interés. Total estimado ${formatCurrency(checkoutValueWithShipping)}.`
+                        ? `${installmentsCount} cuotas de ${formatCurrency(selectedInstallmentAmount)} sin interés. Total estimado ${formatCurrency(selectedDiscountedTotalWithShipping)}.`
                         : "Pagás online con el total confirmado al momento de procesar el pago."
                       : selectedDiscountAmount > 0
                         ? `Con este medio ahorrás ${formatCurrency(selectedDiscountAmount)} sobre el total.`

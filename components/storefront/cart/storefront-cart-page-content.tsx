@@ -10,7 +10,15 @@ import { CartShippingSelector } from "@/components/storefront/cart/cart-shipping
 import { useStorefrontCart } from "@/components/storefront/cart/storefront-cart-provider";
 import { buildCheckoutHrefFromCartItems } from "@/lib/cart/storefront-cart";
 import { getShippingFinalCost } from "@/lib/shipping/checkout-shipping";
-import type { StorefrontShippingQuoteOption } from "@/lib/types/storefront";
+import type {
+  StorefrontPaymentMethod,
+  StorefrontPaymentMethods,
+  StorefrontShippingQuoteOption,
+} from "@/lib/types/storefront";
+
+type StorefrontCartPageContentProps = {
+  paymentMethods?: StorefrontPaymentMethods | null;
+};
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("es-AR", {
@@ -20,7 +28,39 @@ function formatCurrency(amount: number) {
   }).format(amount);
 }
 
-export function StorefrontCartPageContent() {
+function calculatePaymentDiscountAmount(
+  total: number,
+  discount: StorefrontPaymentMethod["discount"],
+): number {
+  if (!discount || total <= 0) {
+    return 0;
+  }
+
+  if (discount.type === "percentage") {
+    return Math.max(0, Math.round((total * discount.value) / 100));
+  }
+
+  return Math.max(0, Math.min(total, discount.value));
+}
+
+function getBestPaymentDiscount(
+  total: number,
+  paymentMethods?: StorefrontPaymentMethods | null,
+): { methodName: string; amount: number } | null {
+  const methods = paymentMethods?.paymentMethods ?? [];
+
+  return methods.reduce<{ methodName: string; amount: number } | null>((best, method) => {
+    const amount = calculatePaymentDiscountAmount(total, method.discount);
+
+    if (amount <= 0 || (best && best.amount >= amount)) {
+      return best;
+    }
+
+    return { methodName: method.displayName, amount };
+  }, null);
+}
+
+export function StorefrontCartPageContent({ paymentMethods = null }: StorefrontCartPageContentProps) {
   const {
     clearCart,
     items,
@@ -34,6 +74,7 @@ export function StorefrontCartPageContent() {
   const checkoutHref = buildCheckoutHrefFromCartItems(items);
   const shippingCost = selectedShippingOption ? getShippingFinalCost(selectedShippingOption) : 0;
   const estimatedTotal = subtotal + shippingCost;
+  const bestPaymentDiscount = getBestPaymentDiscount(estimatedTotal, paymentMethods);
 
   const handleSelectedShippingOptionChange = useCallback(
     (option: StorefrontShippingQuoteOption | null) => {
@@ -172,6 +213,12 @@ export function StorefrontCartPageContent() {
             <span className="font-semibold text-foreground">Total estimado</span>
             <strong className="text-lg text-foreground">{formatCurrency(estimatedTotal)}</strong>
           </div>
+          {bestPaymentDiscount ? (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold leading-5 text-amber-950">
+              Descuento por medio de pago al finalizar: hasta{" "}
+              {formatCurrency(bestPaymentDiscount.amount)} con {bestPaymentDiscount.methodName}.
+            </div>
+          ) : null}
         </div>
 
         {selectedShippingOption ? (

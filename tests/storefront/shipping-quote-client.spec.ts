@@ -110,6 +110,15 @@ describe("postStorefrontShippingQuote", () => {
             finalPriceWithTax: 0,
             label: "Envío gratis a sucursal",
           },
+          benefitHint: {
+            kind: "free_shipping_min_subtotal",
+            ruleId: "rule-free-branch",
+            ruleName: "Envío gratis a sucursal",
+            deliveryType: "carrier_branch",
+            minSubtotal: 150000,
+            remainingSubtotal: 30000,
+            label: "Te faltan $ 30.000 para envío gratis a sucursal",
+          },
           selectedCarrierBranch: {
             branchId: "AND-RIO-001",
             name: "Andreani Río Cuarto",

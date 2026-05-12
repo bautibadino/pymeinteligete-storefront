@@ -7,6 +7,12 @@ vi.mock("@/components/storefront/cart/storefront-cart-page-content", () => ({
     createElement("section", { "data-cart-page-content": "true" }, "cart-page-content"),
 }));
 
+vi.mock("@/app/(storefront)/_lib/storefront-shell-data", () => ({
+  loadCheckoutExperience: vi.fn(async () => ({
+    paymentMethods: null,
+  })),
+}));
+
 vi.mock("@/lib/seo", () => ({
   buildTenantMetadata: vi.fn((_snapshot, metadata) => metadata),
   resolveTenantSeoSnapshot: vi.fn(async () => ({

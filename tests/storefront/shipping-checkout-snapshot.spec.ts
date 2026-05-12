@@ -73,6 +73,28 @@ describe("shipping checkout snapshot", () => {
     expect(normalizeStoredShippingCheckoutSnapshot(snapshot)).toEqual(snapshot);
   });
 
+  it("normaliza snapshots con mínimo faltante para envío gratis", () => {
+    const snapshot = {
+      ...VALID_SNAPSHOT,
+      deliveryType: "carrier_branch",
+      originalShippingCost: 13238.84,
+      finalShippingCost: 13238.84,
+      discountAmount: 0,
+      isFreeShipping: false,
+      benefitHint: {
+        kind: "free_shipping_min_subtotal",
+        ruleId: "rule-free-branch",
+        ruleName: "Envío gratis a sucursal",
+        deliveryType: "carrier_branch",
+        minSubtotal: 150000,
+        remainingSubtotal: 35728,
+        label: "Te faltan $ 35.728 para envío gratis a sucursal",
+      },
+    } satisfies StorefrontShippingCheckoutSnapshot;
+
+    expect(normalizeStoredShippingCheckoutSnapshot(snapshot)).toEqual(snapshot);
+  });
+
   it("mantiene compatibilidad con snapshots legacy que sólo traen priceWithTax", () => {
     const normalized = normalizeStoredShippingCheckoutSnapshot(VALID_SNAPSHOT);
 
