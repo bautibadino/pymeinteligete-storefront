@@ -3,7 +3,14 @@ import type { MetadataRoute } from "next";
 import { buildCanonicalUrl } from "@/lib/seo/canonical";
 import type { TenantSeoSnapshot } from "@/lib/seo/types";
 
-const DISALLOWED_PATHS = ["/checkout", "/checkout/", "/checkout/confirmacion", "/api/"] as const;
+const DISALLOWED_PATHS = [
+  "/checkout",
+  "/checkout/",
+  "/checkout/confirmacion",
+  "/api/",
+  "/*?page=*",
+  "/*&page=*",
+] as const;
 
 export function buildTenantRobots(snapshot: TenantSeoSnapshot): MetadataRoute.Robots {
   if (!snapshot.indexable) {

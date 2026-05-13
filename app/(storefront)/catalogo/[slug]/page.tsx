@@ -27,6 +27,7 @@ export async function generateMetadata({
 }: CatalogCategoryPageProps): Promise<Metadata> {
   const [{ slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const { snapshot, resolution } = await resolveCategoryMetadata(slug, resolvedSearchParams);
+  const currentPage = resolution.query.page ?? 1;
   const title = resolution.selectedCategory
     ? `${resolution.selectedCategory.name} | ${snapshot.title}`
     : `${snapshot.title} | Catalogo`;
@@ -34,7 +35,7 @@ export async function generateMetadata({
   return buildTenantMetadata(snapshot, {
     pathname: resolution.pathname,
     title,
-    noIndex: !resolution.selectedCategory && !resolution.categoryLookupFailed,
+    noIndex: (!resolution.selectedCategory && !resolution.categoryLookupFailed) || currentPage > 1,
   });
 }
 

@@ -39,6 +39,7 @@ export async function generateMetadata({ searchParams }: CatalogPageProps): Prom
     resolveTenantSeoSnapshotByRequest(requestContext),
     resolveCatalogMetadataPath(resolvedSearchParams),
   ]);
+  const currentPage = resolution.query.page ?? 1;
   const title = resolution.selectedCategory
     ? `${resolution.selectedCategory.name} | ${snapshot.title}`
     : `${snapshot.title} | Catalogo`;
@@ -46,6 +47,7 @@ export async function generateMetadata({ searchParams }: CatalogPageProps): Prom
   return buildTenantMetadata(snapshot, {
     pathname: resolution.pathname,
     title,
+    noIndex: currentPage > 1,
   });
 }
 
