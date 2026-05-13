@@ -3,7 +3,7 @@ import type { StorefrontQueryParams } from "@/lib/types/storefront";
 import { buildStorefrontQuerySignature } from "@/lib/api/query";
 import type { StorefrontNextOptions } from "@/lib/api/client";
 
-const DEFAULT_STOREFRONT_REVALIDATE_SECONDS = 300;
+const DEFAULT_STOREFRONT_REVALIDATE_SECONDS = 86400;
 
 function readOptionalPositiveInteger(name: string): number | undefined {
   const rawValue = process.env[name]?.trim();

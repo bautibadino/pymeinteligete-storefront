@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Analytics } from "@vercel/analytics/next";
 
 import "./globals.css";
-import { getBootstrap } from "@/lib/storefront-api";
+import { loadBootstrapExperience } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { isPymeStoreMarketingHost } from "@/lib/marketing/pyme-store-host";
 import { getStorefrontRuntimeSnapshot } from "@/lib/runtime/storefront-request-context";
 import { applyPresentationTheme } from "@/lib/theme/apply-presentation-theme";
@@ -14,9 +14,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     const runtime = await getStorefrontRuntimeSnapshot();
 
     if (!isPymeStoreMarketingHost(runtime.context.host)) {
-      const bootstrap = await getBootstrap(runtime.context);
+      const { bootstrap } = await loadBootstrapExperience();
 
-      if (bootstrap.presentation?.theme) {
+      if (bootstrap?.presentation?.theme) {
         htmlStyle = applyPresentationTheme(bootstrap.presentation.theme);
       }
     }

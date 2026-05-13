@@ -70,9 +70,9 @@ describe("storefront fetch cache", () => {
     delete process.env.STORE_REVALIDATE_SECONDS;
 
     try {
-      expect(getStorefrontFetchRevalidate()).toBe(300);
+      expect(getStorefrontFetchRevalidate()).toBe(86400);
       expect(buildStorefrontGetNextOptions("catalog", "acme.com", { pageSize: 24 })).toEqual({
-        revalidate: 300,
+        revalidate: 86400,
         tags: ["catalog:acme.com", "catalog:acme.com:pageSize=24"],
       });
     } finally {

@@ -205,6 +205,10 @@ export async function requestStorefrontApi<TData, TBody = undefined>({
     requestInit.cache = cache;
   }
 
+  if (method === "GET" && !context.previewToken) {
+    resolvedHeaders.delete("x-request-id");
+  }
+
   if (next) {
     requestInit.next = next;
   }

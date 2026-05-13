@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { cache } from "react";
 
 import { STOREFRONT_TECHNICAL_NAME, STOREFRONT_VERSION } from "@/lib/config/storefront";
 import { getServerEnvSnapshot } from "@/lib/env/server-env";
@@ -28,7 +29,7 @@ export type StorefrontRuntimeSnapshot = {
   hasApiBaseUrl: boolean;
 };
 
-export async function getStorefrontRuntimeSnapshot(): Promise<StorefrontRuntimeSnapshot> {
+export const getStorefrontRuntimeSnapshot = cache(async function getStorefrontRuntimeSnapshot(): Promise<StorefrontRuntimeSnapshot> {
   const headerStore = await headers();
   const env = getServerEnvSnapshot();
   const previewToken =
@@ -54,4 +55,4 @@ export async function getStorefrontRuntimeSnapshot(): Promise<StorefrontRuntimeS
     context,
     hasApiBaseUrl: env.pymeApiBaseUrl !== null,
   };
-}
+});

@@ -51,4 +51,28 @@ describe("requestStorefrontApi error envelopes", () => {
       requestId: "req_checkout_failed",
     });
   });
+
+  it("no manda x-request-id en GET públicos para no fragmentar cache", async () => {
+    vi.stubEnv("PYME_API_BASE_URL", "https://erp.pyme.test");
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ success: true, data: { ok: true } }), {
+        status: 200,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await requestStorefrontApi({
+      path: "/api/storefront/v1/bootstrap",
+      method: "GET",
+      context: {
+        host: "bym.test",
+        requestId: "req_get",
+        storefrontVersion: "storefront@test",
+      },
+    });
+
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    expect(init?.headers).toBeInstanceOf(Headers);
+    expect((init?.headers as Headers).has("x-request-id")).toBe(false);
+  });
 });
