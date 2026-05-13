@@ -8,7 +8,7 @@ import type { StorefrontNextOptions } from "@/lib/api/client";
 import type { StorefrontBootstrap, StorefrontFetchInput } from "@/lib/types/storefront";
 
 import { requestStorefrontApi } from "@/lib/api/client";
-import { buildStorefrontGetNextOptions } from "@/lib/fetchers/cache";
+import { buildStorefrontGetNextOptions, readCachedStorefrontGet } from "@/lib/fetchers/cache";
 import { resolveStorefrontRequestContext } from "@/lib/fetchers/context";
 import type { StorefrontRequestContext } from "@/lib/runtime/storefront-request-context";
 
@@ -43,11 +43,17 @@ export async function getBootstrap(input: StorefrontFetchInput): Promise<Storefr
   const context = resolveStorefrontRequestContext(input);
   const previewHeaders = buildBootstrapPreviewHeaders(context);
 
-  return requestStorefrontApi<StorefrontBootstrap>({
-    path: STOREFRONT_API_PATHS.bootstrap,
-    context,
-    method: "GET",
-    ...(previewHeaders ? { headers: previewHeaders } : {}),
-    ...buildBootstrapFetchCacheOptions(context),
-  });
+  const fetchBootstrap = () => requestStorefrontApi<StorefrontBootstrap>({
+      path: STOREFRONT_API_PATHS.bootstrap,
+      context,
+      method: "GET",
+      ...(previewHeaders ? { headers: previewHeaders } : {}),
+      ...buildBootstrapFetchCacheOptions(context),
+    });
+
+  if (context.previewToken) {
+    return fetchBootstrap();
+  }
+
+  return readCachedStorefrontGet("bootstrap", context.host, undefined, fetchBootstrap);
 }

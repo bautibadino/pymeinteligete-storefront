@@ -2,6 +2,7 @@ import type { StorefrontQueryParams } from "@/lib/types/storefront";
 
 import { buildStorefrontQuerySignature } from "@/lib/api/query";
 import type { StorefrontNextOptions } from "@/lib/api/client";
+import { unstable_cache } from "next/cache";
 
 const DEFAULT_STOREFRONT_REVALIDATE_SECONDS = 86400;
 
@@ -57,4 +58,21 @@ export function buildStorefrontGetNextOptions(
     tags,
     ...(revalidate !== undefined ? { revalidate } : {}),
   };
+}
+
+export async function readCachedStorefrontGet<T>(
+  surface: string,
+  host: string,
+  query: StorefrontQueryParams | undefined,
+  fetcher: () => Promise<T>,
+): Promise<T> {
+  const revalidate = getStorefrontFetchRevalidate();
+  const tags = buildStorefrontGetCacheTags(surface, host, query);
+  const cacheKey = ["storefront-get", surface, host, buildStorefrontQuerySignature(query)];
+  const cachedFetcher = unstable_cache(fetcher, cacheKey, {
+    tags,
+    ...(revalidate !== undefined ? { revalidate } : {}),
+  });
+
+  return cachedFetcher();
 }

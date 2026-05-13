@@ -19,6 +19,7 @@ vi.mock("@/lib/fetchers/context", () => ({
 
 vi.mock("@/lib/fetchers/cache", () => ({
   buildStorefrontGetNextOptions: vi.fn(() => ({ revalidate: 60, tags: ["test"] })),
+  readCachedStorefrontGet: vi.fn((_: string, __: string, ___: unknown, fetcher: () => unknown) => fetcher()),
 }));
 
 const requestStorefrontApiMock = vi.mocked(requestStorefrontApi);

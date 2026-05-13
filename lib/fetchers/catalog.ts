@@ -2,7 +2,7 @@ import { STOREFRONT_API_PATHS } from "@/lib/contracts/storefront-v1";
 import type { StorefrontCatalog, StorefrontCatalogQuery, StorefrontFetchInput } from "@/lib/types/storefront";
 
 import { requestStorefrontApi } from "@/lib/api/client";
-import { buildStorefrontGetNextOptions } from "@/lib/fetchers/cache";
+import { buildStorefrontGetNextOptions, readCachedStorefrontGet } from "@/lib/fetchers/cache";
 import { resolveStorefrontRequestContext } from "@/lib/fetchers/context";
 
 export async function getCatalog(
@@ -17,6 +17,11 @@ export async function getCatalog(
     next: buildStorefrontGetNextOptions("catalog", context.host, query),
     ...(query ? { query } : {}),
   };
+  const fetchCatalog = () => requestStorefrontApi<StorefrontCatalog>(requestOptions);
 
-  return requestStorefrontApi<StorefrontCatalog>(requestOptions);
+  if (context.previewToken) {
+    return fetchCatalog();
+  }
+
+  return readCachedStorefrontGet("catalog", context.host, query, fetchCatalog);
 }
