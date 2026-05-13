@@ -4,6 +4,7 @@ import { ArrowRight, CreditCard, Search, Shield, Star, Truck, Clock } from "luci
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import type { HeroBadge, HeroModule } from "@/lib/modules";
 
 /**
@@ -97,7 +98,10 @@ export function HeroCommerce({ module }: { module: HeroModule }) {
             <div className="flex flex-wrap gap-3 pt-1">
               {primaryAction ? (
                 <Button asChild size="lg">
-                  <Link href={primaryAction.href as Route}>
+                  <Link
+                    href={primaryAction.href as Route}
+                    prefetch={shouldPrefetchStorefrontLink(primaryAction.href)}
+                  >
                     {primaryAction.label}
                     <ArrowRight className="size-4" aria-hidden="true" />
                   </Link>
@@ -110,7 +114,12 @@ export function HeroCommerce({ module }: { module: HeroModule }) {
                   size="lg"
                   className="border-white/40 bg-white/10 text-white hover:bg-white/20"
                 >
-                  <Link href={secondaryAction.href as Route}>{secondaryAction.label}</Link>
+                  <Link
+                    href={secondaryAction.href as Route}
+                    prefetch={shouldPrefetchStorefrontLink(secondaryAction.href)}
+                  >
+                    {secondaryAction.label}
+                  </Link>
                 </Button>
               ) : null}
             </div>

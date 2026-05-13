@@ -4,6 +4,7 @@ import type { Route } from "next";
 import { PackageSearch } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { themeTypographyStyles } from "@/lib/theme";
 import type { ProductGridModule } from "@/lib/modules/product-grid";
 import { resolveProductCardTemplate } from "@/lib/templates/product-card-registry";
@@ -34,7 +35,12 @@ export function ProductGridHeader({ module, mobileAccessory }: ProductGridHeader
 
       {showViewAllLink && viewAllHref ? (
         <Button asChild variant="outline" size="sm" className="self-start rounded-full px-4 md:self-auto">
-          <Link href={viewAllHref as Route}>{viewAllLabel || "Ver catálogo"}</Link>
+          <Link
+            href={viewAllHref as Route}
+            prefetch={shouldPrefetchStorefrontLink(viewAllHref)}
+          >
+            {viewAllLabel || "Ver catálogo"}
+          </Link>
         </Button>
       ) : null}
     </div>

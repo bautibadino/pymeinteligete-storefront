@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { ProductCardStockBadge } from "@/components/templates/product-card/product-card-stock-badge";
 import { themeTypographyStyles } from "@/lib/theme";
 import type {
@@ -36,7 +37,13 @@ export function ProductCardEditorial({
       className="group relative flex flex-col overflow-hidden"
       data-template="product-card-editorial"
     >
-      <Link href={href as Route} className="contents" tabIndex={-1} aria-hidden="true">
+      <Link
+        href={href as Route}
+        prefetch={shouldPrefetchStorefrontLink(href)}
+        className="contents"
+        tabIndex={-1}
+        aria-hidden="true"
+      >
         <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-panel-strong">
           {imageUrl ? (
             <img
@@ -74,7 +81,7 @@ export function ProductCardEditorial({
           </span>
         ) : null}
 
-        <Link href={href as Route}>
+        <Link href={href as Route} prefetch={shouldPrefetchStorefrontLink(href)}>
           <h3
             className={themeTypographyStyles.cardTitle(
               "text-base leading-snug text-foreground transition-colors hover:text-primary",

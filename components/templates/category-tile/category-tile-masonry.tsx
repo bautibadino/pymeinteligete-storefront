@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { Layers } from "lucide-react";
 
 import type { CategoryTileModule } from "@/lib/modules/category-tile";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 
 /**
  * Category Tile — Masonry.
@@ -84,6 +85,7 @@ function TileCard({
   return (
     <Link
       href={tile.href as Route}
+      prefetch={shouldPrefetchStorefrontLink(tile.href)}
       aria-label={tile.label}
       className={[
         "group relative block w-full overflow-hidden rounded-xl bg-panel-strong shadow-tenant",

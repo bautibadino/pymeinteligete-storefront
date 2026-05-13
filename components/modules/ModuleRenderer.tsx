@@ -10,6 +10,7 @@ import type {
   StorefrontModule,
   TrustBarModule,
 } from "@/lib/modules";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import type { StorefrontCatalogProduct, StorefrontCategory } from "@/lib/storefront-api";
 import { buildCategoryCatalogHref } from "@/components/presentation/render-context";
 import { resolveHeroTemplate } from "@/lib/templates/registry";
@@ -35,7 +36,11 @@ function renderAction(action: { label: string; href: string } | undefined, class
   }
 
   return (
-    <Link className={className} href={action.href as Route}>
+    <Link
+      className={className}
+      href={action.href as Route}
+      prefetch={shouldPrefetchStorefrontLink(action.href)}
+    >
       {action.label}
     </Link>
   );
@@ -63,7 +68,9 @@ function ProductCard({ product }: { product: StorefrontCatalogProduct }) {
         <h3>{product.name ?? "Producto sin nombre"}</h3>
         <div className="sf-product-footer">
           <strong>{formatPrice(product)}</strong>
-          <Link href={slug as Route}>Ver</Link>
+          <Link href={slug as Route} prefetch={shouldPrefetchStorefrontLink(slug)}>
+            Ver
+          </Link>
         </div>
       </div>
     </article>
@@ -107,7 +114,11 @@ function CategoryLink({ category }: { category: StorefrontCategory }) {
   const href = buildCategoryCatalogHref(category);
 
   return (
-    <Link className="sf-category-tile" href={href as Route}>
+    <Link
+      className="sf-category-tile"
+      href={href as Route}
+      prefetch={shouldPrefetchStorefrontLink(href)}
+    >
       {category.imageUrl ? <img src={category.imageUrl} alt="" /> : <span aria-hidden="true" />}
       <strong>{category.name ?? category.slug ?? "Categoría"}</strong>
       {category.description ? <p>{category.description}</p> : null}

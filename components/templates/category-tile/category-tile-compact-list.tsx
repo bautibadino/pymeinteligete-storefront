@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ChevronRight, Layers } from "lucide-react";
 
 import type { CategoryTileModule } from "@/lib/modules/category-tile";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 
 /**
  * Category Tile — Lista compacta.
@@ -45,6 +46,7 @@ export function CategoryTileCompactList({ module }: { module: CategoryTileModule
           <li key={tile.href}>
             <Link
               href={tile.href as Route}
+              prefetch={shouldPrefetchStorefrontLink(tile.href)}
               className="group flex items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-panel-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary first:rounded-t-xl last:rounded-b-xl"
             >
               <div

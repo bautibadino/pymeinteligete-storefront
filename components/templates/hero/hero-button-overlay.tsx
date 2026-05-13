@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { cn } from "@/lib/utils/cn";
 import type { HeroModule } from "@/lib/modules";
 
@@ -43,7 +44,10 @@ export function HeroButtonOverlay({ module }: { module: HeroModule }) {
       <div className={cn("absolute inset-x-0 bottom-0 flex px-6 pb-6 pt-16 md:px-10 md:pb-10", justifyButton)}>
         {module.primaryAction ? (
           <Button asChild size="lg" className="shadow-2xl">
-            <Link href={module.primaryAction.href as Route}>
+            <Link
+              href={module.primaryAction.href as Route}
+              prefetch={shouldPrefetchStorefrontLink(module.primaryAction.href)}
+            >
               {module.primaryAction.label}
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>

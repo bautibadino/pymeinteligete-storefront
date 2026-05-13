@@ -22,6 +22,7 @@ import {
   resolveTenantLogoUrl,
   type FetchIssue,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import type { StorefrontBootstrap, StorefrontCategory, StorefrontNavLink } from "@/lib/storefront-api";
 import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
 
@@ -144,6 +145,7 @@ export function StorefrontShell({ bootstrap, categories = [], host, children, is
               key={item.href}
               className="whitespace-nowrap transition-colors hover:text-foreground"
               href={item.href as Route}
+              prefetch={shouldPrefetchStorefrontLink(item.href)}
               {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             >
               {item.label}
@@ -193,6 +195,7 @@ export function StorefrontShell({ bootstrap, categories = [], host, children, is
                       <Link
                         className="hover:text-foreground"
                         href={link.href as Route}
+                        prefetch={shouldPrefetchStorefrontLink(link.href)}
                         {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                       >
                         {link.label}

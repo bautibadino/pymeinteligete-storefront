@@ -360,7 +360,7 @@ export async function loadCheckoutExperience(): Promise<CheckoutExperience> {
 
 export async function loadHomeExperience(): Promise<HomeExperience> {
   const [catalogExperience, checkoutExperience] = await Promise.all([
-    loadCatalogExperience(),
+    loadCatalogExperience({ pageSize: 8 }),
     loadCheckoutExperience(),
   ]);
 

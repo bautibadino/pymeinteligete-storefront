@@ -7,6 +7,7 @@ import type { Route } from "next";
 import { Menu, Search, X } from "lucide-react";
 
 import { HeaderCartButton } from "@/components/storefront/cart/header-cart-button";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { cn } from "@/lib/utils/cn";
 import type { StorefrontCategory, StorefrontNavLink } from "@/lib/storefront-api";
 
@@ -161,6 +162,7 @@ export function BymHeader({
         <div className="flex items-center justify-end gap-2" data-bym-mobile-actions="true">
           <Link
             href="/catalogo"
+            prefetch={shouldPrefetchStorefrontLink("/catalogo")}
             className="hidden min-h-10 items-center border border-white/25 px-4 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-white hover:text-black sm:inline-flex"
           >
             Comprar

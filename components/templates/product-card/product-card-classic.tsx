@@ -5,6 +5,7 @@ import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button
 import { resolveCartItemPrice } from "@/lib/cart/storefront-cart";
 import { ProductCardMediaFrame } from "@/components/templates/product-card/product-card-media-frame";
 import { Button } from "@/components/ui/button";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { themeTypographyStyles } from "@/lib/theme";
 import type {
   ProductCardData,
@@ -55,7 +56,13 @@ export function ProductCardClassic({
       className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-white shadow-tenant transition-shadow hover:shadow-md"
       data-template="product-card-classic"
     >
-      <Link href={href as Route} className="contents" tabIndex={-1} aria-hidden="true">
+      <Link
+        href={href as Route}
+        prefetch={shouldPrefetchStorefrontLink(href)}
+        className="contents"
+        tabIndex={-1}
+        aria-hidden="true"
+      >
         <ProductCardMediaFrame
           imageUrl={imageUrl}
           alt={name}
@@ -81,7 +88,7 @@ export function ProductCardClassic({
           </span>
         ) : null}
 
-        <Link href={href as Route} className="flex-1">
+        <Link href={href as Route} prefetch={shouldPrefetchStorefrontLink(href)} className="flex-1">
           <h3
             className={themeTypographyStyles.cardTitle(
               "line-clamp-2 text-sm leading-snug text-foreground transition-colors hover:text-primary",
@@ -146,7 +153,9 @@ export function ProductCardClassic({
           />
         ) : (
           <Button asChild size="sm" variant="outline" className="mt-auto w-full">
-            <Link href={href as Route}>Ver producto</Link>
+            <Link href={href as Route} prefetch={shouldPrefetchStorefrontLink(href)}>
+              Ver producto
+            </Link>
           </Button>
         )}
       </div>

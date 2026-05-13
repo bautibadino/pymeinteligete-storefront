@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ArrowRight } from "lucide-react";
 
 import { ProductCardMediaFrame } from "@/components/templates/product-card/product-card-media-frame";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { themeTypographyStyles } from "@/lib/theme";
 import type {
   ProductCardData,
@@ -40,7 +41,13 @@ export function ProductCardCompact({
       className="group relative flex flex-col overflow-hidden rounded-md border border-border bg-white transition-shadow hover:shadow-sm"
       data-template="product-card-compact"
     >
-      <Link href={href as Route} className="contents" tabIndex={-1} aria-hidden="true">
+      <Link
+        href={href as Route}
+        prefetch={shouldPrefetchStorefrontLink(href)}
+        className="contents"
+        tabIndex={-1}
+        aria-hidden="true"
+      >
         <ProductCardMediaFrame
           imageUrl={imageUrl}
           alt={name}
@@ -80,7 +87,7 @@ export function ProductCardCompact({
           </span>
         ) : null}
 
-        <Link href={href as Route}>
+        <Link href={href as Route} prefetch={shouldPrefetchStorefrontLink(href)}>
           <h3
             className={themeTypographyStyles.cardTitle(
               "line-clamp-2 text-xs leading-snug text-foreground transition-colors hover:text-primary",
@@ -95,6 +102,7 @@ export function ProductCardCompact({
 
           <Link
             href={href as Route}
+            prefetch={shouldPrefetchStorefrontLink(href)}
             aria-label={`Ver ${name}`}
             className="rounded-full bg-primary p-1 text-primary-foreground transition-opacity hover:opacity-80 disabled:pointer-events-none disabled:opacity-40"
           >

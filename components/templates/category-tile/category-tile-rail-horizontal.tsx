@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { Layers } from "lucide-react";
 
 import type { CategoryTileModule } from "@/lib/modules/category-tile";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 
 /**
  * Category Tile — Rail horizontal.
@@ -46,6 +47,7 @@ export function CategoryTileRailHorizontal({ module }: { module: CategoryTileMod
             <li key={tile.href} className="flex-shrink-0">
               <Link
                 href={tile.href as Route}
+                prefetch={shouldPrefetchStorefrontLink(tile.href)}
                 className="group flex flex-col items-center gap-2 focus-visible:outline-none"
               >
                 <div className="relative size-20 overflow-hidden rounded-full border-2 border-border bg-panel-strong shadow-tenant transition-transform duration-200 group-hover:scale-105 group-focus-visible:ring-2 group-focus-visible:ring-primary md:size-24">

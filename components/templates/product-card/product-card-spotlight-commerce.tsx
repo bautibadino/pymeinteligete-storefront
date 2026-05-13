@@ -12,6 +12,7 @@ import { ProductCardMediaFrame } from "@/components/templates/product-card/produ
 import { ProductCardStockBadge } from "@/components/templates/product-card/product-card-stock-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { themeTypographyStyles } from "@/lib/theme";
 import { cn } from "@/lib/utils/cn";
 import type {
@@ -77,7 +78,13 @@ export function ProductCardSpotlightCommerce({
       data-template="product-card-spotlight-commerce"
     >
       <div className="relative border-b border-border/50 bg-[linear-gradient(180deg,rgba(248,250,252,0.94),rgba(255,255,255,0.98))] sm:border-b-0 sm:border-r">
-        <Link href={href as Route} className="contents" tabIndex={-1} aria-hidden="true">
+        <Link
+          href={href as Route}
+          prefetch={shouldPrefetchStorefrontLink(href)}
+          className="contents"
+          tabIndex={-1}
+          aria-hidden="true"
+        >
           <ProductCardMediaFrame
             imageUrl={imageUrl}
             alt={name}
@@ -123,7 +130,7 @@ export function ProductCardSpotlightCommerce({
             </span>
           ) : null}
 
-          <Link href={href as Route}>
+          <Link href={href as Route} prefetch={shouldPrefetchStorefrontLink(href)}>
             <h3
               className={themeTypographyStyles.cardTitle(
                 "line-clamp-2 text-base leading-tight text-foreground transition-colors hover:text-primary sm:text-[1.05rem]",
@@ -170,6 +177,7 @@ export function ProductCardSpotlightCommerce({
             <p className="text-[10px] uppercase tracking-[0.18em] text-muted">Ficha</p>
             <Link
               href={href as Route}
+              prefetch={shouldPrefetchStorefrontLink(href)}
               className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-foreground transition-colors hover:text-primary"
             >
               Ver detalle
@@ -205,7 +213,9 @@ export function ProductCardSpotlightCommerce({
               </AddToCartButton>
             ) : (
               <Button asChild size="sm" variant="outline" className="rounded-full px-4">
-                <Link href={href as Route}>Ver</Link>
+                <Link href={href as Route} prefetch={shouldPrefetchStorefrontLink(href)}>
+                  Ver
+                </Link>
               </Button>
             )}
 
@@ -215,7 +225,11 @@ export function ProductCardSpotlightCommerce({
               variant="outline"
               className="size-9 rounded-full border border-border/70 bg-white/90"
             >
-              <Link href={href as Route} aria-label={`Ver ${name}`}>
+              <Link
+                href={href as Route}
+                prefetch={shouldPrefetchStorefrontLink(href)}
+                aria-label={`Ver ${name}`}
+              >
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </Button>

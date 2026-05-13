@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { Layers } from "lucide-react";
 
 import type { CategoryTileModule } from "@/lib/modules/category-tile";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 
 /**
  * Category Tile — Grid de tarjetas.
@@ -45,6 +46,7 @@ export function CategoryTileGridCards({ module }: { module: CategoryTileModule }
           <li key={tile.href}>
             <Link
               href={tile.href as Route}
+              prefetch={shouldPrefetchStorefrontLink(tile.href)}
               className="group relative block aspect-square overflow-hidden rounded-xl bg-panel-strong shadow-tenant transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               {tile.imageUrl ? (

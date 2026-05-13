@@ -13,6 +13,7 @@ import {
 import { getStorefrontInstallmentsCount } from "@/lib/commerce/installments";
 import { getStorefrontInstallmentsLabel } from "@/lib/commerce/installments";
 import { normalizeProductGridContent, type ProductGridModule } from "@/lib/modules/product-grid";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { resolveProductGridTemplate } from "@/lib/templates/registry";
 import { resolveProductGridTemplateId } from "@/lib/templates/product-grid-catalog";
 import type {
@@ -292,12 +293,14 @@ export function BymHomePage({ bootstrap, categories, products }: BymHomePageProp
             <div className="flex flex-wrap gap-3 lg:justify-end">
               <Link
                 href={hero.primaryCta.href as Route}
+                prefetch={shouldPrefetchStorefrontLink(hero.primaryCta.href)}
                 className="inline-flex min-h-12 items-center bg-white px-5 text-xs font-semibold uppercase tracking-[0.16em] text-black transition hover:bg-[#f4c542]"
               >
                 {hero.primaryCta.label}
               </Link>
               <Link
                 href={hero.secondaryCta.href as Route}
+                prefetch={shouldPrefetchStorefrontLink(hero.secondaryCta.href)}
                 className="inline-flex min-h-12 items-center border border-white/40 px-5 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:bg-white hover:text-black"
               >
                 {hero.secondaryCta.label}

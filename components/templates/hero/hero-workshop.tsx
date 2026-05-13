@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { themeTypographyStyles } from "@/lib/theme";
 import type { HeroModule } from "@/lib/modules";
 
@@ -72,7 +73,10 @@ export function HeroWorkshop({ module }: { module: HeroModule }) {
             <div className="flex flex-wrap gap-3 pt-2">
               {primaryAction ? (
                 <Button asChild size="lg">
-                  <Link href={primaryAction.href as Route}>
+                  <Link
+                    href={primaryAction.href as Route}
+                    prefetch={shouldPrefetchStorefrontLink(primaryAction.href)}
+                  >
                     {primaryAction.label}
                     <ArrowRight className="size-4" aria-hidden="true" />
                   </Link>
@@ -85,7 +89,12 @@ export function HeroWorkshop({ module }: { module: HeroModule }) {
                   size="lg"
                   className="border-white/40 bg-white/10 text-white hover:bg-white/20"
                 >
-                  <Link href={secondaryAction.href as Route}>{secondaryAction.label}</Link>
+                  <Link
+                    href={secondaryAction.href as Route}
+                    prefetch={shouldPrefetchStorefrontLink(secondaryAction.href)}
+                  >
+                    {secondaryAction.label}
+                  </Link>
                 </Button>
               ) : null}
             </div>
