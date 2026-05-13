@@ -51,48 +51,6 @@ function parsePositiveInteger(value: string | undefined): number | undefined {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 }
 
-function parseNumber(value: string | undefined): number | undefined {
-  if (!value) {
-    return undefined;
-  }
-
-  const parsed = Number(value);
-
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function parseBoolean(value: string | undefined): boolean | undefined {
-  const normalized = normalizeToken(value);
-
-  if (!normalized) {
-    return undefined;
-  }
-
-  if (["1", "true", "yes", "si", "on"].includes(normalized)) {
-    return true;
-  }
-
-  if (["0", "false", "no", "off"].includes(normalized)) {
-    return false;
-  }
-
-  return undefined;
-}
-
-function parseImmediateAvailability(value: string | undefined): boolean | undefined {
-  const normalized = normalizeToken(value);
-
-  if (!normalized) {
-    return undefined;
-  }
-
-  if (["immediate", "inmediata", "inmediato", "onlyimmediate"].includes(normalized)) {
-    return true;
-  }
-
-  return parseBoolean(normalized);
-}
-
 function isSortField(value: string | undefined): value is NonNullable<StorefrontCatalogQuery["sortBy"]> {
   return Boolean(value && VALID_SORT_FIELDS.includes(value as (typeof VALID_SORT_FIELDS)[number]));
 }
@@ -184,15 +142,12 @@ export function parseCatalogSearchParams(
     categories.find((category) => matchesCategory(category, rawCategory)) ??
     null;
   const { sortBy, sortOrder } = resolveSort(rawSortBy, rawSortOrder, rawSort);
-  const onlyImmediate = parseBoolean(rawOnlyImmediate) ?? parseImmediateAvailability(rawAvailability);
   const page = parsePositiveInteger(rawPage);
   const pageSize = parsePositiveInteger(rawPageSize);
   const search = rawSearch?.trim() || undefined;
   const categoryId = selectedCategory?.categoryId ?? (rawCategoryId?.trim() || undefined);
   const brand = rawBrand?.trim() || undefined;
   const family = rawFamily?.trim() || undefined;
-  const minPrice = parseNumber(rawMinPrice);
-  const maxPrice = parseNumber(rawMaxPrice);
   const query: StorefrontCatalogQuery = {};
 
   if (page !== undefined) query.page = page;
@@ -203,9 +158,14 @@ export function parseCatalogSearchParams(
   if (categoryId) query.categoryId = categoryId;
   if (brand) query.brand = brand;
   if (family) query.family = family;
-  if (minPrice !== undefined) query.minPrice = minPrice;
-  if (maxPrice !== undefined) query.maxPrice = maxPrice;
-  if (onlyImmediate !== undefined) query.onlyImmediate = onlyImmediate;
+
+  // Corte operativo por incidente de costos:
+  // los filtros de precio/disponibilidad generan demasiada cardinalidad de SSR
+  // y dejan de formar parte del query server-side del catálogo público.
+  void rawOnlyImmediate;
+  void rawAvailability;
+  void rawMinPrice;
+  void rawMaxPrice;
 
   return {
     query,

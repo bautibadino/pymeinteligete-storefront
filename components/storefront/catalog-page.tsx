@@ -56,8 +56,8 @@ const DEFAULT_PUBLIC_FILTERS = {
   search: true,
   brand: true,
   category: true,
-  availability: true,
-  priceRange: true,
+  availability: false,
+  priceRange: false,
 } as const;
 
 function formatPrice(amount: number): string {

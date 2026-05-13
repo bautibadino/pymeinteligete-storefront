@@ -31,6 +31,8 @@ describe("catalog routing", () => {
         categoryId: "cat-neu",
         brand: "Pirelli",
         onlyImmediate: "true",
+        minPrice: "100000",
+        maxPrice: "200000",
       },
       CATEGORIES,
     );
@@ -43,7 +45,6 @@ describe("catalog routing", () => {
       sortOrder: "desc",
       categoryId: "cat-neu",
       brand: "Pirelli",
-      onlyImmediate: true,
     });
     expect(result.selectedCategory).toMatchObject({
       categoryId: "cat-neu",
@@ -59,6 +60,7 @@ describe("catalog routing", () => {
         sort: "priceAsc",
         category: "neumaticos",
         availability: "inmediata",
+        maxPrice: "198638",
       },
       CATEGORIES,
     );
@@ -68,7 +70,6 @@ describe("catalog routing", () => {
       sortBy: "price",
       sortOrder: "asc",
       categoryId: "cat-neu",
-      onlyImmediate: true,
     });
     expect(result.selectedCategory?.categoryId).toBe("cat-neu");
     expect(result.pathname).toBe("/catalogo/neumaticos");
@@ -94,6 +95,23 @@ describe("catalog routing", () => {
       slug: "neumaticos",
     });
     expect(result.pathname).toBe("/catalogo/neumaticos");
+  });
+
+  it("ignora filtros públicos de precio y disponibilidad para evitar cardinalidad SSR", () => {
+    const result = parseCatalogSearchParams(
+      {
+        categoryId: "cat-neu",
+        minPrice: "150000",
+        maxPrice: "198638",
+        onlyImmediate: "true",
+        availability: "inmediata",
+      },
+      CATEGORIES,
+    );
+
+    expect(result.query).toEqual({
+      categoryId: "cat-neu",
+    });
   });
 
   it("construye href indexable por slug cuando la categoría lo permite", () => {
