@@ -10,6 +10,18 @@ const DISALLOWED_PATHS = [
   "/api/",
   "/*?page=*",
   "/*&page=*",
+  "/*?search=*",
+  "/*&search=*",
+  "/*?brand=*",
+  "/*&brand=*",
+  "/*?family=*",
+  "/*&family=*",
+  "/*?sort=*",
+  "/*&sort=*",
+  "/*?sortBy=*",
+  "/*&sortBy=*",
+  "/*?sortOrder=*",
+  "/*&sortOrder=*",
 ] as const;
 
 export function buildTenantRobots(snapshot: TenantSeoSnapshot): MetadataRoute.Robots {

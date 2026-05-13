@@ -10,6 +10,19 @@ type CatalogPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+function shouldIndexCatalogQuery(
+  query: ReturnType<typeof parseCatalogSearchParams>["query"],
+): boolean {
+  return (
+    (query.page ?? 1) <= 1 &&
+    !query.search &&
+    !query.brand &&
+    !query.family &&
+    !query.sortBy &&
+    !query.sortOrder
+  );
+}
+
 async function resolveCatalogMetadataPath(
   searchParams: Record<string, string | string[] | undefined>,
 ): Promise<ReturnType<typeof parseCatalogSearchParams>> {
@@ -39,7 +52,6 @@ export async function generateMetadata({ searchParams }: CatalogPageProps): Prom
     resolveTenantSeoSnapshotByRequest(requestContext),
     resolveCatalogMetadataPath(resolvedSearchParams),
   ]);
-  const currentPage = resolution.query.page ?? 1;
   const title = resolution.selectedCategory
     ? `${resolution.selectedCategory.name} | ${snapshot.title}`
     : `${snapshot.title} | Catalogo`;
@@ -47,7 +59,7 @@ export async function generateMetadata({ searchParams }: CatalogPageProps): Prom
   return buildTenantMetadata(snapshot, {
     pathname: resolution.pathname,
     title,
-    noIndex: currentPage > 1,
+    noIndex: !shouldIndexCatalogQuery(resolution.query),
   });
 }
 

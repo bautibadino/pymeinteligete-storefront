@@ -10,6 +10,19 @@ type CatalogCategoryPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+function shouldIndexCatalogQuery(
+  query: Awaited<ReturnType<typeof resolveCatalogRoute>>["query"],
+): boolean {
+  return (
+    (query.page ?? 1) <= 1 &&
+    !query.search &&
+    !query.brand &&
+    !query.family &&
+    !query.sortBy &&
+    !query.sortOrder
+  );
+}
+
 async function resolveCategoryMetadata(
   slug: string,
   searchParams: Record<string, string | string[] | undefined>,
@@ -27,7 +40,6 @@ export async function generateMetadata({
 }: CatalogCategoryPageProps): Promise<Metadata> {
   const [{ slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const { snapshot, resolution } = await resolveCategoryMetadata(slug, resolvedSearchParams);
-  const currentPage = resolution.query.page ?? 1;
   const title = resolution.selectedCategory
     ? `${resolution.selectedCategory.name} | ${snapshot.title}`
     : `${snapshot.title} | Catalogo`;
@@ -35,7 +47,9 @@ export async function generateMetadata({
   return buildTenantMetadata(snapshot, {
     pathname: resolution.pathname,
     title,
-    noIndex: (!resolution.selectedCategory && !resolution.categoryLookupFailed) || currentPage > 1,
+    noIndex:
+      (!resolution.selectedCategory && !resolution.categoryLookupFailed) ||
+      !shouldIndexCatalogQuery(resolution.query),
   });
 }
 
