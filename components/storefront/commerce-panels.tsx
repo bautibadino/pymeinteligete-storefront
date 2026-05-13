@@ -14,6 +14,7 @@ import {
 } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { mapCatalogProductToCardData } from "@/components/presentation/render-context";
 import { buildShippingQuotePackageFromStorefrontProduct } from "@/lib/shipping/product-package";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import type {
   StorefrontBootstrap,
   StorefrontPaymentMethods,
@@ -47,7 +48,7 @@ export function HomeHero({ bootstrap, host }: HomeHeroProps) {
         <h2>{displayName}</h2>
         <p>{description}</p>
         <div className="hero-actions">
-          <Link className="primary-action" href="/catalogo">
+          <Link className="primary-action" href="/catalogo" prefetch={shouldPrefetchStorefrontLink("/catalogo")}>
             Explorar catálogo
           </Link>
           <Link className="secondary-action" href="/checkout">
@@ -228,7 +229,11 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
           Inicio
         </Link>
         <span aria-hidden="true">/</span>
-        <Link className="font-semibold text-foreground hover:underline" href="/catalogo">
+        <Link
+          className="font-semibold text-foreground hover:underline"
+          href="/catalogo"
+          prefetch={shouldPrefetchStorefrontLink("/catalogo")}
+        >
           Catálogo
         </Link>
         <span aria-hidden="true">/</span>
@@ -322,13 +327,19 @@ export function ProductDetailPanel({ product }: ProductDetailPanelProps) {
 
             <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
               <Button asChild size="lg" className="h-14 rounded-lg text-base font-black shadow-tenant" variant={canPurchase ? "default" : "secondary"}>
-                <Link href={(canPurchase ? checkoutHref : "/catalogo") as Route} aria-disabled={!canPurchase}>
+                <Link
+                  href={(canPurchase ? checkoutHref : "/catalogo") as Route}
+                  prefetch={shouldPrefetchStorefrontLink(canPurchase ? checkoutHref : "/catalogo")}
+                  aria-disabled={!canPurchase}
+                >
                   <ShoppingCart className="size-5" aria-hidden="true" />
                   {canPurchase ? "Comprar ahora" : "Ver otros productos"}
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="h-14 rounded-lg font-black">
-                <Link href="/catalogo">Seguir comprando</Link>
+                <Link href="/catalogo" prefetch={shouldPrefetchStorefrontLink("/catalogo")}>
+                  Seguir comprando
+                </Link>
               </Button>
             </div>
 

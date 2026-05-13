@@ -17,6 +17,7 @@ import { resolveCartItemPrice } from "@/lib/cart/storefront-cart";
 import { buildShippingQuotePackageFromProductDetailData } from "@/lib/shipping/product-package";
 import { ProductCardCompact } from "@/components/templates/product-card/product-card-compact";
 import { Badge } from "@/components/ui/badge";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { cn } from "@/lib/utils/cn";
 import type {
   ProductDetailBadge,
@@ -403,6 +404,7 @@ export function ProductDetailBreadcrumbs({
         <li>
           <Link
             href={"/catalogo" as Route}
+            prefetch={shouldPrefetchStorefrontLink("/catalogo")}
             className="transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background xl:hover:text-white xl:focus-visible:ring-white/70 xl:focus-visible:ring-offset-foreground"
           >
             Catálogo

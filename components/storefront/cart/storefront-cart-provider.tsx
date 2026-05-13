@@ -19,6 +19,7 @@ import {
   type StorefrontCartItem,
   type StorefrontCartUiMode,
 } from "@/lib/cart/storefront-cart";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { getShippingFinalCost } from "@/lib/shipping/checkout-shipping";
 import type { StorefrontShippingQuoteOption } from "@/lib/types/storefront";
 import { cn } from "@/lib/utils/cn";
@@ -387,7 +388,9 @@ function StorefrontCartSurface({
               </p>
             </div>
             <Button asChild onClick={closeCart}>
-              <Link href={"/catalogo" as Route}>Explorar catálogo</Link>
+              <Link href={"/catalogo" as Route} prefetch={shouldPrefetchStorefrontLink("/catalogo")}>
+                Explorar catálogo
+              </Link>
             </Button>
           </div>
         )}

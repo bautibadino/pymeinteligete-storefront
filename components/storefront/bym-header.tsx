@@ -231,6 +231,7 @@ export function BymHeader({
                 <Link
                   key={category.categoryId ?? category.slug ?? category.name}
                   href={`/catalogo?category=${encodeURIComponent(category.slug ?? category.categoryId ?? category.name)}` as Route}
+                  prefetch={shouldPrefetchStorefrontLink(`/catalogo?category=${encodeURIComponent(category.slug ?? category.categoryId ?? category.name)}`)}
                   className="border-b border-white/10 py-3 text-white/72 transition hover:text-white"
                   onClick={() => setMenuOpen(false)}
                 >

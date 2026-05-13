@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { CartShippingSelector } from "@/components/storefront/cart/cart-shipping-selector";
 import { useStorefrontCart } from "@/components/storefront/cart/storefront-cart-provider";
 import { buildCheckoutHrefFromCartItems } from "@/lib/cart/storefront-cart";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { getShippingFinalCost } from "@/lib/shipping/checkout-shipping";
 import type {
   StorefrontPaymentMethod,
@@ -96,7 +97,9 @@ export function StorefrontCartPageContent({ paymentMethods = null }: StorefrontC
           </p>
         </div>
         <Button asChild>
-          <Link href={"/catalogo" as Route}>Explorar catálogo</Link>
+          <Link href={"/catalogo" as Route} prefetch={shouldPrefetchStorefrontLink("/catalogo")}>
+            Explorar catálogo
+          </Link>
         </Button>
       </section>
     );

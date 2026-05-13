@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { ShopStatus } from "@/lib/storefront-api";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 
 import {
   canAccessCheckout,
@@ -67,7 +68,7 @@ export function SurfaceStateCard({
         {description ??
           "La superficie solicitada no está habilitada para el estado actual de la tienda según la política documentada de `shopStatus`."}
       </p>
-      <Link className="surface-action" href={action.href}>
+      <Link className="surface-action" href={action.href} prefetch={shouldPrefetchStorefrontLink(action.href)}>
         {action.label}
       </Link>
     </section>
