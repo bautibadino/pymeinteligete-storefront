@@ -72,6 +72,21 @@ describe("buildStorefrontHeaders", () => {
       process.env.STOREFRONT_CATALOG_SECRET = previousSecret;
     }
   });
+
+  it("preserva headers custom para instrumentar origenes de catalogo", () => {
+    const headers = buildStorefrontHeaders({
+      context: {
+        host: "acme.com",
+        requestId: "req_123",
+        storefrontVersion: "storefront@0.1.0",
+      },
+      headers: {
+        "x-storefront-origin": "catalog-page",
+      },
+    });
+
+    expect(headers.get("x-storefront-origin")).toBe("catalog-page");
+  });
 });
 
 describe("buildStorefrontSearchParams", () => {

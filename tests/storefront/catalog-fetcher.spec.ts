@@ -68,4 +68,19 @@ describe("getCatalog", () => {
       }),
     );
   });
+
+  it("propaga el origen instrumentado para identificar al caller real", async () => {
+    requestStorefrontApiMock.mockResolvedValueOnce({
+      products: [],
+      pagination: { page: 1, pageSize: 24, total: 0, totalPages: 0 },
+    });
+
+    await getCatalog("bym.example.com", undefined, { origin: "home" });
+
+    expect(requestStorefrontApiMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: { "x-storefront-origin": "home" },
+      }),
+    );
+  });
 });

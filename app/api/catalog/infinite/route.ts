@@ -35,7 +35,9 @@ export async function GET(request: Request) {
       categories,
       routeCategorySlug,
     );
-    const catalog = await getCatalog(runtime.context, resolution.query);
+    const catalog = await getCatalog(runtime.context, resolution.query, {
+      origin: "infinite-scroll",
+    });
 
     return NextResponse.json({
       products: mapCatalogProductsToCardData(

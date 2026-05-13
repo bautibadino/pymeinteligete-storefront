@@ -45,7 +45,12 @@ async function fetchAllCatalogProducts(
 
   while (page <= totalPages) {
     const { data: catalog, issue } = await safeFetch(
-      () => getCatalog(input, { page, pageSize: SITEMAP_CATALOG_PAGE_SIZE }),
+      () =>
+        getCatalog(
+          input,
+          { page, pageSize: SITEMAP_CATALOG_PAGE_SIZE },
+          { origin: "sitemap" },
+        ),
       {
         products: [],
         pagination: { page, pageSize: SITEMAP_CATALOG_PAGE_SIZE, total: 0, totalPages: 0 },

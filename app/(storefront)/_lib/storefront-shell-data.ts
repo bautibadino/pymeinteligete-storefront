@@ -187,6 +187,7 @@ export const loadBootstrapExperience = cache(async (): Promise<BootstrapExperien
 
 export async function loadCatalogExperience(
   query?: StorefrontCatalogQuery,
+  origin: "catalog-page" | "home" = "catalog-page",
 ): Promise<CatalogExperience> {
   const base = await loadBootstrapExperience();
 
@@ -198,7 +199,7 @@ export async function loadCatalogExperience(
   }
 
   try {
-    const catalog = await getCatalog(base.runtime.context, query);
+    const catalog = await getCatalog(base.runtime.context, query, { origin });
 
     return {
       ...base,
@@ -279,7 +280,7 @@ export async function loadProductExperience(slug: string): Promise<ProductExperi
           const catalog = await getCatalog(base.runtime.context, {
             categoryId: matchingCategory.categoryId,
             pageSize: 13,
-          });
+          }, { origin: "product-related" });
           relatedProducts = catalog.products.filter((candidate) => candidate.slug !== product.slug);
         }
       } catch {
@@ -292,7 +293,7 @@ export async function loadProductExperience(slug: string): Promise<ProductExperi
         const catalog = await getCatalog(base.runtime.context, {
           brand: product.brand,
           pageSize: 13,
-        });
+        }, { origin: "product-related" });
         relatedProducts = catalog.products.filter((candidate) => candidate.slug !== product.slug);
       } catch {
         relatedProducts = [];
@@ -360,7 +361,7 @@ export async function loadCheckoutExperience(): Promise<CheckoutExperience> {
 
 export async function loadHomeExperience(): Promise<HomeExperience> {
   const [catalogExperience, checkoutExperience] = await Promise.all([
-    loadCatalogExperience({ pageSize: 8 }),
+    loadCatalogExperience({ pageSize: 8 }, "home"),
     loadCheckoutExperience(),
   ]);
 

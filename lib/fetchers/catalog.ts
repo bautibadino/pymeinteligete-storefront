@@ -1,4 +1,4 @@
-import { STOREFRONT_API_PATHS } from "@/lib/contracts/storefront-v1";
+import { STOREFRONT_API_PATHS, STOREFRONT_HEADERS } from "@/lib/contracts/storefront-v1";
 import type { StorefrontCatalog, StorefrontCatalogQuery, StorefrontFetchInput } from "@/lib/types/storefront";
 
 import { requestStorefrontApi } from "@/lib/api/client";
@@ -77,9 +77,21 @@ function normalizeCatalogQuery(query?: StorefrontCatalogQuery): StorefrontCatalo
   return Object.keys(normalizedQuery).length > 0 ? normalizedQuery : undefined;
 }
 
+export type StorefrontCatalogOrigin =
+  | "catalog-page"
+  | "home"
+  | "infinite-scroll"
+  | "product-related"
+  | "sitemap";
+
+type CatalogRequestOptions = {
+  origin?: StorefrontCatalogOrigin;
+};
+
 export async function getCatalog(
   input: StorefrontFetchInput,
   query?: StorefrontCatalogQuery,
+  options?: CatalogRequestOptions,
 ): Promise<StorefrontCatalog> {
   const context = resolveStorefrontRequestContext(input);
   const normalizedQuery = normalizeCatalogQuery(query);
@@ -88,6 +100,9 @@ export async function getCatalog(
     context,
     method: "GET" as const,
     next: buildStorefrontGetNextOptions("catalog", context.host, normalizedQuery),
+    ...(options?.origin
+      ? { headers: { [STOREFRONT_HEADERS.origin]: options.origin } }
+      : {}),
     ...(normalizedQuery ? { query: normalizedQuery } : {}),
   };
   const fetchCatalog = () => requestStorefrontApi<StorefrontCatalog>(requestOptions);
