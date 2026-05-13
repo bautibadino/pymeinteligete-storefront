@@ -20,6 +20,7 @@ import type { ProductCardData, ProductCardDisplayOptions } from "@/lib/templates
 import { cn } from "@/lib/utils/cn";
 import { trackStorefrontAnalyticsEvent } from "@/lib/analytics/client";
 import { buildSelectItemPayload } from "@/lib/analytics/events";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 
 /**
  * Opciones de ordenamiento disponibles.
@@ -889,6 +890,7 @@ export function CatalogToolbar({
               <Link
                 key={opt.value}
                 href={href as Route}
+                prefetch={shouldPrefetchStorefrontLink(href)}
                 className={
                   opt.value === selected
                     ? FILTER_CHIP_ACTIVE_CLASSNAME
@@ -964,6 +966,7 @@ function FilterGroupContent({
           <Link
             key={option.id}
             href={option.href as Route}
+            prefetch={shouldPrefetchStorefrontLink(option.href)}
             aria-current={option.active ? "true" : undefined}
             className={cn(
               "flex min-h-10 items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-0",
@@ -988,6 +991,7 @@ function FilterGroupContent({
         <Link
           key={option.id}
           href={option.href as Route}
+          prefetch={shouldPrefetchStorefrontLink(option.href)}
           aria-current={option.active ? "true" : undefined}
           className={
             option.active
@@ -1109,6 +1113,7 @@ function CategoryTreeList({
         <li key={node.id} className="space-y-1">
           <Link
             href={node.href as Route}
+            prefetch={shouldPrefetchStorefrontLink(node.href)}
             aria-current={node.active ? "true" : undefined}
             className={
               node.active
@@ -1283,7 +1288,11 @@ export function FilterSidebar({
             <p className="text-sm text-[#c4c4cc]">Refiná el catálogo sin salir de la grilla.</p>
           </div>
           {filters.length > 0 ? (
-            <Link href={clearAllHref as Route} className="text-xs font-semibold text-[#e4e4e7] transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-0">
+            <Link
+              href={clearAllHref as Route}
+              prefetch={shouldPrefetchStorefrontLink(clearAllHref)}
+              className="text-xs font-semibold text-[#e4e4e7] transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-0"
+            >
               Limpiar
             </Link>
           ) : null}
@@ -1295,6 +1304,7 @@ export function FilterSidebar({
               <Link
                 key={filter.key}
                 href={filter.href as Route}
+                prefetch={shouldPrefetchStorefrontLink(filter.href)}
                 className="inline-flex items-center gap-1 rounded-full border border-[#3f3f46] bg-[#18181b] px-3 py-1.5 text-xs text-[#e4e4e7] transition hover:bg-[#232326]"
               >
                 <span className="font-semibold text-[#fafafa]">{filter.label}</span>
@@ -1376,7 +1386,11 @@ export function FilterBar({
             </span>
           </div>
           {filters.length > 0 ? (
-            <Link href={clearAllHref as Route} className="text-xs font-semibold text-[color:var(--accent)] transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-raised)]">
+            <Link
+              href={clearAllHref as Route}
+              prefetch={shouldPrefetchStorefrontLink(clearAllHref)}
+              className="text-xs font-semibold text-[color:var(--accent)] transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface-raised)]"
+            >
               Limpiar
             </Link>
           ) : null}
@@ -1388,6 +1402,7 @@ export function FilterBar({
               <Link
                 key={filter.key}
                 href={filter.href as Route}
+                prefetch={shouldPrefetchStorefrontLink(filter.href)}
                 className="inline-flex min-h-8 items-center rounded-full border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--ink)]"
               >
                 <span className="font-semibold text-[color:var(--accent)]">{filter.label}:</span>
@@ -1483,6 +1498,7 @@ export function CatalogPagination({
         {previousPageHref ? (
           <Link
             href={previousPageHref as Route}
+            prefetch={shouldPrefetchStorefrontLink(previousPageHref)}
             className="inline-flex h-9 items-center justify-center rounded-md border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-3 text-sm font-medium text-foreground transition hover:bg-[color:var(--surface-raised)]"
             aria-label="Página anterior"
           >
@@ -1505,6 +1521,7 @@ export function CatalogPagination({
         {nextPageHref ? (
           <Link
             href={nextPageHref as Route}
+            prefetch={shouldPrefetchStorefrontLink(nextPageHref)}
             className="inline-flex h-9 items-center justify-center rounded-md border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-3 text-sm font-medium text-foreground transition hover:bg-[color:var(--surface-raised)]"
             aria-label="Página siguiente"
           >
@@ -1546,6 +1563,7 @@ export function CatalogInfiniteNavigation({
       </p>
       <Link
         href={nextPageHref as Route}
+        prefetch={shouldPrefetchStorefrontLink(nextPageHref)}
         className="inline-flex items-center rounded-pill border border-line bg-panel px-4 py-2 text-sm font-medium text-foreground transition hover:bg-panel-strong"
       >
         Cargar página {currentPage + 1}

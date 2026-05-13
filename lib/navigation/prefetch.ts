@@ -12,6 +12,9 @@ export function shouldPrefetchStorefrontLink(href: string): boolean {
   }
 
   return !EXPENSIVE_STOREFRONT_PREFIXES.some((prefix) =>
-    normalizedHref === prefix || normalizedHref.startsWith(`${prefix}/`),
+    normalizedHref === prefix ||
+    normalizedHref.startsWith(`${prefix}/`) ||
+    normalizedHref.startsWith(`${prefix}?`) ||
+    normalizedHref.startsWith(`${prefix}#`),
   );
 }

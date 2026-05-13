@@ -6,6 +6,8 @@ describe("shouldPrefetchStorefrontLink", () => {
   it("desactiva prefetch para superficies caras del storefront", () => {
     expect(shouldPrefetchStorefrontLink("/catalogo")).toBe(false);
     expect(shouldPrefetchStorefrontLink("/catalogo/cubiertas")).toBe(false);
+    expect(shouldPrefetchStorefrontLink("/catalogo?minPrice=154042")).toBe(false);
+    expect(shouldPrefetchStorefrontLink("/catalogo?minPrice=542322&onlyImmediate=true")).toBe(false);
     expect(shouldPrefetchStorefrontLink("/catalog/slug")).toBe(false);
     expect(shouldPrefetchStorefrontLink("/producto/neumatico-1")).toBe(false);
   });
