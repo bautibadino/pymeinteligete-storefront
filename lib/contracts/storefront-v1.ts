@@ -5,6 +5,7 @@ export const STOREFRONT_HEADERS = {
   tenantSlug: "x-tenant-slug",
   version: "x-storefront-version",
   requestId: "x-request-id",
+  secret: "x-storefront-secret",
   idempotencyKey: "Idempotency-Key",
 } as const;
 

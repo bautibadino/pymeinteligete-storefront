@@ -25,6 +25,9 @@ import {
 
 describe("buildStorefrontHeaders", () => {
   it("inyecta headers obligatorios de storefront", () => {
+    const previousSecret = process.env.STOREFRONT_CATALOG_SECRET;
+    delete process.env.STOREFRONT_CATALOG_SECRET;
+
     const headers = buildStorefrontHeaders({
       context: {
         host: "acme.com",
@@ -41,6 +44,33 @@ describe("buildStorefrontHeaders", () => {
     expect(headers.get("x-request-id")).toBe("req_123");
     expect(headers.get("x-tenant-slug")).toBe("acme");
     expect(headers.get("Idempotency-Key")).toBe("idem_123");
+
+    if (previousSecret === undefined) {
+      delete process.env.STOREFRONT_CATALOG_SECRET;
+    } else {
+      process.env.STOREFRONT_CATALOG_SECRET = previousSecret;
+    }
+  });
+
+  it("agrega el secreto compartido cuando está configurado", () => {
+    const previousSecret = process.env.STOREFRONT_CATALOG_SECRET;
+    process.env.STOREFRONT_CATALOG_SECRET = "secret-test";
+
+    const headers = buildStorefrontHeaders({
+      context: {
+        host: "acme.com",
+        requestId: "req_123",
+        storefrontVersion: "storefront@0.1.0",
+      },
+    });
+
+    expect(headers.get("x-storefront-secret")).toBe("secret-test");
+
+    if (previousSecret === undefined) {
+      delete process.env.STOREFRONT_CATALOG_SECRET;
+    } else {
+      process.env.STOREFRONT_CATALOG_SECRET = previousSecret;
+    }
   });
 });
 

@@ -34,6 +34,7 @@ describe("getStorefrontRuntimeSnapshot", () => {
     getServerEnvSnapshotMock.mockReturnValue({
       pymeApiBaseUrl: "http://localhost:3001",
       storefrontVersionOverride: null,
+      storefrontCatalogSecret: null,
     });
     createRequestIdMock.mockReturnValue("req_test");
     resolveRequestHostFromHeadersMock.mockReturnValue("localhost");

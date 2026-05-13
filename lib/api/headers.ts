@@ -1,4 +1,5 @@
 import { STOREFRONT_HEADERS } from "@/lib/contracts/storefront-v1";
+import { getServerEnvSnapshot } from "@/lib/env/server-env";
 import type { StorefrontRequestContext } from "@/lib/runtime/storefront-request-context";
 
 type StorefrontHeaderOptions = {
@@ -13,6 +14,7 @@ export function buildStorefrontHeaders({
   headers,
 }: StorefrontHeaderOptions): Headers {
   const resolvedHeaders = new Headers(headers);
+  const env = getServerEnvSnapshot();
 
   resolvedHeaders.set("accept", "application/json");
   resolvedHeaders.set(STOREFRONT_HEADERS.host, context.host);
@@ -25,6 +27,10 @@ export function buildStorefrontHeaders({
 
   if (idempotencyKey) {
     resolvedHeaders.set(STOREFRONT_HEADERS.idempotencyKey, idempotencyKey);
+  }
+
+  if (env.storefrontCatalogSecret) {
+    resolvedHeaders.set(STOREFRONT_HEADERS.secret, env.storefrontCatalogSecret);
   }
 
   return resolvedHeaders;
