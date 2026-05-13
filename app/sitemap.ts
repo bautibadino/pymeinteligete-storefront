@@ -11,7 +11,7 @@ import {
 } from "@/lib/seo";
 import { getTenantSitemapData } from "@/lib/seo/sitemap-data";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const requestContext = await getTenantSeoRequestContext();

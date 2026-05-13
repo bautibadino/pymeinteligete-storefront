@@ -42,18 +42,18 @@ describe("getTenantSitemapData", () => {
     getCategoriesMock.mockResolvedValue([]);
   });
 
-  it("pagina el catálogo completo para no truncar el sitemap en 500 productos", async () => {
+  it("pagina el catálogo completo respetando el pageSize maximo del backend", async () => {
     getCatalogMock
       .mockResolvedValueOnce({
         products: [
           { productId: "prod-1", slug: "prod-1", name: "Prod 1" },
           { productId: "prod-2", slug: "prod-2", name: "Prod 2" },
         ],
-        pagination: { page: 1, pageSize: 500, total: 3, totalPages: 2 },
+        pagination: { page: 1, pageSize: 48, total: 3, totalPages: 2 },
       } as never)
       .mockResolvedValueOnce({
         products: [{ productId: "prod-3", slug: "prod-3", name: "Prod 3" }],
-        pagination: { page: 2, pageSize: 500, total: 3, totalPages: 2 },
+        pagination: { page: 2, pageSize: 48, total: 3, totalPages: 2 },
       } as never);
 
     const result = await getTenantSitemapData();
@@ -61,12 +61,12 @@ describe("getTenantSitemapData", () => {
     expect(getCatalogMock).toHaveBeenNthCalledWith(
       1,
       expect.any(Object),
-      { page: 1, pageSize: 500 },
+      { page: 1, pageSize: 48 },
     );
     expect(getCatalogMock).toHaveBeenNthCalledWith(
       2,
       expect.any(Object),
-      { page: 2, pageSize: 500 },
+      { page: 2, pageSize: 48 },
     );
     expect(result.products.map((product) => product.slug)).toEqual(["prod-1", "prod-2", "prod-3"]);
     expect(result.issues).toEqual([]);
@@ -76,7 +76,7 @@ describe("getTenantSitemapData", () => {
     getCatalogMock
       .mockResolvedValueOnce({
         products: [{ productId: "prod-1", slug: "prod-1", name: "Prod 1" }],
-        pagination: { page: 1, pageSize: 500, total: 2, totalPages: 2 },
+        pagination: { page: 1, pageSize: 48, total: 2, totalPages: 2 },
       } as never)
       .mockRejectedValueOnce(new Error("timeout"));
 

@@ -16,7 +16,7 @@ export type TenantSitemapData = {
   issues: string[];
 };
 
-const SITEMAP_CATALOG_PAGE_SIZE = 500;
+const SITEMAP_CATALOG_PAGE_SIZE = 48;
 
 async function safeFetch<T>(
   fetcher: () => Promise<T>,
