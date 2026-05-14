@@ -28,4 +28,5 @@
 - centralizar headers comunes
 - keyar cache por `host`
 - no dispersar el contrato por toda la app
-
+- en `catalog v2`, usar una revalidación alineada al índice materializado, no al cache genérico diario
+- si cambia la semántica de stock/disponibilidad del índice, cortar el namespace de cache de `catalog v2` para evitar snapshots stale persistidos

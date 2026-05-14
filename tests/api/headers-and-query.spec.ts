@@ -113,7 +113,9 @@ describe("buildStorefrontSearchParams", () => {
 describe("storefront fetch cache", () => {
   it("usa una revalidación por defecto cuando STORE_REVALIDATE_SECONDS no está configurado", () => {
     const previousValue = process.env.STORE_REVALIDATE_SECONDS;
+    const previousCatalogValue = process.env.STORE_CATALOG_V2_REVALIDATE_SECONDS;
     delete process.env.STORE_REVALIDATE_SECONDS;
+    delete process.env.STORE_CATALOG_V2_REVALIDATE_SECONDS;
 
     try {
       expect(getStorefrontFetchRevalidate()).toBe(86400);
@@ -121,26 +123,49 @@ describe("storefront fetch cache", () => {
         revalidate: 86400,
         tags: ["catalog:acme.com", "catalog:acme.com:pageSize=24"],
       });
+      expect(getStorefrontFetchRevalidate("catalog:v2:index-sync-v2")).toBe(1200);
+      expect(
+        buildStorefrontGetNextOptions("catalog:v2:index-sync-v2", "acme.com", { pageSize: 24 }),
+      ).toEqual({
+        revalidate: 1200,
+        tags: [
+          "catalog:v2:index-sync-v2:acme.com",
+          "catalog:v2:index-sync-v2:acme.com:pageSize=24",
+        ],
+      });
     } finally {
       if (previousValue === undefined) {
         delete process.env.STORE_REVALIDATE_SECONDS;
       } else {
         process.env.STORE_REVALIDATE_SECONDS = previousValue;
       }
+      if (previousCatalogValue === undefined) {
+        delete process.env.STORE_CATALOG_V2_REVALIDATE_SECONDS;
+      } else {
+        process.env.STORE_CATALOG_V2_REVALIDATE_SECONDS = previousCatalogValue;
+      }
     }
   });
 
   it("respeta STORE_REVALIDATE_SECONDS cuando está configurado", () => {
     const previousValue = process.env.STORE_REVALIDATE_SECONDS;
+    const previousCatalogValue = process.env.STORE_CATALOG_V2_REVALIDATE_SECONDS;
     process.env.STORE_REVALIDATE_SECONDS = "60";
+    process.env.STORE_CATALOG_V2_REVALIDATE_SECONDS = "300";
 
     try {
       expect(getStorefrontFetchRevalidate()).toBe(60);
+      expect(getStorefrontFetchRevalidate("catalog:v2:index-sync-v2")).toBe(300);
     } finally {
       if (previousValue === undefined) {
         delete process.env.STORE_REVALIDATE_SECONDS;
       } else {
         process.env.STORE_REVALIDATE_SECONDS = previousValue;
+      }
+      if (previousCatalogValue === undefined) {
+        delete process.env.STORE_CATALOG_V2_REVALIDATE_SECONDS;
+      } else {
+        process.env.STORE_CATALOG_V2_REVALIDATE_SECONDS = previousCatalogValue;
       }
     }
   });

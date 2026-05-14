@@ -5,6 +5,7 @@ import type { StorefrontNextOptions } from "@/lib/api/client";
 import { unstable_cache } from "next/cache";
 
 const DEFAULT_STOREFRONT_REVALIDATE_SECONDS = 86400;
+const DEFAULT_STOREFRONT_CATALOG_V2_REVALIDATE_SECONDS = 1200;
 
 function readOptionalPositiveInteger(name: string): number | undefined {
   const rawValue = process.env[name]?.trim();
@@ -22,7 +23,23 @@ function readOptionalPositiveInteger(name: string): number | undefined {
   return parsed;
 }
 
-export function getStorefrontFetchRevalidate(): number | false | undefined {
+function isCatalogV2Surface(surface: string): boolean {
+  return surface.startsWith("catalog:v2");
+}
+
+export function getStorefrontFetchRevalidate(
+  surface?: string,
+): number | false | undefined {
+  if (surface && isCatalogV2Surface(surface)) {
+    const v2Value = readOptionalPositiveInteger("STORE_CATALOG_V2_REVALIDATE_SECONDS");
+
+    if (v2Value !== undefined) {
+      return v2Value;
+    }
+
+    return DEFAULT_STOREFRONT_CATALOG_V2_REVALIDATE_SECONDS;
+  }
+
   const value = readOptionalPositiveInteger("STORE_REVALIDATE_SECONDS");
 
   if (value === undefined) {
@@ -54,7 +71,7 @@ export function buildStorefrontGetNextOptions(
   query?: StorefrontQueryParams,
   tenantSlug?: string,
 ): StorefrontNextOptions {
-  const revalidate = getStorefrontFetchRevalidate();
+  const revalidate = getStorefrontFetchRevalidate(surface);
   const tags = buildStorefrontGetCacheTags(surface, host, query, tenantSlug);
 
   return {
@@ -70,7 +87,7 @@ export async function readCachedStorefrontGet<T>(
   tenantSlug: string | undefined,
   fetcher: () => Promise<T>,
 ): Promise<T> {
-  const revalidate = getStorefrontFetchRevalidate();
+  const revalidate = getStorefrontFetchRevalidate(surface);
   const tags = buildStorefrontGetCacheTags(surface, host, query, tenantSlug);
   const cacheKey = [
     "storefront-get",

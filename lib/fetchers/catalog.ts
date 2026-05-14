@@ -11,6 +11,7 @@ import {
 } from "@/lib/storefront/catalog-source";
 
 const STOREFRONT_CATALOG_V2_PATH = "/api/storefront/v2/catalog/search";
+const STOREFRONT_CATALOG_V2_CACHE_NAMESPACE = "catalog:v2:index-sync-v2";
 
 function readNonEmptyString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
@@ -99,7 +100,7 @@ function resolveCatalogPath(source: StorefrontCatalogSource): string {
 }
 
 function resolveCatalogCacheSurface(source: StorefrontCatalogSource): string {
-  return `catalog:${source}`;
+  return source === "v2" ? STOREFRONT_CATALOG_V2_CACHE_NAMESPACE : `catalog:${source}`;
 }
 
 type CatalogRequestOptions = {

@@ -56,7 +56,7 @@ describe("getCatalog", () => {
     });
 
     expect(buildStorefrontGetNextOptionsMock).toHaveBeenCalledWith(
-      "catalog:v1",
+      "catalog:v2:index-sync-v2",
       "bym.example.com",
       {
         brand: "Pirelli",
@@ -65,7 +65,7 @@ describe("getCatalog", () => {
       undefined,
     );
     expect(readCachedStorefrontGetMock).toHaveBeenCalledWith(
-      "catalog:v1",
+      "catalog:v2:index-sync-v2",
       "bym.example.com",
       {
         brand: "Pirelli",
@@ -76,7 +76,7 @@ describe("getCatalog", () => {
     );
     expect(requestStorefrontApiMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        path: "/api/storefront/v1/catalog",
+        path: "/api/storefront/v2/catalog/search",
         query: { brand: "Pirelli", search: "scorpion" },
       }),
     );
@@ -93,28 +93,50 @@ describe("getCatalog", () => {
     expect(requestStorefrontApiMock).toHaveBeenCalledWith(
       expect.objectContaining({
         headers: { "x-storefront-origin": "home" },
-        path: "/api/storefront/v1/catalog",
+        path: "/api/storefront/v2/catalog/search",
       }),
     );
   });
 
-  it("migra al boundary v2 sin fallback a v1 cuando el source v2 está activo", async () => {
-    process.env.STOREFRONT_CATALOG_SOURCE = "v2";
+  it("corta el namespace de cache de v2 para invalidar snapshots stale del catálogo", async () => {
     requestStorefrontApiMock.mockResolvedValueOnce({
       products: [],
       pagination: { page: 1, pageSize: 24, total: 0, totalPages: 0 },
     });
 
-    await getCatalog("bym.example.com", { categoryId: "cat-neu" }, { origin: "catalog-page" });
+    await getCatalog("bym.example.com");
 
     expect(buildStorefrontGetNextOptionsMock).toHaveBeenCalledWith(
-      "catalog:v2",
+      "catalog:v2:index-sync-v2",
+      "bym.example.com",
+      undefined,
+      undefined,
+    );
+    expect(readCachedStorefrontGetMock).toHaveBeenCalledWith(
+      "catalog:v2:index-sync-v2",
+      "bym.example.com",
+      undefined,
+      undefined,
+      expect.any(Function),
+    );
+  });
+
+  it("conserva v1 cuando el caller lo pide explícitamente", async () => {
+    requestStorefrontApiMock.mockResolvedValueOnce({
+      products: [],
+      pagination: { page: 1, pageSize: 24, total: 0, totalPages: 0 },
+    });
+
+    await getCatalog("bym.example.com", { categoryId: "cat-neu" }, { origin: "catalog-page", source: "v1" });
+
+    expect(buildStorefrontGetNextOptionsMock).toHaveBeenCalledWith(
+      "catalog:v1",
       "bym.example.com",
       { categoryId: "cat-neu" },
       undefined,
     );
     expect(readCachedStorefrontGetMock).toHaveBeenCalledWith(
-      "catalog:v2",
+      "catalog:v1",
       "bym.example.com",
       { categoryId: "cat-neu" },
       undefined,
@@ -123,7 +145,7 @@ describe("getCatalog", () => {
     expect(requestStorefrontApiMock).toHaveBeenCalledOnce();
     expect(requestStorefrontApiMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        path: "/api/storefront/v2/catalog/search",
+        path: "/api/storefront/v1/catalog",
         headers: { "x-storefront-origin": "catalog-page" },
       }),
     );
