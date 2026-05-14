@@ -4,7 +4,6 @@ import {
   loadCatalogExperience,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { parseCatalogSearchParams } from "@/lib/presentation/catalog-routing";
-import { headers } from "next/headers";
 import { getCategories, type StorefrontCategory } from "@/lib/storefront-api";
 
 type SearchParamsRecord = Record<string, string | string[] | undefined>;
@@ -25,9 +24,6 @@ type CatalogRouteData = {
   selectedCategory: ReturnType<typeof parseCatalogSearchParams>["selectedCategory"];
   categoryLookupFailed: boolean;
 };
-
-const BOT_USER_AGENT_PATTERN =
-  /bot|crawler|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegram/i;
 
 function shouldResolveCategories(
   searchParams: SearchParamsRecord,
@@ -87,15 +83,8 @@ function isCanonicalCatalogQuery(query: CatalogRouteResolution["query"]): boolea
   );
 }
 
-function sanitizeCatalogQueryForBot(query: CatalogRouteResolution["query"]): CatalogRouteResolution["query"] {
+function sanitizeCatalogQuery(query: CatalogRouteResolution["query"]): CatalogRouteResolution["query"] {
   return query.categoryId ? { categoryId: query.categoryId } : {};
-}
-
-async function isBotCatalogRequest(): Promise<boolean> {
-  const headerStore = await headers();
-  const userAgent = headerStore.get("user-agent")?.trim().toLowerCase() ?? "";
-
-  return BOT_USER_AGENT_PATTERN.test(userAgent);
 }
 
 export async function resolveCatalogRoute(
@@ -123,10 +112,8 @@ export async function loadCatalogRouteData(
   routeCategorySlug?: string,
 ): Promise<CatalogRouteData> {
   const resolved = await resolveCatalogRoute(searchParams, routeCategorySlug);
-  const shouldSanitizeForBot =
-    (await isBotCatalogRequest()) && !isCanonicalCatalogQuery(resolved.query);
-  const effectiveQuery = shouldSanitizeForBot
-    ? sanitizeCatalogQueryForBot(resolved.query)
+  const effectiveQuery = !isCanonicalCatalogQuery(resolved.query)
+    ? sanitizeCatalogQuery(resolved.query)
     : resolved.query;
   const experience = await loadCatalogExperience(effectiveQuery);
 

@@ -20,7 +20,9 @@ const {
   readCachedStorefrontGetMock,
 } = vi.hoisted(() => ({
   buildStorefrontGetNextOptionsMock: vi.fn(() => ({ revalidate: 60, tags: ["test"] })),
-  readCachedStorefrontGetMock: vi.fn((_: string, __: string, ___: unknown, fetcher: () => unknown) => fetcher()),
+  readCachedStorefrontGetMock: vi.fn(
+    (_: string, __: string, ___: unknown, ____: unknown, fetcher: () => unknown) => fetcher(),
+  ),
 }));
 
 vi.mock("@/lib/fetchers/cache", () => ({
@@ -52,14 +54,23 @@ describe("getCatalog", () => {
       search: "  scorpion  ",
     });
 
-    expect(buildStorefrontGetNextOptionsMock).toHaveBeenCalledWith("catalog", "bym.example.com", {
-      brand: "Pirelli",
-      search: "scorpion",
-    });
+    expect(buildStorefrontGetNextOptionsMock).toHaveBeenCalledWith(
+      "catalog",
+      "bym.example.com",
+      {
+        brand: "Pirelli",
+        search: "scorpion",
+      },
+      undefined,
+    );
     expect(readCachedStorefrontGetMock).toHaveBeenCalledWith(
       "catalog",
       "bym.example.com",
-      { brand: "Pirelli", search: "scorpion" },
+      {
+        brand: "Pirelli",
+        search: "scorpion",
+      },
+      undefined,
       expect.any(Function),
     );
     expect(requestStorefrontApiMock).toHaveBeenCalledWith(
