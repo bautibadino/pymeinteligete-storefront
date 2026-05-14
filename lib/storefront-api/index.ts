@@ -3,13 +3,18 @@ export { buildStorefrontHeaders } from "@/lib/api/headers";
 export { requestStorefrontApi } from "@/lib/api/client";
 export { STOREFRONT_API_PATHS, STOREFRONT_API_PREFIX, STOREFRONT_HEADERS } from "@/lib/contracts/storefront-v1";
 export { getBootstrap } from "@/lib/fetchers/bootstrap";
-export { getCatalog } from "@/lib/fetchers/catalog";
+export {
+  DEFAULT_STOREFRONT_CATALOG_SOURCE,
+  getCatalog,
+  resolveStorefrontCatalogSource,
+} from "@/lib/fetchers/catalog";
 export { getCategories } from "@/lib/fetchers/categories";
 export { getProduct } from "@/lib/fetchers/product";
 export { getPaymentMethods } from "@/lib/fetchers/payment-methods";
 export { postContactForm } from "@/lib/fetchers/contact";
 export { postCheckout, processPayment } from "@/lib/fetchers/checkout";
 export { getOrderByToken, postManualPayment } from "@/lib/fetchers/orders";
+export type { StorefrontCatalogOrigin, StorefrontCatalogSource } from "@/lib/fetchers/catalog";
 export type {
   ShopStatus,
   StorefrontAddressInput,

@@ -3,11 +3,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadCatalogRouteData, resolveCatalogRoute } from "@/app/(storefront)/catalogo/_lib/catalog-data";
 import type { StorefrontCategory } from "@/lib/storefront-api";
 
-vi.mock("@/app/(storefront)/_lib/storefront-shell-data", () => ({
-  canBrowseCatalog: vi.fn(() => true),
-  loadBootstrapExperience: vi.fn(),
-  loadCatalogExperience: vi.fn(),
-}));
+vi.mock("@/app/(storefront)/_lib/storefront-shell-data", async () => {
+  const actual = await vi.importActual<typeof import("@/app/(storefront)/_lib/storefront-shell-data")>(
+    "@/app/(storefront)/_lib/storefront-shell-data",
+  );
+
+  return {
+    ...actual,
+    canBrowseCatalog: vi.fn(() => true),
+    loadBootstrapExperience: vi.fn(),
+    loadCatalogExperience: vi.fn(),
+  };
+});
 
 vi.mock("@/lib/storefront-api", () => ({
   getCategories: vi.fn(),
@@ -16,6 +23,7 @@ vi.mock("@/lib/storefront-api", () => ({
 import {
   loadBootstrapExperience,
   loadCatalogExperience,
+  normalizeCatalogExperienceQuery,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { getCategories } from "@/lib/storefront-api";
 
@@ -111,5 +119,21 @@ describe("catalog data", () => {
     expect(routeData.query).toEqual({
       categoryId: "cat-neu",
     });
+  });
+
+  it("comparte la misma query canónica entre SSR e infinite scroll para variantes públicas caras", () => {
+    expect(normalizeCatalogExperienceQuery({
+      categoryId: "cat-neu",
+      brand: "HENGST",
+      sortBy: "price",
+      page: 2,
+      search: "R16",
+    })).toEqual({
+      categoryId: "cat-neu",
+    });
+  });
+
+  it("preserva queries livianas que no reabren el hot path caro del catálogo", () => {
+    expect(normalizeCatalogExperienceQuery({ pageSize: 8 })).toEqual({ pageSize: 8 });
   });
 });

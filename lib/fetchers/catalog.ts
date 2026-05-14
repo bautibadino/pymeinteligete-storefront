@@ -5,6 +5,8 @@ import { requestStorefrontApi } from "@/lib/api/client";
 import { buildStorefrontGetNextOptions, readCachedStorefrontGet } from "@/lib/fetchers/cache";
 import { resolveStorefrontRequestContext } from "@/lib/fetchers/context";
 
+const STOREFRONT_CATALOG_V2_PATH = "/api/storefront/v2/catalog/search";
+
 function readNonEmptyString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
 }
@@ -84,8 +86,37 @@ export type StorefrontCatalogOrigin =
   | "product-related"
   | "sitemap";
 
+export type StorefrontCatalogSource = "v1" | "v2";
+
+export const DEFAULT_STOREFRONT_CATALOG_SOURCE: StorefrontCatalogSource = "v1";
+
+function isCatalogSource(value: string | undefined): value is StorefrontCatalogSource {
+  return value === "v1" || value === "v2";
+}
+
+export function resolveStorefrontCatalogSource(
+  explicitSource?: StorefrontCatalogSource,
+): StorefrontCatalogSource {
+  if (explicitSource) {
+    return explicitSource;
+  }
+
+  const envSource = process.env.STOREFRONT_CATALOG_SOURCE?.trim().toLowerCase();
+
+  return isCatalogSource(envSource) ? envSource : DEFAULT_STOREFRONT_CATALOG_SOURCE;
+}
+
+function resolveCatalogPath(source: StorefrontCatalogSource): string {
+  return source === "v2" ? STOREFRONT_CATALOG_V2_PATH : STOREFRONT_API_PATHS.catalog;
+}
+
+function resolveCatalogCacheSurface(source: StorefrontCatalogSource): string {
+  return `catalog:${source}`;
+}
+
 type CatalogRequestOptions = {
   origin?: StorefrontCatalogOrigin;
+  source?: StorefrontCatalogSource;
 };
 
 export async function getCatalog(
@@ -95,11 +126,14 @@ export async function getCatalog(
 ): Promise<StorefrontCatalog> {
   const context = resolveStorefrontRequestContext(input);
   const normalizedQuery = normalizeCatalogQuery(query);
+  const source = resolveStorefrontCatalogSource(options?.source);
+  // Source travels in the cache namespace so cutovers never mix v1 and v2 entries.
+  const cacheSurface = resolveCatalogCacheSurface(source);
   const requestOptions = {
-    path: STOREFRONT_API_PATHS.catalog,
+    path: resolveCatalogPath(source),
     context,
     method: "GET" as const,
-    next: buildStorefrontGetNextOptions("catalog", context.host, normalizedQuery, context.tenantSlug),
+    next: buildStorefrontGetNextOptions(cacheSurface, context.host, normalizedQuery, context.tenantSlug),
     ...(options?.origin
       ? { headers: { [STOREFRONT_HEADERS.origin]: options.origin } }
       : {}),
@@ -111,5 +145,11 @@ export async function getCatalog(
     return fetchCatalog();
   }
 
-  return readCachedStorefrontGet("catalog", context.host, normalizedQuery, context.tenantSlug, fetchCatalog);
+  return readCachedStorefrontGet(
+    cacheSurface,
+    context.host,
+    normalizedQuery,
+    context.tenantSlug,
+    fetchCatalog,
+  );
 }

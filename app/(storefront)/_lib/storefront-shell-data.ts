@@ -137,6 +137,26 @@ export function resolveStatusMessage(shopStatus: ShopStatus | null): string {
   }
 }
 
+export function normalizeCatalogExperienceQuery(
+  query?: StorefrontCatalogQuery,
+): StorefrontCatalogQuery | undefined {
+  if (!query) {
+    return undefined;
+  }
+
+  const shouldCollapseToCanonicalQuery =
+    (query.page ?? 1) > 1 ||
+    Boolean(query.search || query.brand || query.family || query.sortBy || query.sortOrder);
+
+  if (!shouldCollapseToCanonicalQuery) {
+    return query;
+  }
+
+  // SSR e infinite scroll deben pegar al mismo query liviano para no reabrir
+  // el hot path caro del catálogo público cuando se activa el source v2.
+  return query.categoryId ? { categoryId: query.categoryId } : {};
+}
+
 export const loadBootstrapExperience = cache(async (): Promise<BootstrapExperience> => {
   const runtime = await getStorefrontRuntimeSnapshot();
   const issues: FetchIssue[] = [];
@@ -190,6 +210,7 @@ export async function loadCatalogExperience(
   origin: "catalog-page" | "home" = "catalog-page",
 ): Promise<CatalogExperience> {
   const base = await loadBootstrapExperience();
+  const normalizedQuery = normalizeCatalogExperienceQuery(query);
 
   if (!canBrowseCatalog(base.bootstrap?.tenant.status ?? null)) {
     return {
@@ -199,7 +220,7 @@ export async function loadCatalogExperience(
   }
 
   try {
-    const catalog = await getCatalog(base.runtime.context, query, { origin });
+    const catalog = await getCatalog(base.runtime.context, normalizedQuery, { origin });
 
     return {
       ...base,

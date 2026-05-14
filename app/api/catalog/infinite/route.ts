@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { mapCatalogProductsToCardData } from "@/components/presentation/render-context";
+import { normalizeCatalogExperienceQuery } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { parseCatalogSearchParams } from "@/lib/presentation/catalog-routing";
 import { getStorefrontRuntimeSnapshot } from "@/lib/runtime/storefront-request-context";
 import { getCatalog, getCategories } from "@/lib/storefront-api";
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
       categories,
       routeCategorySlug,
     );
-    const catalog = await getCatalog(runtime.context, resolution.query, {
+    const catalog = await getCatalog(runtime.context, normalizeCatalogExperienceQuery(resolution.query), {
       origin: "infinite-scroll",
     });
 

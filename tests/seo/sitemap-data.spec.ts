@@ -62,11 +62,13 @@ describe("getTenantSitemapData", () => {
       1,
       expect.any(Object),
       { page: 1, pageSize: 48 },
+      { origin: "sitemap" },
     );
     expect(getCatalogMock).toHaveBeenNthCalledWith(
       2,
       expect.any(Object),
       { page: 2, pageSize: 48 },
+      { origin: "sitemap" },
     );
     expect(result.products.map((product) => product.slug)).toEqual(["prod-1", "prod-2", "prod-3"]);
     expect(result.issues).toEqual([]);

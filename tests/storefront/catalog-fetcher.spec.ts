@@ -34,6 +34,7 @@ const requestStorefrontApiMock = vi.mocked(requestStorefrontApi);
 
 describe("getCatalog", () => {
   beforeEach(() => {
+    delete process.env.STOREFRONT_CATALOG_SOURCE;
     requestStorefrontApiMock.mockReset();
     buildStorefrontGetNextOptionsMock.mockClear();
     readCachedStorefrontGetMock.mockClear();
@@ -55,7 +56,7 @@ describe("getCatalog", () => {
     });
 
     expect(buildStorefrontGetNextOptionsMock).toHaveBeenCalledWith(
-      "catalog",
+      "catalog:v1",
       "bym.example.com",
       {
         brand: "Pirelli",
@@ -64,7 +65,7 @@ describe("getCatalog", () => {
       undefined,
     );
     expect(readCachedStorefrontGetMock).toHaveBeenCalledWith(
-      "catalog",
+      "catalog:v1",
       "bym.example.com",
       {
         brand: "Pirelli",
@@ -75,6 +76,7 @@ describe("getCatalog", () => {
     );
     expect(requestStorefrontApiMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        path: "/api/storefront/v1/catalog",
         query: { brand: "Pirelli", search: "scorpion" },
       }),
     );
@@ -91,6 +93,38 @@ describe("getCatalog", () => {
     expect(requestStorefrontApiMock).toHaveBeenCalledWith(
       expect.objectContaining({
         headers: { "x-storefront-origin": "home" },
+        path: "/api/storefront/v1/catalog",
+      }),
+    );
+  });
+
+  it("migra al boundary v2 sin fallback a v1 cuando el source v2 está activo", async () => {
+    process.env.STOREFRONT_CATALOG_SOURCE = "v2";
+    requestStorefrontApiMock.mockResolvedValueOnce({
+      products: [],
+      pagination: { page: 1, pageSize: 24, total: 0, totalPages: 0 },
+    });
+
+    await getCatalog("bym.example.com", { categoryId: "cat-neu" }, { origin: "catalog-page" });
+
+    expect(buildStorefrontGetNextOptionsMock).toHaveBeenCalledWith(
+      "catalog:v2",
+      "bym.example.com",
+      { categoryId: "cat-neu" },
+      undefined,
+    );
+    expect(readCachedStorefrontGetMock).toHaveBeenCalledWith(
+      "catalog:v2",
+      "bym.example.com",
+      { categoryId: "cat-neu" },
+      undefined,
+      expect.any(Function),
+    );
+    expect(requestStorefrontApiMock).toHaveBeenCalledOnce();
+    expect(requestStorefrontApiMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: "/api/storefront/v2/catalog/search",
+        headers: { "x-storefront-origin": "catalog-page" },
       }),
     );
   });

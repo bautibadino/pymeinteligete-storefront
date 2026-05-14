@@ -45,12 +45,15 @@ async function fetchAllCatalogProducts(
 
   while (page <= totalPages) {
     const { data: catalog, issue } = await safeFetch(
-      () =>
-        getCatalog(
+      () => {
+        // Sitemap pagina contra el mismo boundary del catálogo público para que
+        // el cutover a v2 no deje un caller SEO colgado del hot path legacy.
+        return getCatalog(
           input,
           { page, pageSize: SITEMAP_CATALOG_PAGE_SIZE },
           { origin: "sitemap" },
-        ),
+        );
+      },
       {
         products: [],
         pagination: { page, pageSize: SITEMAP_CATALOG_PAGE_SIZE, total: 0, totalPages: 0 },
