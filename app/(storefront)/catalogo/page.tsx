@@ -18,6 +18,9 @@ function shouldIndexCatalogQuery(
     !query.search &&
     !query.brand &&
     !query.family &&
+    query.minPrice === undefined &&
+    query.maxPrice === undefined &&
+    query.onlyImmediate === undefined &&
     !query.sortBy &&
     !query.sortOrder
   );

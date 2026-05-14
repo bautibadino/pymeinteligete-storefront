@@ -2,8 +2,10 @@ import {
   canBrowseCatalog,
   loadBootstrapExperience,
   loadCatalogExperience,
+  normalizeCatalogExperienceQuery,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { parseCatalogSearchParams } from "@/lib/presentation/catalog-routing";
+import { resolveStorefrontCatalogSource } from "@/lib/storefront/catalog-source";
 import { getCategories, type StorefrontCategory } from "@/lib/storefront-api";
 
 type SearchParamsRecord = Record<string, string | string[] | undefined>;
@@ -72,21 +74,6 @@ function buildCategoryFallbackPath(routeCategorySlug: string | undefined): strin
   return routeCategorySlug ? `/catalogo/${encodeURIComponent(routeCategorySlug)}` : "/catalogo";
 }
 
-function isCanonicalCatalogQuery(query: CatalogRouteResolution["query"]): boolean {
-  return (
-    (query.page ?? 1) <= 1 &&
-    !query.search &&
-    !query.brand &&
-    !query.family &&
-    !query.sortBy &&
-    !query.sortOrder
-  );
-}
-
-function sanitizeCatalogQuery(query: CatalogRouteResolution["query"]): CatalogRouteResolution["query"] {
-  return query.categoryId ? { categoryId: query.categoryId } : {};
-}
-
 export async function resolveCatalogRoute(
   searchParams: SearchParamsRecord,
   routeCategorySlug?: string,
@@ -112,9 +99,10 @@ export async function loadCatalogRouteData(
   routeCategorySlug?: string,
 ): Promise<CatalogRouteData> {
   const resolved = await resolveCatalogRoute(searchParams, routeCategorySlug);
-  const effectiveQuery = !isCanonicalCatalogQuery(resolved.query)
-    ? sanitizeCatalogQuery(resolved.query)
-    : resolved.query;
+  const effectiveQuery = normalizeCatalogExperienceQuery(
+    resolved.query,
+    resolveStorefrontCatalogSource(),
+  ) ?? {};
   const experience = await loadCatalogExperience(effectiveQuery);
 
   return {

@@ -2,6 +2,11 @@ import { cache } from "react";
 
 import { getStorefrontRuntimeSnapshot } from "@/lib/runtime/storefront-request-context";
 import {
+  resolveStorefrontCatalogSource,
+  shouldCollapseCatalogVariants,
+  type StorefrontCatalogSource,
+} from "@/lib/storefront/catalog-source";
+import {
   getBootstrap,
   getCatalog,
   getCategories,
@@ -139,9 +144,14 @@ export function resolveStatusMessage(shopStatus: ShopStatus | null): string {
 
 export function normalizeCatalogExperienceQuery(
   query?: StorefrontCatalogQuery,
+  source: StorefrontCatalogSource = resolveStorefrontCatalogSource(),
 ): StorefrontCatalogQuery | undefined {
   if (!query) {
     return undefined;
+  }
+
+  if (!shouldCollapseCatalogVariants(source)) {
+    return query;
   }
 
   const shouldCollapseToCanonicalQuery =
@@ -152,8 +162,8 @@ export function normalizeCatalogExperienceQuery(
     return query;
   }
 
-  // SSR e infinite scroll deben pegar al mismo query liviano para no reabrir
-  // el hot path caro del catálogo público cuando se activa el source v2.
+  // SSR e infinite scroll deben pegar al mismo query liviano mientras v1
+  // siga habilitado como fallback deprecated para evitar reabrir su hot path.
   return query.categoryId ? { categoryId: query.categoryId } : {};
 }
 
@@ -210,7 +220,8 @@ export async function loadCatalogExperience(
   origin: "catalog-page" | "home" = "catalog-page",
 ): Promise<CatalogExperience> {
   const base = await loadBootstrapExperience();
-  const normalizedQuery = normalizeCatalogExperienceQuery(query);
+  const source = resolveStorefrontCatalogSource();
+  const normalizedQuery = normalizeCatalogExperienceQuery(query, source);
 
   if (!canBrowseCatalog(base.bootstrap?.tenant.status ?? null)) {
     return {
@@ -220,7 +231,10 @@ export async function loadCatalogExperience(
   }
 
   try {
-    const catalog = await getCatalog(base.runtime.context, normalizedQuery, { origin });
+    const catalog = await getCatalog(base.runtime.context, normalizedQuery, {
+      origin,
+      source,
+    });
 
     return {
       ...base,

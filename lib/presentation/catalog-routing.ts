@@ -1,4 +1,8 @@
 import type { StorefrontCatalogQuery, StorefrontCategory } from "@/lib/storefront-api";
+import {
+  resolveStorefrontCatalogSource,
+  shouldCollapseCatalogVariants,
+} from "@/lib/storefront/catalog-source";
 
 type SearchParamValue = string | string[] | undefined;
 
@@ -49,6 +53,55 @@ function parsePositiveInteger(value: string | undefined): number | undefined {
   const parsed = Number(value);
 
   return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function parseNonNegativeNumber(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
+function parseBooleanLike(value: string | undefined): boolean | undefined {
+  const normalized = normalizeToken(value);
+
+  if (!normalized) {
+    return undefined;
+  }
+
+  if (["true", "1", "si", "yes", "on"].includes(normalized)) {
+    return true;
+  }
+
+  if (["false", "0", "no", "off"].includes(normalized)) {
+    return false;
+  }
+
+  return undefined;
+}
+
+function parseOnlyImmediateFilter(
+  rawOnlyImmediate: string | undefined,
+  rawAvailability: string | undefined,
+): boolean | undefined {
+  const explicit = parseBooleanLike(rawOnlyImmediate);
+  if (explicit !== undefined) {
+    return explicit;
+  }
+
+  const normalizedAvailability = normalizeToken(rawAvailability);
+  if (!normalizedAvailability) {
+    return undefined;
+  }
+
+  if (["immediate", "inmediata", "inmediato", "onlyimmediate"].includes(normalizedAvailability)) {
+    return true;
+  }
+
+  return undefined;
 }
 
 function isSortField(value: string | undefined): value is NonNullable<StorefrontCatalogQuery["sortBy"]> {
@@ -148,6 +201,10 @@ export function parseCatalogSearchParams(
   const categoryId = selectedCategory?.categoryId ?? (rawCategoryId?.trim() || undefined);
   const brand = rawBrand?.trim() || undefined;
   const family = rawFamily?.trim() || undefined;
+  const minPrice = parseNonNegativeNumber(rawMinPrice);
+  const maxPrice = parseNonNegativeNumber(rawMaxPrice);
+  const onlyImmediate = parseOnlyImmediateFilter(rawOnlyImmediate, rawAvailability);
+  const source = resolveStorefrontCatalogSource();
   const query: StorefrontCatalogQuery = {};
 
   if (page !== undefined) query.page = page;
@@ -158,14 +215,11 @@ export function parseCatalogSearchParams(
   if (categoryId) query.categoryId = categoryId;
   if (brand) query.brand = brand;
   if (family) query.family = family;
-
-  // Corte operativo por incidente de costos:
-  // los filtros de precio/disponibilidad generan demasiada cardinalidad de SSR
-  // y dejan de formar parte del query server-side del catálogo público.
-  void rawOnlyImmediate;
-  void rawAvailability;
-  void rawMinPrice;
-  void rawMaxPrice;
+  if (!shouldCollapseCatalogVariants(source)) {
+    if (minPrice !== undefined) query.minPrice = minPrice;
+    if (maxPrice !== undefined) query.maxPrice = maxPrice;
+    if (onlyImmediate !== undefined) query.onlyImmediate = onlyImmediate;
+  }
 
   return {
     query,

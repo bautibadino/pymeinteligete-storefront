@@ -4,6 +4,11 @@ import type { StorefrontCatalog, StorefrontCatalogQuery, StorefrontFetchInput } 
 import { requestStorefrontApi } from "@/lib/api/client";
 import { buildStorefrontGetNextOptions, readCachedStorefrontGet } from "@/lib/fetchers/cache";
 import { resolveStorefrontRequestContext } from "@/lib/fetchers/context";
+import {
+  DEFAULT_STOREFRONT_CATALOG_SOURCE,
+  resolveStorefrontCatalogSource,
+  type StorefrontCatalogSource,
+} from "@/lib/storefront/catalog-source";
 
 const STOREFRONT_CATALOG_V2_PATH = "/api/storefront/v2/catalog/search";
 
@@ -86,25 +91,8 @@ export type StorefrontCatalogOrigin =
   | "product-related"
   | "sitemap";
 
-export type StorefrontCatalogSource = "v1" | "v2";
-
-export const DEFAULT_STOREFRONT_CATALOG_SOURCE: StorefrontCatalogSource = "v1";
-
-function isCatalogSource(value: string | undefined): value is StorefrontCatalogSource {
-  return value === "v1" || value === "v2";
-}
-
-export function resolveStorefrontCatalogSource(
-  explicitSource?: StorefrontCatalogSource,
-): StorefrontCatalogSource {
-  if (explicitSource) {
-    return explicitSource;
-  }
-
-  const envSource = process.env.STOREFRONT_CATALOG_SOURCE?.trim().toLowerCase();
-
-  return isCatalogSource(envSource) ? envSource : DEFAULT_STOREFRONT_CATALOG_SOURCE;
-}
+export { DEFAULT_STOREFRONT_CATALOG_SOURCE, resolveStorefrontCatalogSource };
+export type { StorefrontCatalogSource };
 
 function resolveCatalogPath(source: StorefrontCatalogSource): string {
   return source === "v2" ? STOREFRONT_CATALOG_V2_PATH : STOREFRONT_API_PATHS.catalog;

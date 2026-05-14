@@ -4,6 +4,7 @@ import { mapCatalogProductsToCardData } from "@/components/presentation/render-c
 import { normalizeCatalogExperienceQuery } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { parseCatalogSearchParams } from "@/lib/presentation/catalog-routing";
 import { getStorefrontRuntimeSnapshot } from "@/lib/runtime/storefront-request-context";
+import { resolveStorefrontCatalogSource } from "@/lib/storefront/catalog-source";
 import { getCatalog, getCategories } from "@/lib/storefront-api";
 
 function toSearchParamsRecord(searchParams: URLSearchParams): Record<string, string | undefined> {
@@ -36,9 +37,15 @@ export async function GET(request: Request) {
       categories,
       routeCategorySlug,
     );
-    const catalog = await getCatalog(runtime.context, normalizeCatalogExperienceQuery(resolution.query), {
-      origin: "infinite-scroll",
-    });
+    const source = resolveStorefrontCatalogSource();
+    const catalog = await getCatalog(
+      runtime.context,
+      normalizeCatalogExperienceQuery(resolution.query, source),
+      {
+        origin: "infinite-scroll",
+        source,
+      },
+    );
 
     return NextResponse.json({
       products: mapCatalogProductsToCardData(
