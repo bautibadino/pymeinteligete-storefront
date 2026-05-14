@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("next/headers", () => ({
+  headers: vi.fn(),
+}));
+
 import { loadCatalogRouteData, resolveCatalogRoute } from "@/app/(storefront)/catalogo/_lib/catalog-data";
 import type { StorefrontCategory } from "@/lib/storefront-api";
 
@@ -17,11 +21,13 @@ import {
   loadBootstrapExperience,
   loadCatalogExperience,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
+import { headers } from "next/headers";
 import { getCategories } from "@/lib/storefront-api";
 
 const loadBootstrapExperienceMock = vi.mocked(loadBootstrapExperience);
 const loadCatalogExperienceMock = vi.mocked(loadCatalogExperience);
 const getCategoriesMock = vi.mocked(getCategories);
+const headersMock = vi.mocked(headers);
 
 const CATEGORIES: StorefrontCategory[] = [
   {
@@ -60,6 +66,11 @@ describe("catalog data", () => {
         },
       },
     } as never);
+    headersMock.mockResolvedValue(
+      new Headers({
+        "user-agent": "Mozilla/5.0",
+      }),
+    );
   });
 
   it("no convierte a 404 falso una categoría por slug cuando falla categories", async () => {
@@ -92,5 +103,29 @@ describe("catalog data", () => {
     expect(route.selectedCategory?.categoryId).toBe("cat-neu");
     expect(route.query.categoryId).toBe("cat-neu");
     expect(route.pathname).toBe("/catalogo/neumaticos");
+  });
+
+  it("degrada queries variantes de catálogo para bots antes de pegar al backend", async () => {
+    getCategoriesMock.mockResolvedValueOnce(CATEGORIES);
+    headersMock.mockResolvedValueOnce(
+      new Headers({
+        "user-agent": "Googlebot/2.1",
+      }),
+    );
+
+    const routeData = await loadCatalogRouteData({
+      category: "neumaticos",
+      brand: "HENGST",
+      sortBy: "price",
+      page: "2",
+      search: "R16",
+    });
+
+    expect(loadCatalogExperienceMock).toHaveBeenCalledWith({
+      categoryId: "cat-neu",
+    });
+    expect(routeData.query).toEqual({
+      categoryId: "cat-neu",
+    });
   });
 });
