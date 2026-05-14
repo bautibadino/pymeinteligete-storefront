@@ -7,6 +7,7 @@ import {
 } from "@/lib/api/query";
 import {
   buildStorefrontGetNextOptions,
+  buildStorefrontGetCacheTags,
   getStorefrontFetchRevalidate,
 } from "@/lib/fetchers/cache";
 import {
@@ -142,6 +143,30 @@ describe("storefront fetch cache", () => {
         process.env.STORE_REVALIDATE_SECONDS = previousValue;
       }
     }
+  });
+
+  it("aísla cache tags por tenantSlug cuando el host se resuelve vía preview", () => {
+    expect(buildStorefrontGetCacheTags("bootstrap", "pymeinteligete-storefront.vercel.app")).toEqual([
+      "bootstrap:pymeinteligete-storefront.vercel.app",
+    ]);
+
+    expect(
+      buildStorefrontGetCacheTags("bootstrap", "pymeinteligete-storefront.vercel.app", undefined, "bym"),
+    ).toEqual([
+      "bootstrap:pymeinteligete-storefront.vercel.app:tenant:bym",
+    ]);
+
+    expect(
+      buildStorefrontGetNextOptions(
+        "bootstrap",
+        "pymeinteligete-storefront.vercel.app",
+        undefined,
+        "bym",
+      ),
+    ).toEqual({
+      revalidate: 86400,
+      tags: ["bootstrap:pymeinteligete-storefront.vercel.app:tenant:bym"],
+    });
   });
 });
 

@@ -84,11 +84,11 @@ export async function getCategories(input: StorefrontFetchInput): Promise<Storef
     path: STOREFRONT_API_PATHS.categories,
     context,
     method: "GET",
-    next: buildStorefrontGetNextOptions("categories", context.host),
+    next: buildStorefrontGetNextOptions("categories", context.host, undefined, context.tenantSlug),
   });
   const response = context.previewToken
     ? await fetchCategories()
-    : await readCachedStorefrontGet("categories", context.host, undefined, fetchCategories);
+    : await readCachedStorefrontGet("categories", context.host, undefined, context.tenantSlug, fetchCategories);
 
   return unwrapCategories(response);
 }

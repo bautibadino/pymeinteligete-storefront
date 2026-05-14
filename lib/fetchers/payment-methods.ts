@@ -17,6 +17,6 @@ export async function getPaymentMethods(
     path: STOREFRONT_API_PATHS.paymentMethods,
     context,
     method: "GET",
-    next: buildStorefrontGetNextOptions("payment-methods", context.host),
+    next: buildStorefrontGetNextOptions("payment-methods", context.host, undefined, context.tenantSlug),
   });
 }

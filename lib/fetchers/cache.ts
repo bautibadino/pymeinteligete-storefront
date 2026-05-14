@@ -36,11 +36,13 @@ export function buildStorefrontGetCacheTags(
   surface: string,
   host: string,
   query?: StorefrontQueryParams,
+  tenantSlug?: string,
 ): string[] {
-  const tags = [`${surface}:${host}`];
+  const baseTag = tenantSlug ? `${surface}:${host}:tenant:${tenantSlug}` : `${surface}:${host}`;
+  const tags = [baseTag];
 
   if (query && Object.keys(query).length > 0) {
-    tags.push(`${surface}:${host}:${buildStorefrontQuerySignature(query)}`);
+    tags.push(`${baseTag}:${buildStorefrontQuerySignature(query)}`);
   }
 
   return tags;
@@ -50,9 +52,10 @@ export function buildStorefrontGetNextOptions(
   surface: string,
   host: string,
   query?: StorefrontQueryParams,
+  tenantSlug?: string,
 ): StorefrontNextOptions {
   const revalidate = getStorefrontFetchRevalidate();
-  const tags = buildStorefrontGetCacheTags(surface, host, query);
+  const tags = buildStorefrontGetCacheTags(surface, host, query, tenantSlug);
 
   return {
     tags,
@@ -64,11 +67,18 @@ export async function readCachedStorefrontGet<T>(
   surface: string,
   host: string,
   query: StorefrontQueryParams | undefined,
+  tenantSlug: string | undefined,
   fetcher: () => Promise<T>,
 ): Promise<T> {
   const revalidate = getStorefrontFetchRevalidate();
-  const tags = buildStorefrontGetCacheTags(surface, host, query);
-  const cacheKey = ["storefront-get", surface, host, buildStorefrontQuerySignature(query)];
+  const tags = buildStorefrontGetCacheTags(surface, host, query, tenantSlug);
+  const cacheKey = [
+    "storefront-get",
+    surface,
+    host,
+    tenantSlug ?? "no-tenant-slug",
+    buildStorefrontQuerySignature(query),
+  ];
   const cachedFetcher = unstable_cache(fetcher, cacheKey, {
     tags,
     ...(revalidate !== undefined ? { revalidate } : {}),

@@ -33,7 +33,7 @@ export async function getProduct(
     path: STOREFRONT_API_PATHS.product(slug),
     context,
     method: "GET",
-    next: buildStorefrontGetNextOptions("product", context.host, { slug }),
+    next: buildStorefrontGetNextOptions("product", context.host, { slug }, context.tenantSlug),
   });
 
   return unwrapProductDetail(response);

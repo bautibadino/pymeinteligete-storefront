@@ -24,7 +24,7 @@ export function buildBootstrapFetchCacheOptions(
     return { cache: "no-store" };
   }
 
-  return { next: buildStorefrontGetNextOptions("bootstrap", context.host) };
+  return { next: buildStorefrontGetNextOptions("bootstrap", context.host, undefined, context.tenantSlug) };
 }
 
 function buildBootstrapPreviewHeaders(context: StorefrontRequestContext): HeadersInit | undefined {
@@ -55,5 +55,5 @@ export async function getBootstrap(input: StorefrontFetchInput): Promise<Storefr
     return fetchBootstrap();
   }
 
-  return readCachedStorefrontGet("bootstrap", context.host, undefined, fetchBootstrap);
+  return readCachedStorefrontGet("bootstrap", context.host, undefined, context.tenantSlug, fetchBootstrap);
 }

@@ -99,7 +99,7 @@ export async function getCatalog(
     path: STOREFRONT_API_PATHS.catalog,
     context,
     method: "GET" as const,
-    next: buildStorefrontGetNextOptions("catalog", context.host, normalizedQuery),
+    next: buildStorefrontGetNextOptions("catalog", context.host, normalizedQuery, context.tenantSlug),
     ...(options?.origin
       ? { headers: { [STOREFRONT_HEADERS.origin]: options.origin } }
       : {}),
@@ -111,5 +111,5 @@ export async function getCatalog(
     return fetchCatalog();
   }
 
-  return readCachedStorefrontGet("catalog", context.host, normalizedQuery, fetchCatalog);
+  return readCachedStorefrontGet("catalog", context.host, normalizedQuery, context.tenantSlug, fetchCatalog);
 }

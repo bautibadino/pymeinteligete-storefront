@@ -20,7 +20,7 @@ export async function getOrderByToken(
     path: STOREFRONT_API_PATHS.orderByToken(token),
     context,
     method: "GET",
-    next: buildStorefrontGetNextOptions("order-by-token", context.host, { token }),
+    next: buildStorefrontGetNextOptions("order-by-token", context.host, { token }, context.tenantSlug),
   });
 }
 
