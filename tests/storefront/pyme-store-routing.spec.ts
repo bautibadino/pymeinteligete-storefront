@@ -144,6 +144,7 @@ describe("routing comercial pymeinteligente.store", () => {
   it("reconoce sólo el apex y www del dominio comercial sin depender de IDs", () => {
     expect(isPymeStoreMarketingHost("pymeinteligente.store")).toBe(true);
     expect(isPymeStoreMarketingHost("www.pymeinteligente.store")).toBe(true);
+    expect(isPymeStoreMarketingHost("pymeinteligete-storefront.vercel.app")).toBe(true);
     expect(isPymeStoreMarketingHost("https://www.PYMEINTELIGENTE.store:443")).toBe(true);
     expect(isPymeStoreMarketingHost("bym.pymeinteligente.store")).toBe(false);
     expect(isPymeStoreMarketingHost("www.bymlubricentro.com")).toBe(false);
@@ -166,6 +167,16 @@ describe("routing comercial pymeinteligente.store", () => {
 
   it("renderiza la landing comercial en la home sin pedir experiencia storefront", async () => {
     setHost("pymeinteligente.store");
+
+    const page = await HomePage({ searchParams: Promise.resolve({}) });
+    const html = renderHtml(page);
+
+    expect(loadHomeExperienceMock).not.toHaveBeenCalled();
+    expect(html).toContain('data-pyme-store-landing="true"');
+  });
+
+  it("renderiza la landing comercial en la home para el host raíz de vercel", async () => {
+    setHost("pymeinteligete-storefront.vercel.app");
 
     const page = await HomePage({ searchParams: Promise.resolve({}) });
     const html = renderHtml(page);

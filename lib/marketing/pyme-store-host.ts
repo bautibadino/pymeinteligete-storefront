@@ -1,5 +1,6 @@
 const PYME_STORE_MARKETING_DOMAIN = "pymeinteligente.store";
 const PYME_STORE_MARKETING_WWW_DOMAIN = `www.${PYME_STORE_MARKETING_DOMAIN}`;
+const PYME_STORE_MARKETING_VERCEL_HOST = "pymeinteligete-storefront.vercel.app";
 const LOCAL_MARKETING_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
 function getPrimaryHostCandidate(candidate: string): string {
@@ -36,6 +37,7 @@ export function isPymeStoreMarketingHost(candidate: string | null | undefined): 
   return (
     normalizedHost === PYME_STORE_MARKETING_DOMAIN ||
     normalizedHost === PYME_STORE_MARKETING_WWW_DOMAIN ||
+    normalizedHost === PYME_STORE_MARKETING_VERCEL_HOST ||
     (normalizedHost !== null && LOCAL_MARKETING_HOSTS.has(normalizedHost))
   );
 }

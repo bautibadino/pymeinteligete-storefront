@@ -89,6 +89,7 @@ describe("pyme store marketing SEO", () => {
   it("reconoce sólo los hosts comerciales de PymeInteligente Store", () => {
     expect(isPymeStoreMarketingHost("www.pymeinteligente.store")).toBe(true);
     expect(isPymeStoreMarketingHost("pymeinteligente.store")).toBe(true);
+    expect(isPymeStoreMarketingHost("pymeinteligete-storefront.vercel.app")).toBe(true);
     expect(isPymeStoreMarketingHost("acme.pymeinteligente.store")).toBe(false);
     expect(isPymeStoreMarketingHost("bym.pymeinteligente.com.ar")).toBe(false);
   });
