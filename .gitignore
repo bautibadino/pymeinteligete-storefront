@@ -6,6 +6,6 @@ dist
 coverage
 *.log
 *.tsbuildinfo
-
 .DS_Store
 .vercel
+.npm-cache

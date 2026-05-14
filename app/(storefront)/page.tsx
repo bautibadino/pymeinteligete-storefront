@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 
-import { loadHomeExperience } from "@/app/(storefront)/_lib/storefront-shell-data";
+import {
+  loadBootstrapExperience,
+  loadHomeExperience,
+} from "@/app/(storefront)/_lib/storefront-shell-data";
 import { PymeStoreLanding } from "@/components/marketing/pyme-store-landing";
 import { ModuleRenderer } from "@/components/modules/ModuleRenderer";
 import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
 import { PreviewBridge } from "@/components/presentation/PreviewBridge";
 import { BymHomePage } from "@/components/storefront/bym-home-page";
 import { SurfaceStateCard } from "@/components/storefront/surface-state";
+import {
+  resolveCustomExperienceDefinition,
+  resolveCustomExperienceKey,
+} from "@/lib/experiences";
 import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
 import { isPymeStoreMarketingHost } from "@/lib/marketing/pyme-store-host";
 import { buildPymeStoreMetadata } from "@/lib/marketing/pyme-store-seo";
@@ -29,7 +36,20 @@ export async function generateMetadata(): Promise<Metadata> {
     return buildPymeStoreMetadata();
   }
 
-  const snapshot = await resolveTenantSeoSnapshot();
+  const [experience, snapshot] = await Promise.all([
+    loadBootstrapExperience(),
+    resolveTenantSeoSnapshot(),
+  ]);
+  const customExperienceKey = resolveCustomExperienceKey(experience.bootstrap);
+
+  if (customExperienceKey === "sportadventure-custom-v1") {
+    return buildTenantMetadata(snapshot, {
+      pathname: "/",
+      title: "SportAdventure | Motos, indumentaria y repuestos",
+      description:
+        "Motos, indumentaria técnica, repuestos, accesorios y taller especializado para riders de enduro, motocross y aventura.",
+    });
+  }
 
   return buildTenantMetadata(snapshot, {
     pathname: "/",
@@ -50,7 +70,27 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const host = experience.runtime.context.host;
   const theme = resolveEffectiveTenantTheme(experience.bootstrap);
   const hasPreview = Boolean(experience.runtime.context.previewToken);
-  const usePresentation = shouldUsePresentation(experience.bootstrap?.presentation, "home");
+  const customExperience = resolveCustomExperienceDefinition(experience.bootstrap);
+  const usePresentation = shouldUsePresentation(
+    experience.bootstrap?.presentation,
+    "home",
+  );
+
+  if (customExperience) {
+    return (
+      <>
+        {hasPreview ? <PreviewBridge /> : null}
+        {customExperience.renderHome({
+          bootstrap: experience.bootstrap,
+          host,
+          theme,
+          products: experience.catalog?.products ?? [],
+          categories: experience.categories,
+          paymentMethods: experience.paymentMethods?.paymentMethods ?? [],
+        })}
+      </>
+    );
+  }
 
   if (isBymCustomExperience(experience.bootstrap)) {
     return (
@@ -92,9 +132,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     theme,
     host,
   });
-  // Permite previsualizar templates desde la URL (`?hero=workshop`)
-  // sin mutar la configuración persistida del tenant. El editor del
-  // ERP usará el mismo mecanismo para el preview iframe (Fase 4).
   const modules = applyTemplateOverrides(baseModules, resolvedSearchParams);
 
   return (

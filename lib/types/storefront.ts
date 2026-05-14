@@ -58,6 +58,12 @@ export interface StorefrontTenantIdentity {
   resolvedHost: string;
   resolvedBy: ResolvedBy;
   canonicalDomain?: string;
+  host?: string | null;
+  canonicalHost?: string | null;
+  canonicalUrl?: string | null;
+  displayName?: string | null;
+  additionalDomains?: string[] | null;
+  [key: string]: unknown;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -82,8 +88,10 @@ export interface StorefrontBranding {
   legalName?: string;
   logoUrl?: string;
   faviconUrl?: string;
-  colors: StorefrontBrandingColors;
+  colors?: StorefrontBrandingColors;
   typography?: StorefrontBrandingTypography;
+  name?: string | null;
+  theme?: unknown;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -109,6 +117,19 @@ export interface StorefrontSeoConfig {
   defaultDescription?: string;
   ogImage?: string;
   keywords?: string[];
+  title?: string | null;
+  description?: string | null;
+  canonicalUrl?: string | null;
+  canonicalHost?: string | null;
+  ogImageUrl?: string | null;
+  [key: string]: unknown;
+}
+
+export interface StorefrontThemeConfig {
+  [key: string]: unknown;
+  preset?: string | null;
+  layout?: string | null;
+  tokensVersion?: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -309,7 +330,7 @@ export interface StorefrontBootstrap {
   branding: StorefrontBranding;
   presentation?: Presentation;
   storefrontExperience?: StorefrontExperienceConfig;
-  theme: StorefrontTheme;
+  theme: StorefrontTheme | StorefrontThemeConfig;
   seo: StorefrontSeoConfig;
   navigation: StorefrontNavigation;
   home: StorefrontHomeConfig;
@@ -319,6 +340,10 @@ export interface StorefrontBootstrap {
   features: StorefrontFeatures;
   pages: StorefrontPage[];
   analytics?: StorefrontAnalytics;
+  shopStatus?: ShopStatus;
+  modules?: StorefrontContentModule[] | null;
+  paymentSettings?: unknown;
+  [key: string]: unknown;
 }
 
 export interface StorefrontExperienceConfig {
@@ -336,13 +361,18 @@ export interface StorefrontCatalogQuery extends StorefrontQueryParams {
   pageSize?: number;
   sortBy?: "name" | "price" | "createdAt" | "brand";
   sortOrder?: "asc" | "desc";
+  sort?: string;
   search?: string;
   categoryId?: string;
+  category?: string;
   brand?: string;
   family?: string;
+  slug?: string;
   minPrice?: number;
   maxPrice?: number;
   onlyImmediate?: boolean;
+  availability?: string | boolean;
+  vehicleVersionId?: string;
 }
 
 export interface StorefrontImageAsset {
@@ -480,6 +510,7 @@ export interface StorefrontPagination {
   pageSize: number;
   limit?: number;
   total: number;
+  totalItems?: number;
   totalPages: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
@@ -509,8 +540,10 @@ export interface StorefrontCatalogFacets {
 
 export interface StorefrontCatalog {
   products: StorefrontCatalogProduct[];
+  items?: StorefrontCatalogProduct[];
   pagination: StorefrontPagination;
   facets?: StorefrontCatalogFacets;
+  filters?: StorefrontCatalogFacets;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -752,6 +785,7 @@ export interface StorefrontPaymentMethod {
 
 export interface StorefrontPaymentMethods {
   paymentMethods: StorefrontPaymentMethod[];
+  items?: StorefrontPaymentMethod[];
 }
 
 // ─────────────────────────────────────────────────────────────

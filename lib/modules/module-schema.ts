@@ -12,7 +12,8 @@ export type StorefrontModuleType =
   | "categoryRail"
   | "promoBand"
   | "trustBar"
-  | "richText";
+  | "richText"
+  | "videoHero";
 
 export type ModuleVariant =
   | "split"
@@ -28,7 +29,8 @@ export type ModuleVariant =
   | "stacked"
   | "inline"
   | "cards"
-  | "compact";
+  | "compact"
+  | "cinematic";
 
 export type StorefrontModuleBase<TType extends StorefrontModuleType, TVariant extends ModuleVariant> = {
   id: string;
@@ -106,13 +108,24 @@ export type RichTextModule = StorefrontModuleBase<"richText", "editorial" | "com
   action?: ModuleAction;
 };
 
+export type VideoHeroModule = StorefrontModuleBase<"videoHero", "cinematic"> & {
+  eyebrow?: string;
+  title: string;
+  description: string;
+  videoSrc?: string;
+  videoPoster?: string;
+  primaryAction?: ModuleAction;
+  secondaryAction?: ModuleAction;
+};
+
 export type StorefrontModule =
   | HeroModule
   | FeaturedProductsModule
   | CategoryRailModule
   | PromoBandModule
   | TrustBarModule
-  | RichTextModule;
+  | RichTextModule
+  | VideoHeroModule;
 
 export type ModuleRendererProps = {
   modules: StorefrontModule[];

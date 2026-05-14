@@ -6,8 +6,10 @@ import {
   type ContactEntry,
   loadInstitutionalPageData,
 } from "@/app/(storefront)/_lib/institutional-page-data";
+import { SportAdventureContactExperience } from "@/components/experiences/sportadventure";
 import { BymContactPage } from "@/components/storefront/bym-contact-page";
 import { DynamicContactForm } from "@/components/storefront/contact/dynamic-contact-form";
+import { resolveCustomExperienceKey } from "@/lib/experiences";
 import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
 
 export async function generateMetadata() {
@@ -53,6 +55,16 @@ function ContactChannels({ entries }: { entries: ContactEntry[] }) {
 export default async function ContactoPage() {
   const data = await loadInstitutionalPageData("/contacto");
   const contactForm = data.bootstrap?.contactForm;
+  const customExperienceKey = resolveCustomExperienceKey(data.bootstrap);
+
+  if (customExperienceKey === "sportadventure-custom-v1") {
+    return (
+      <SportAdventureContactExperience
+        bootstrap={data.bootstrap}
+        host={data.host}
+      />
+    );
+  }
 
   if (isBymCustomExperience(data.bootstrap)) {
     return <BymContactPage data={data} {...(contactForm ? { contactForm } : {})} />;

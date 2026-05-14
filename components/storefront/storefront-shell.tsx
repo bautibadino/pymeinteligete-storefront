@@ -3,17 +3,6 @@ import Link from "next/link";
 import type { Route } from "next";
 import type { ReactNode } from "react";
 
-import { HeaderCartButton } from "@/components/storefront/cart/header-cart-button";
-import { BymStorefrontShell } from "@/components/storefront/bym-storefront-shell";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import {
-  PresentationGlobalAnnouncementBar,
-  PresentationGlobalFooter,
-  PresentationGlobalHeader,
-} from "@/components/presentation/PresentationRenderer";
 import {
   resolveStatusMessage,
   resolveStatusTone,
@@ -22,9 +11,24 @@ import {
   resolveTenantLogoUrl,
   type FetchIssue,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
-import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
-import type { StorefrontBootstrap, StorefrontCategory, StorefrontNavLink } from "@/lib/storefront-api";
+import {
+  PresentationGlobalAnnouncementBar,
+  PresentationGlobalFooter,
+  PresentationGlobalHeader,
+} from "@/components/presentation/PresentationRenderer";
+import { BymStorefrontShell } from "@/components/storefront/bym-storefront-shell";
+import { HeaderCartButton } from "@/components/storefront/cart/header-cart-button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
+import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
+import type {
+  StorefrontBootstrap,
+  StorefrontCategory,
+  StorefrontNavLink,
+} from "@/lib/storefront-api";
 
 const FALLBACK_NAVIGATION: StorefrontNavLink[] = [
   { href: "/", label: "Inicio" },
@@ -42,13 +46,21 @@ type StorefrontShellProps = {
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_STOREFRONT_DEBUG === "true";
 
-function resolveStatusBadgeVariant(statusTone: ReturnType<typeof resolveStatusTone>) {
+function resolveStatusBadgeVariant(
+  statusTone: ReturnType<typeof resolveStatusTone>,
+) {
   if (statusTone === "live") return "success";
   if (statusTone === "paused") return "warning";
   return "outline";
 }
 
-export function StorefrontShell({ bootstrap, categories = [], host, children, issues }: StorefrontShellProps) {
+export function StorefrontShell({
+  bootstrap,
+  categories = [],
+  host,
+  children,
+  issues,
+}: StorefrontShellProps) {
   const presentation = bootstrap?.presentation ?? null;
   const displayName = resolveTenantDisplayName(bootstrap, host);
   const description =
@@ -59,12 +71,18 @@ export function StorefrontShell({ bootstrap, categories = [], host, children, is
   const statusMessage = resolveStatusMessage(bootstrap?.tenant.status ?? null);
   const contactEmail = bootstrap?.contact?.email;
   const contactPhone = bootstrap?.contact?.phone;
-  const headerLinks = bootstrap?.navigation?.headerLinks ?? FALLBACK_NAVIGATION;
+  const headerLinks =
+    bootstrap?.navigation?.headerLinks ?? FALLBACK_NAVIGATION;
   const footerColumns = bootstrap?.navigation?.footerColumns ?? [];
 
   if (isBymCustomExperience(bootstrap)) {
     return (
-      <BymStorefrontShell bootstrap={bootstrap} categories={categories} host={host} issues={issues}>
+      <BymStorefrontShell
+        bootstrap={bootstrap}
+        categories={categories}
+        host={host}
+        issues={issues}
+      >
         {children}
       </BymStorefrontShell>
     );
@@ -79,11 +97,20 @@ export function StorefrontShell({ bootstrap, categories = [], host, children, is
           className="sticky top-0 z-50 bg-paper/84 shadow-sm backdrop-blur-xl"
           data-presentation-chrome="sticky-stack"
         >
-          <PresentationGlobalAnnouncementBar presentation={presentation} context={presentationContext} />
-          <PresentationGlobalHeader presentation={presentation} context={presentationContext} />
+          <PresentationGlobalAnnouncementBar
+            presentation={presentation}
+            context={presentationContext}
+          />
+          <PresentationGlobalHeader
+            presentation={presentation}
+            context={presentationContext}
+          />
         </div>
         <div className="presentation-shell-content">{children}</div>
-        <PresentationGlobalFooter presentation={presentation} context={presentationContext} />
+        <PresentationGlobalFooter
+          presentation={presentation}
+          context={presentationContext}
+        />
       </main>
     );
   }
@@ -93,18 +120,28 @@ export function StorefrontShell({ bootstrap, categories = [], host, children, is
       <header className="sticky top-0 z-40 border-b border-border bg-paper/95 backdrop-blur-xl">
         <div className="bg-secondary px-4 py-2 text-center text-xs font-bold uppercase tracking-wide text-secondary-foreground">
           <div className="mx-auto flex max-w-content items-center justify-center gap-3">
-            <Badge variant={resolveStatusBadgeVariant(statusTone)}>{statusMessage}</Badge>
-            <span className="truncate">{contactPhone ? `Atención: ${contactPhone}` : description}</span>
+            <Badge variant={resolveStatusBadgeVariant(statusTone)}>
+              {statusMessage}
+            </Badge>
+            <span className="truncate">
+              {contactPhone ? `Atención: ${contactPhone}` : description}
+            </span>
           </div>
         </div>
 
         <div className="mx-auto grid max-w-content grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 md:grid-cols-[220px_minmax(260px,640px)_120px] md:gap-6">
-          <Link className="flex min-w-0 items-center gap-3" href="/" aria-label={`Inicio de ${displayName}`}>
+          <Link
+            className="flex min-w-0 items-center gap-3"
+            href="/"
+            aria-label={`Inicio de ${displayName}`}
+          >
             <span className="grid h-10 w-24 shrink-0 place-items-center" aria-hidden="true">
               {logoUrl ? (
                 <img className="h-full w-full object-contain" src={logoUrl} alt="" />
               ) : (
-                <span className="font-heading text-xl font-bold">{displayName.slice(0, 2).toUpperCase()}</span>
+                <span className="font-heading text-xl font-bold">
+                  {displayName.slice(0, 2).toUpperCase()}
+                </span>
               )}
             </span>
             <span className="hidden truncate text-sm font-black tracking-tight text-foreground sm:inline">
@@ -139,14 +176,19 @@ export function StorefrontShell({ bootstrap, categories = [], host, children, is
 
         <Separator />
 
-        <nav className="mx-auto flex min-h-11 max-w-content items-center justify-start gap-6 overflow-x-auto px-4 text-sm font-bold text-muted md:justify-center md:gap-9" aria-label="Navegación pública">
+        <nav
+          className="mx-auto flex min-h-11 max-w-content items-center justify-start gap-6 overflow-x-auto px-4 text-sm font-bold text-muted md:justify-center md:gap-9"
+          aria-label="Navegación pública"
+        >
           {headerLinks.map((item) => (
             <Link
               key={item.href}
               className="whitespace-nowrap transition-colors hover:text-foreground"
               href={item.href as Route}
               prefetch={shouldPrefetchStorefrontLink(item.href)}
-              {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              {...(item.external
+                ? { target: "_blank", rel: "noopener noreferrer" }
+                : {})}
             >
               {item.label}
             </Link>
@@ -162,7 +204,10 @@ export function StorefrontShell({ bootstrap, categories = [], host, children, is
       </header>
 
       {DEBUG_ENABLED && issues.length > 0 ? (
-        <section className="mx-auto grid max-w-content gap-4 px-4 py-5 md:grid-cols-[1fr_1fr]" aria-label="Estado técnico del tenant">
+        <section
+          className="mx-auto grid max-w-content gap-4 px-4 py-5 md:grid-cols-[1fr_1fr]"
+          aria-label="Estado técnico del tenant"
+        >
           <div>
             <strong>Integración parcial</strong>
             <p className="mt-1 text-sm text-muted">
@@ -172,7 +217,10 @@ export function StorefrontShell({ bootstrap, categories = [], host, children, is
           </div>
           <ul className="grid gap-2">
             {issues.map((issue, index) => (
-              <li className="rounded-lg border border-dashed border-border p-3 text-sm" key={`${issue.surface}-${issue.code ?? "na"}-${index}`}>
+              <li
+                className="rounded-lg border border-dashed border-border p-3 text-sm"
+                key={`${issue.surface}-${issue.code ?? "na"}-${index}`}
+              >
                 <span className="font-mono">{issue.surface}</span>
                 <span className="ml-2">{issue.message}</span>
               </li>
@@ -181,7 +229,9 @@ export function StorefrontShell({ bootstrap, categories = [], host, children, is
         </section>
       ) : null}
 
-      <div className="mx-auto grid max-w-content gap-6 px-4 py-8 md:py-10">{children}</div>
+      <div className="mx-auto grid max-w-content gap-6 px-4 py-8 md:py-10">
+        {children}
+      </div>
 
       {footerColumns.length > 0 ? (
         <footer className="border-t border-border bg-panel" aria-label="Pie de página">
@@ -196,7 +246,9 @@ export function StorefrontShell({ bootstrap, categories = [], host, children, is
                         className="hover:text-foreground"
                         href={link.href as Route}
                         prefetch={shouldPrefetchStorefrontLink(link.href)}
-                        {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                        {...(link.external
+                          ? { target: "_blank", rel: "noopener noreferrer" }
+                          : {})}
                       >
                         {link.label}
                       </Link>

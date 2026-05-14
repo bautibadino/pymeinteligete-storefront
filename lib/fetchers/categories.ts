@@ -78,17 +78,32 @@ function unwrapCategories(response: CategoriesResponse): StorefrontCategory[] {
     .filter((node): node is StorefrontCategory => node !== null);
 }
 
-export async function getCategories(input: StorefrontFetchInput): Promise<StorefrontCategory[]> {
+export async function getCategories(
+  input: StorefrontFetchInput,
+): Promise<StorefrontCategory[]> {
   const context = resolveStorefrontRequestContext(input);
-  const fetchCategories = async () => requestStorefrontApi<CategoriesResponse>({
-    path: STOREFRONT_API_PATHS.categories,
-    context,
-    method: "GET",
-    next: buildStorefrontGetNextOptions("categories", context.host, undefined, context.tenantSlug),
-  });
+  const fetchCategories = async () =>
+    requestStorefrontApi<CategoriesResponse>({
+      path: STOREFRONT_API_PATHS.categories,
+      context,
+      method: "GET",
+      next: buildStorefrontGetNextOptions(
+        "categories",
+        context.host,
+        undefined,
+        context.tenantSlug,
+      ),
+    });
+
   const response = context.previewToken
     ? await fetchCategories()
-    : await readCachedStorefrontGet("categories", context.host, undefined, context.tenantSlug, fetchCategories);
+    : await readCachedStorefrontGet(
+        "categories",
+        context.host,
+        undefined,
+        context.tenantSlug,
+        fetchCategories,
+      );
 
   return unwrapCategories(response);
 }

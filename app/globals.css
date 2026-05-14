@@ -86,6 +86,16 @@ img {
     linear-gradient(180deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 86%, var(--panel-strong)) 100%);
 }
 
+.custom-experience-root {
+  width: 100%;
+  min-height: 100dvh;
+}
+
+.tenant-theme:has(> main.custom-experience-root-sportadventure-custom-v1) {
+  overflow: visible;
+  height: auto;
+}
+
 .eyebrow,
 .storefront-kicker {
   display: inline-flex;
@@ -1458,5 +1468,476 @@ img {
   .form-field-compact,
   .checkout-submit {
     width: 100%;
+  }
+}
+
+/* ========================================================================== */
+/*  velocityBrutal theme overrides                                            */
+/* ========================================================================== */
+
+.tenant-theme-velocityBrutal {
+  color-scheme: dark;
+  overflow: visible;
+}
+
+.tenant-theme-velocityBrutal .storefront-frame {
+  padding-top: 0;
+  padding-bottom: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.tenant-theme-velocityBrutal .storefront-shell {
+  border: none;
+  border-radius: 0;
+  background: var(--bg);
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.tenant-theme-velocityBrutal .storefront-topbar {
+  border-bottom-color: var(--line);
+  background: rgba(8, 6, 5, 0.82);
+  backdrop-filter: blur(18px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.tenant-theme-velocityBrutal .storefront-brandmark {
+  background: linear-gradient(135deg, rgba(255, 68, 0, 0.32), rgba(255, 208, 0, 0.12));
+  border-color: rgba(255, 68, 0, 0.25);
+  box-shadow: 0 0 24px rgba(255, 68, 0, 0.12);
+}
+
+.tenant-theme-velocityBrutal .storefront-title {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.tenant-theme-velocityBrutal .storefront-navlink,
+.tenant-theme-velocityBrutal .secondary-action,
+.tenant-theme-velocityBrutal .surface-action {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.tenant-theme-velocityBrutal .storefront-navlink:hover,
+.tenant-theme-velocityBrutal .secondary-action:hover,
+.tenant-theme-velocityBrutal .surface-action:hover {
+  background: rgba(255, 68, 0, 0.14);
+  border-color: rgba(255, 68, 0, 0.3);
+}
+
+.tenant-theme-velocityBrutal .primary-action {
+  background: var(--accent);
+  color: var(--action-contrast);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 30px rgba(255, 68, 0, 0.35), 0 0 60px rgba(255, 68, 0, 0.12);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.tenant-theme-velocityBrutal .primary-action:hover {
+  box-shadow: 0 0 40px rgba(255, 68, 0, 0.5), 0 0 80px rgba(255, 68, 0, 0.2);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.tenant-theme-velocityBrutal .eyebrow,
+.tenant-theme-velocityBrutal .storefront-kicker {
+  color: var(--accent);
+  letter-spacing: 0.22em;
+  font-weight: 700;
+}
+
+.tenant-theme-velocityBrutal .eyebrow::before,
+.tenant-theme-velocityBrutal .storefront-kicker::before {
+  background: var(--accent);
+  height: 2px;
+}
+
+.tenant-theme-velocityBrutal .sf-module {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02) inset;
+  border-radius: 0;
+}
+
+.tenant-theme-velocityBrutal .sf-module h2 {
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  font-weight: 900;
+}
+
+.tenant-theme-velocityBrutal .sf-hero-workshop {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 48%),
+    repeating-linear-gradient(
+      -4deg,
+      color-mix(in srgb, var(--line) 60%, transparent) 0 1px,
+      transparent 1px 28px
+    ),
+    var(--panel);
+}
+
+.tenant-theme-velocityBrutal .sf-hero-panel {
+  background: color-mix(in srgb, var(--panel-strong) 70%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--line));
+}
+
+.tenant-theme-velocityBrutal .sf-product-card,
+.tenant-theme-velocityBrutal .sf-category-tile,
+.tenant-theme-velocityBrutal .sf-trust-item {
+  background: color-mix(in srgb, var(--panel-strong) 80%, var(--bg));
+  border-color: var(--line);
+  border-radius: var(--radius-lg);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.tenant-theme-velocityBrutal .sf-product-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.tenant-theme-velocityBrutal .sf-product-media {
+  background:
+    radial-gradient(circle at top, var(--accent-soft), transparent 38%),
+    color-mix(in srgb, var(--bg) 80%, var(--panel-strong));
+}
+
+.tenant-theme-velocityBrutal .sf-product-copy h3 {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.tenant-theme-velocityBrutal .sf-product-footer a {
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.tenant-theme-velocityBrutal .sf-category-tile {
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.tenant-theme-velocityBrutal .sf-category-tile:hover {
+  border-color: color-mix(in srgb, var(--module-accent) 40%, var(--line));
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+.tenant-theme-velocityBrutal .sf-trust-item strong::before {
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.tenant-theme-velocityBrutal .sf-promo {
+  background:
+    linear-gradient(90deg, var(--accent-soft), transparent 60%),
+    var(--panel);
+}
+
+.tenant-theme-velocityBrutal .sf-promo-split {
+  border-left-color: var(--accent);
+}
+
+.tenant-theme-velocityBrutal .status-badge-live {
+  color: var(--accent-live);
+  background: var(--accent-live-soft);
+}
+
+/* ========================================================================== */
+/*  Video Hero                                                                */
+/* ========================================================================== */
+
+.sf-video-hero {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  overflow: hidden;
+  border: none !important;
+  border-radius: 0 !important;
+  background: #080605 !important;
+  box-shadow: none !important;
+}
+
+.sf-video-hero .sf-module {
+  border: none;
+  border-radius: 0;
+}
+
+.sf-video-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.sf-video-hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  will-change: transform;
+}
+
+.sf-video-hero-fallback {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.sf-video-hero-fallback-inner {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 35% 15%, rgba(255, 68, 0, 0.18), transparent 55%),
+    radial-gradient(ellipse at 70% 70%, rgba(255, 208, 0, 0.08), transparent 50%),
+    radial-gradient(ellipse at 15% 85%, rgba(255, 68, 0, 0.06), transparent 40%),
+    linear-gradient(180deg, #080604 0%, #0e0c0a 40%, #12100e 100%);
+}
+
+/* Speed lines animation for fallback */
+.sf-video-hero-fallback-inner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    55deg,
+    transparent,
+    transparent 180px,
+    rgba(255, 255, 255, 0.008) 180px,
+    rgba(255, 255, 255, 0.008) 182px
+  );
+  animation: speedLines 18s linear infinite;
+}
+
+.sf-video-hero-fallback-inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 68, 0, 0.04), transparent 70%);
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+@keyframes speedLines {
+  from {
+    transform: translateX(-10%) translateY(-10%);
+  }
+  to {
+    transform: translateX(10%) translateY(10%);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.sf-video-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 6, 5, 0.35) 0%,
+    rgba(8, 6, 5, 0.55) 50%,
+    rgba(8, 6, 5, 0.8) 100%
+  );
+  pointer-events: none;
+}
+
+/* Noise grain overlay */
+.sf-video-hero-noise {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+/* Content */
+.sf-video-hero-content {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 20px;
+  justify-items: center;
+  max-width: 900px;
+  padding: 40px clamp(20px, 5vw, 60px);
+  text-align: center;
+}
+
+.sf-video-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.sf-video-hero-eyebrow::before,
+.sf-video-hero-eyebrow::after {
+  content: "";
+  width: 28px;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.sf-video-hero-content h2 {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: clamp(3rem, 10vw, 8rem);
+  font-weight: 900;
+  line-height: 0.88;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  text-shadow: 0 4px 60px rgba(0, 0, 0, 0.6);
+}
+
+.sf-video-hero-content p {
+  margin: 0;
+  max-width: 540px;
+  color: rgba(240, 235, 228, 0.75);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.7;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+}
+
+.sf-video-hero-content .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.sf-video-hero-content .primary-action {
+  font-size: 0.95rem;
+  padding: 0 28px;
+  min-height: 52px;
+}
+
+.sf-video-hero-content .secondary-action {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.95rem;
+}
+
+.sf-video-hero-content .secondary-action:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Scroll indicator */
+.sf-scroll-indicator {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.sf-scroll-indicator::before {
+  content: "";
+  width: 1px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.sf-scroll-indicator span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+}
+
+/* ========================================================================== */
+/*  3D Tilt card                                                              */
+/* ========================================================================== */
+
+.tilt-card {
+  position: relative;
+  transform-style: preserve-3d;
+  perspective: 800px;
+  cursor: pointer;
+}
+
+.tilt-card .sf-product-media {
+  transform: translateZ(24px);
+}
+
+.tilt-card .sf-product-copy {
+  transform: translateZ(18px);
+}
+
+.tilt-card .sf-product-copy h3 {
+  transform: translateZ(4px);
+}
+
+.tilt-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tilt-card:hover .tilt-glare {
+  opacity: 1;
+}
+
+/* ========================================================================== */
+/*  velocityBrutal responsive tweaks                                          */
+/* ========================================================================== */
+
+@media (max-width: 760px) {
+  .sf-video-hero-content h2 {
+    font-size: clamp(2.4rem, 12vw, 3.8rem);
+  }
+
+  .sf-video-hero-content .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tenant-theme-velocityBrutal .storefront-shell {
+    border-radius: 0;
+  }
+
+  .tilt-card {
+    perspective: none;
+    transform: none !important;
+  }
+
+  .tilt-glare {
+    display: none;
   }
 }

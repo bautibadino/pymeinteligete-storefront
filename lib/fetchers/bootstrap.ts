@@ -24,10 +24,14 @@ export function buildBootstrapFetchCacheOptions(
     return { cache: "no-store" };
   }
 
-  return { next: buildStorefrontGetNextOptions("bootstrap", context.host, undefined, context.tenantSlug) };
+  return {
+    next: buildStorefrontGetNextOptions("bootstrap", context.host, undefined, context.tenantSlug),
+  };
 }
 
-function buildBootstrapPreviewHeaders(context: StorefrontRequestContext): HeadersInit | undefined {
+function buildBootstrapPreviewHeaders(
+  context: StorefrontRequestContext,
+): HeadersInit | undefined {
   if (!context.previewToken) {
     return undefined;
   }
@@ -39,11 +43,14 @@ function buildBootstrapPreviewHeaders(context: StorefrontRequestContext): Header
   };
 }
 
-export async function getBootstrap(input: StorefrontFetchInput): Promise<StorefrontBootstrap> {
+export async function getBootstrap(
+  input: StorefrontFetchInput,
+): Promise<StorefrontBootstrap> {
   const context = resolveStorefrontRequestContext(input);
   const previewHeaders = buildBootstrapPreviewHeaders(context);
 
-  const fetchBootstrap = () => requestStorefrontApi<StorefrontBootstrap>({
+  const fetchBootstrap = () =>
+    requestStorefrontApi<StorefrontBootstrap>({
       path: STOREFRONT_API_PATHS.bootstrap,
       context,
       method: "GET",
@@ -55,5 +62,11 @@ export async function getBootstrap(input: StorefrontFetchInput): Promise<Storefr
     return fetchBootstrap();
   }
 
-  return readCachedStorefrontGet("bootstrap", context.host, undefined, context.tenantSlug, fetchBootstrap);
+  return readCachedStorefrontGet(
+    "bootstrap",
+    context.host,
+    undefined,
+    context.tenantSlug,
+    fetchBootstrap,
+  );
 }

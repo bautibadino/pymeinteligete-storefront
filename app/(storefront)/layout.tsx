@@ -5,8 +5,9 @@ import type { ReactNode } from "react";
 import { loadBootstrapExperience } from "@/app/(storefront)/_lib/storefront-shell-data";
 import { StorefrontAnalyticsProvider } from "@/components/analytics/storefront-analytics-provider";
 import { StorefrontCartProvider } from "@/components/storefront/cart/storefront-cart-provider";
-import { TenantThemeProvider } from "@/components/theme/TenantThemeProvider";
 import { StorefrontShell } from "@/components/storefront/storefront-shell";
+import { TenantThemeProvider } from "@/components/theme/TenantThemeProvider";
+import { resolveCustomExperienceKey } from "@/lib/experiences";
 import { isPymeStoreMarketingHost } from "@/lib/marketing/pyme-store-host";
 import { resolveRequestHostFromHeaders } from "@/lib/tenancy/resolve-request-host";
 import { resolveEffectiveTenantTheme } from "@/lib/theme";
@@ -21,7 +22,11 @@ async function isPymeStoreMarketingRequest(): Promise<boolean> {
   }
 }
 
-export default async function StorefrontLayout({ children }: { children: ReactNode }) {
+export default async function StorefrontLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   if (await isPymeStoreMarketingRequest()) {
     return <>{children}</>;
   }
@@ -33,6 +38,7 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
   }
 
   const theme = resolveEffectiveTenantTheme(experience.bootstrap);
+  const customExperienceKey = resolveCustomExperienceKey(experience.bootstrap);
 
   return (
     <TenantThemeProvider theme={theme}>
@@ -41,14 +47,22 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
         host={experience.runtime.context.host}
       >
         <StorefrontCartProvider host={experience.runtime.context.host}>
-          <StorefrontShell
-            bootstrap={experience.bootstrap}
-            categories={experience.categories}
-            host={experience.runtime.context.host}
-            issues={experience.issues}
-          >
-            {children}
-          </StorefrontShell>
+          {customExperienceKey ? (
+            <main
+              className={`custom-experience-root custom-experience-root-${customExperienceKey}`}
+            >
+              {children}
+            </main>
+          ) : (
+            <StorefrontShell
+              bootstrap={experience.bootstrap}
+              categories={experience.categories}
+              host={experience.runtime.context.host}
+              issues={experience.issues}
+            >
+              {children}
+            </StorefrontShell>
+          )}
         </StorefrontCartProvider>
       </StorefrontAnalyticsProvider>
     </TenantThemeProvider>

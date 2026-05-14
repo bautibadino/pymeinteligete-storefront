@@ -14,6 +14,7 @@ export type {
   StorefrontModule,
   StorefrontModuleType,
   TrustBarModule,
+  VideoHeroModule,
 } from "@/lib/modules/module-schema";
 
 // Builder module types — Ola 2

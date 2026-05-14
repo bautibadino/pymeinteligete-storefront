@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
+
 import { loadCatalogRouteData } from "@/app/(storefront)/catalogo/_lib/catalog-data";
+import { SportAdventureCatalogExperience } from "@/components/experiences/sportadventure";
 import { CatalogPageContent } from "@/components/storefront/catalog-page";
-import { buildTenantMetadata, getTenantSeoRequestContext, resolveTenantSeoSnapshotByRequest } from "@/lib/seo";
+import { resolveCustomExperienceKey } from "@/lib/experiences";
 import { parseCatalogSearchParams } from "@/lib/presentation/catalog-routing";
+import {
+  buildTenantMetadata,
+  getTenantSeoRequestContext,
+  resolveTenantSeoSnapshotByRequest,
+} from "@/lib/seo";
 import { getCategories } from "@/lib/storefront-api";
 import type { StorefrontPagination } from "@/lib/types/storefront";
 
@@ -30,15 +37,14 @@ async function resolveCatalogMetadataPath(
   searchParams: Record<string, string | string[] | undefined>,
 ): Promise<ReturnType<typeof parseCatalogSearchParams>> {
   const requestContext = await getTenantSeoRequestContext();
-  const storefrontInput =
-    requestContext.tenantSlug
-      ? {
-          host: requestContext.resolvedHost,
-          requestId: `seo-${requestContext.tenantSlug}-categories`,
-          storefrontVersion: "seo",
-          tenantSlug: requestContext.tenantSlug,
-        }
-      : requestContext.resolvedHost;
+  const storefrontInput = requestContext.tenantSlug
+    ? {
+        host: requestContext.resolvedHost,
+        requestId: `seo-${requestContext.tenantSlug}-categories`,
+        storefrontVersion: "seo",
+        tenantSlug: requestContext.tenantSlug,
+      }
+    : requestContext.resolvedHost;
 
   try {
     const categories = await getCategories(storefrontInput);
@@ -49,8 +55,13 @@ async function resolveCatalogMetadataPath(
   }
 }
 
-export async function generateMetadata({ searchParams }: CatalogPageProps): Promise<Metadata> {
-  const [resolvedSearchParams, requestContext] = await Promise.all([searchParams, getTenantSeoRequestContext()]);
+export async function generateMetadata({
+  searchParams,
+}: CatalogPageProps): Promise<Metadata> {
+  const [resolvedSearchParams, requestContext] = await Promise.all([
+    searchParams,
+    getTenantSeoRequestContext(),
+  ]);
   const [snapshot, resolution] = await Promise.all([
     resolveTenantSeoSnapshotByRequest(requestContext),
     resolveCatalogMetadataPath(resolvedSearchParams),
@@ -66,10 +77,28 @@ export async function generateMetadata({ searchParams }: CatalogPageProps): Prom
   });
 }
 
-export default async function CatalogoPage({ searchParams }: CatalogPageProps) {
+export default async function CatalogoPage({
+  searchParams,
+}: CatalogPageProps) {
   const resolvedSearchParams = await searchParams;
   const routeData = await loadCatalogRouteData(resolvedSearchParams);
-  const pagination: StorefrontPagination | undefined = routeData.experience.catalog?.pagination;
+  const pagination: StorefrontPagination | undefined =
+    routeData.experience.catalog?.pagination;
+  const customExperienceKey = resolveCustomExperienceKey(
+    routeData.experience.bootstrap,
+  );
+
+  if (customExperienceKey === "sportadventure-custom-v1") {
+    return (
+      <SportAdventureCatalogExperience
+        bootstrap={routeData.experience.bootstrap}
+        host={routeData.experience.runtime.context.host}
+        catalog={routeData.experience.catalog}
+        categories={routeData.categories}
+        query={routeData.query}
+      />
+    );
+  }
 
   return (
     <CatalogPageContent

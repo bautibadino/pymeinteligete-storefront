@@ -7,6 +7,7 @@ import type {
   HeroModule,
   PromoBandModule,
   RichTextModule,
+  VideoHeroModule,
   StorefrontModule,
   StorefrontModuleType,
 } from "@/lib/modules/module-schema";
@@ -63,6 +64,10 @@ const MODULE_TYPE_ALIASES: Record<string, StorefrontModuleType> = {
   rich_text: "richText",
   richText: "richText",
   reviews: "richText",
+  videoHero: "videoHero",
+  "video-hero": "videoHero",
+  video_hero: "videoHero",
+  videohero: "videoHero",
 };
 
 const DEFAULT_VARIANTS: Record<StorefrontModuleType, ModuleVariant> = {
@@ -72,6 +77,7 @@ const DEFAULT_VARIANTS: Record<StorefrontModuleType, ModuleVariant> = {
   promoBand: "solid",
   trustBar: "inline",
   richText: "editorial",
+  videoHero: "cinematic",
 };
 
 const ALLOWED_VARIANTS: Record<StorefrontModuleType, Set<ModuleVariant>> = {
@@ -81,6 +87,7 @@ const ALLOWED_VARIANTS: Record<StorefrontModuleType, Set<ModuleVariant>> = {
   promoBand: new Set(["solid", "split"]),
   trustBar: new Set(["inline", "cards"]),
   richText: new Set(["editorial", "compact"]),
+  videoHero: new Set(["cinematic"]),
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -388,6 +395,57 @@ function normalizeModule(module: unknown, index: number): StorefrontModule | nul
 
       return richTextModule;
     }
+    case "videoHero": {
+      const videoHeroPrimaryAction = readAction(
+        module.primaryAction ?? module.cta ?? payload.primaryAction ?? payload.primaryCta ?? payload.cta,
+        { label: "Ver catálogo", href: "/catalogo" },
+      );
+      const videoHeroSecondaryAction = readAction(
+        module.secondaryAction ?? payload.secondaryAction,
+      );
+      const videoSrc =
+        readString(module.videoSrc) ??
+        readString(module.video) ??
+        readString(module.videoUrl) ??
+        readString(payload.videoSrc) ??
+        readString(payload.video) ??
+        readString(payload.videoUrl);
+      const videoPoster =
+        readString(module.videoPoster) ??
+        readString(module.poster) ??
+        readString(payload.videoPoster) ??
+        readString(payload.poster);
+      const videoHeroModule: VideoHeroModule = {
+        id,
+        type,
+        variant: variant as "cinematic",
+        title: title ?? "Tienda online",
+        description:
+          description ?? "Explorá productos, servicios y novedades de la tienda.",
+      };
+
+      if (eyebrow) {
+        videoHeroModule.eyebrow = eyebrow;
+      }
+
+      if (videoSrc) {
+        videoHeroModule.videoSrc = videoSrc;
+      }
+
+      if (videoPoster) {
+        videoHeroModule.videoPoster = videoPoster;
+      }
+
+      if (videoHeroPrimaryAction) {
+        videoHeroModule.primaryAction = videoHeroPrimaryAction;
+      }
+
+      if (videoHeroSecondaryAction) {
+        videoHeroModule.secondaryAction = videoHeroSecondaryAction;
+      }
+
+      return videoHeroModule;
+    }
   }
 }
 
@@ -399,6 +457,57 @@ function buildFallbackModules({ bootstrap, theme, host }: NormalizeModulesInput)
   const description =
     bootstrap?.seo?.defaultDescription ??
     "Una experiencia pública configurada por theme y módulos, conectada al backend de PyMEInteligente.";
+
+  if (theme.preset === "velocityBrutal") {
+    return [
+      {
+        id: "fallback-video-hero",
+        type: "videoHero",
+        variant: "cinematic",
+        eyebrow: "Velocidad sin límites",
+        title: displayName,
+        description,
+        primaryAction: { label: "Explorar catálogo", href: "/catalogo" },
+      },
+      {
+        id: "fallback-featured",
+        type: "featuredProducts",
+        variant: "spotlight",
+        eyebrow: "Máquinas destacadas",
+        title: "Productos que marcan la diferencia",
+        description: "Selección curada del catálogo público del tenant.",
+        limit: 6,
+      },
+      {
+        id: "fallback-categories",
+        type: "categoryRail",
+        variant: "tiles",
+        eyebrow: "Categorías",
+        title: "Encontrá tu máquina",
+        limit: 8,
+      },
+      {
+        id: "fallback-trust",
+        type: "trustBar",
+        variant: "cards",
+        title: "Compra con respaldo total",
+        items: [
+          {
+            title: "Atención directa",
+            description: "Canales visibles configurados por empresa.",
+          },
+          {
+            title: "Stock y precio validados",
+            description: "La plataforma mantiene la verdad comercial.",
+          },
+          {
+            title: "Pedido trazable",
+            description: "Seguimiento por token firmado cuando exista orden.",
+          },
+        ],
+      },
+    ];
+  }
 
   if (theme.preset === "editorialDark") {
     return [

@@ -1,5 +1,9 @@
 import { STOREFRONT_API_PATHS, STOREFRONT_HEADERS } from "@/lib/contracts/storefront-v1";
-import type { StorefrontCatalog, StorefrontCatalogQuery, StorefrontFetchInput } from "@/lib/types/storefront";
+import type {
+  StorefrontCatalog,
+  StorefrontCatalogQuery,
+  StorefrontFetchInput,
+} from "@/lib/types/storefront";
 
 import { requestStorefrontApi } from "@/lib/api/client";
 import { buildStorefrontGetNextOptions, readCachedStorefrontGet } from "@/lib/fetchers/cache";
@@ -14,10 +18,14 @@ const STOREFRONT_CATALOG_V2_PATH = "/api/storefront/v2/catalog/search";
 const STOREFRONT_CATALOG_V2_CACHE_NAMESPACE = "catalog:v2:index-sync-v2";
 
 function readNonEmptyString(value: unknown): string | undefined {
-  return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : undefined;
 }
 
-function normalizeCatalogQuery(query?: StorefrontCatalogQuery): StorefrontCatalogQuery | undefined {
+function normalizeCatalogQuery(
+  query?: StorefrontCatalogQuery,
+): StorefrontCatalogQuery | undefined {
   if (!query) {
     return undefined;
   }

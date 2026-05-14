@@ -1,39 +1,57 @@
 import { Fragment } from "react";
 import type { Metadata } from "next";
+
 import {
   canBrowseCatalog,
+  loadBootstrapExperience,
   loadProductExperience,
 } from "@/app/(storefront)/_lib/storefront-shell-data";
-import { ProductDetailPanel } from "@/components/storefront/commerce-panels";
-import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
-import { PreviewBridge } from "@/components/presentation/PreviewBridge";
-import { SurfaceStateCard } from "@/components/storefront/surface-state";
-import { mapCatalogProductToCardData } from "@/components/presentation/render-context";
 import {
   buildProductPresentationContext,
   hydrateProductPresentationWithRuntimeSignals,
 } from "@/app/(storefront)/producto/_lib/presentation-context";
+import { ProductViewTracker } from "@/components/analytics/storefront-commerce-analytics";
+import { SportAdventureProductExperience } from "@/components/experiences/sportadventure";
+import { PresentationRenderer } from "@/components/presentation/PresentationRenderer";
+import { mapCatalogProductToCardData } from "@/components/presentation/render-context";
+import { PreviewBridge } from "@/components/presentation/PreviewBridge";
+import { ProductDetailPanel } from "@/components/storefront/commerce-panels";
+import { SurfaceStateCard } from "@/components/storefront/surface-state";
+import { resolveCustomExperienceKey } from "@/lib/experiences";
 import { shouldUsePresentation } from "@/lib/presentation/render-utils";
 import {
   buildTenantMetadata,
   getTenantSeoRequestContext,
   resolveTenantSeoSnapshotByRequest,
 } from "@/lib/seo";
-import { ProductViewTracker } from "@/components/analytics/storefront-commerce-analytics";
 import { StorefrontApiError, getProduct } from "@/lib/storefront-api";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const [{ slug }, requestContext] = await Promise.all([params, getTenantSeoRequestContext()]);
-  const snapshot = await resolveTenantSeoSnapshotByRequest(requestContext);
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
+  const [{ slug }, requestContext] = await Promise.all([
+    params,
+    getTenantSeoRequestContext(),
+  ]);
+  const [snapshot, experience] = await Promise.all([
+    resolveTenantSeoSnapshotByRequest(requestContext),
+    loadBootstrapExperience(),
+  ]);
+  const customExperienceKey = resolveCustomExperienceKey(experience.bootstrap);
+
+  const tenantTitle =
+    customExperienceKey === "sportadventure-custom-v1"
+      ? "SportAdventure"
+      : snapshot.title;
 
   if (!canBrowseCatalog(snapshot.shopStatus)) {
     return buildTenantMetadata(snapshot, {
       pathname: `/producto/${slug}`,
-      title: `${snapshot.title} | Producto`,
+      title: `${tenantTitle} | Producto`,
       noIndex: true,
     });
   }
@@ -52,7 +70,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
     return buildTenantMetadata(snapshot, {
       pathname: `/producto/${slug}`,
-      title: product.name ? `${product.name} | ${snapshot.title}` : `${snapshot.title} | Producto`,
+      title: product.name ? `${product.name} | ${tenantTitle}` : `${tenantTitle} | Producto`,
       description: product.description ?? snapshot.description,
       imageUrl: productCard?.imageUrl ?? snapshot.ogImageUrl,
       noIndex: !productCard?.slug,
@@ -62,7 +80,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
     return buildTenantMetadata(snapshot, {
       pathname: `/producto/${slug}`,
-      title: `${snapshot.title} | Producto`,
+      title: `${tenantTitle} | Producto`,
       noIndex,
     });
   }
@@ -72,12 +90,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
   const experience = await loadProductExperience(slug);
   const hasPreview = Boolean(experience.runtime.context.previewToken);
+  const customExperienceKey = resolveCustomExperienceKey(experience.bootstrap);
   const hydratedPresentation = hydrateProductPresentationWithRuntimeSignals(
     experience.bootstrap?.presentation,
     experience,
   );
 
-  const usePresentation = shouldUsePresentation(hydratedPresentation ?? undefined, "product");
+  const usePresentation = shouldUsePresentation(
+    hydratedPresentation ?? undefined,
+    "product",
+  );
   const productCard = experience.product
     ? mapCatalogProductToCardData(experience.product, experience.bootstrap)
     : null;
@@ -89,6 +111,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
         ...(productCard.brand ? { brand: productCard.brand } : {}),
       }
     : null;
+
+  if (customExperienceKey === "sportadventure-custom-v1") {
+    return (
+      <Fragment>
+        <ProductViewTracker product={analyticsProduct} />
+        {hasPreview ? <PreviewBridge /> : null}
+        <SportAdventureProductExperience product={experience.product} />
+      </Fragment>
+    );
+  }
 
   if (usePresentation) {
     return (

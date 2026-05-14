@@ -1,6 +1,11 @@
 import type { StorefrontBootstrap } from "@/lib/storefront-api";
 
-export type ThemePreset = "industrialWarm" | "minimalClean" | "editorialDark" | "tyreshop";
+export type ThemePreset =
+  | "industrialWarm"
+  | "minimalClean"
+  | "editorialDark"
+  | "tyreshop"
+  | "velocityBrutal";
 
 export type TenantTheme = {
   preset: ThemePreset;
@@ -356,6 +361,52 @@ export const THEME_PRESETS: Record<ThemePreset, TenantTheme> = {
     shadow: "0 18px 48px rgba(0, 0, 0, 0.08)",
     contentWidth: "1200px",
   },
+  velocityBrutal: {
+    preset: "velocityBrutal",
+    name: "Velocity brutal",
+    colors: {
+      background: "#080605",
+      paper: "rgba(18, 16, 14, 0.96)",
+      panel: "rgba(24, 22, 20, 0.98)",
+      panelStrong: "#1e1b18",
+      text: "#f0ebe4",
+      muted: "#8a8076",
+      border: "rgba(240, 235, 228, 0.09)",
+      primary: "#ff4400",
+      primaryContrast: "#0a0806",
+      primarySoft: "rgba(255, 68, 0, 0.16)",
+      accent: "#ffd000",
+      accentSoft: "rgba(255, 208, 0, 0.12)",
+      success: "#3bdb8a",
+      successSoft: "rgba(59, 219, 138, 0.12)",
+      warning: "#ff9d00",
+      warningSoft: "rgba(255, 157, 0, 0.15)",
+      draft: "#8884ff",
+      draftSoft: "rgba(136, 132, 255, 0.14)",
+      danger: "#ff4444",
+      dangerSoft: "rgba(255, 68, 68, 0.13)",
+    },
+    controls: {
+      surfaceMuted: "rgba(18, 16, 14, 0.72)",
+      surfaceRaised: "rgba(24, 22, 20, 0.98)",
+      surfaceOverlay: "rgba(18, 16, 14, 0.86)",
+      focusRing: "rgba(255, 68, 0, 0.32)",
+    },
+    typography: {
+      heading: '"Arial Black", "Impact", "Haettenschweiler", "Franklin Gothic Heavy", sans-serif',
+      body: '-apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", sans-serif',
+      accent: '"Arial Black", "Impact", "Haettenschweiler", "Franklin Gothic Heavy", sans-serif',
+      mono: '"JetBrains Mono", "SF Mono", "Roboto Mono", monospace',
+    },
+    radii: {
+      medium: "4px",
+      large: "8px",
+      xlarge: "12px",
+      pill: "999px",
+    },
+    shadow: "0 40px 120px rgba(0, 0, 0, 0.6)",
+    contentWidth: "1340px",
+  },
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -363,7 +414,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isThemePreset(value: unknown): value is ThemePreset {
-  return value === "industrialWarm" || value === "minimalClean" || value === "editorialDark" || value === "tyreshop";
+  return (
+    value === "industrialWarm" ||
+    value === "minimalClean" ||
+    value === "editorialDark" ||
+    value === "tyreshop" ||
+    value === "velocityBrutal"
+  );
 }
 
 function readString(value: unknown): string | undefined {
