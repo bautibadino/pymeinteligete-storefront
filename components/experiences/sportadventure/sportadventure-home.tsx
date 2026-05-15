@@ -205,8 +205,11 @@ function AnimatedBrandsRow({ brands }: { brands: SportAdventureBrand[] }) {
         indicesToChange.forEach(idx => {
            if (availableBrands.length === 0) return;
            const brandIdx = Math.floor(Math.random() * availableBrands.length);
-           newSlots[idx] = availableBrands[brandIdx];
-           availableBrands.splice(brandIdx, 1); // remove so we don't pick it again this cycle
+           const selectedBrand = availableBrands[brandIdx];
+           if (selectedBrand) {
+             newSlots[idx] = selectedBrand;
+             availableBrands.splice(brandIdx, 1); // remove so we don't pick it again this cycle
+           }
         });
         
         return newSlots;
