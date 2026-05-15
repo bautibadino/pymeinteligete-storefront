@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import type { StorefrontProductDetail } from "@/lib/storefront-api";
 import { sportAdventurePalette } from "@/lib/experiences/sportadventure";
 import { appendTenantSlugForLocalDevHref } from "@/lib/marketing/pyme-store-host";
+import { buildProductWhatsAppUrl } from "@/lib/experiences/sportadventure/whatsapp";
 
 type SportAdventureProductDetailProps = {
   product: StorefrontProductDetail | null;
@@ -570,6 +571,11 @@ export function SportAdventureProductDetail({
   const highlights = buildHighlights(product);
   const insights = buildCommercialInsights(product);
   const paragraphs = splitDescription(product?.description);
+  const waUrl = buildProductWhatsAppUrl({
+    name: product?.name,
+    category: product?.category,
+    brand: product?.brand,
+  });
 
   if (!product) {
     return (
@@ -659,6 +665,16 @@ export function SportAdventureProductDetail({
                     href={appendTenantSlugForLocalDevHref("/catalogo", host, tenantSlug)}
                   >
                     Seguir viendo
+                  </a>
+                  <a
+                    className="sa-product-action"
+                    data-variant="secondary"
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "rgba(37,211,102,0.85)", borderColor: "rgba(37,211,102,0.22)" }}
+                  >
+                    Consultar por WhatsApp
                   </a>
                 </div>
               </div>

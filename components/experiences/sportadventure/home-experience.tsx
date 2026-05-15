@@ -53,6 +53,8 @@ export function SportAdventureHomeExperience({
         tenantSlug: bootstrap?.tenant?.tenantSlug ?? null,
       }}
       palette={{ ...sportAdventurePalette, ...paletteOverride }}
+      products={products}
+      categories={categories}
     />
   );
 }

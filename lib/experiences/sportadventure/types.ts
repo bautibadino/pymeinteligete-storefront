@@ -16,6 +16,9 @@ export type SportAdventureBrand = {
   families: string[];
   placeholderLabel: string;
   alignment?: "left" | "right";
+  group?: "Performance / Racing" | "Adventure / Touring" | "Off-road / Campo / Utility" | "Urban / Lifestyle" | "Eléctricas / Movilidad";
+  uses?: string[];
+  featured?: boolean;
 };
 
 export type SportAdventurePalette = {
@@ -50,5 +53,7 @@ export type SportAdventureHomeProps = {
   content: SportAdventureHomeContent;
   palette?: Partial<SportAdventurePalette>;
   className?: string;
-  navigationContext?: SportAdventureNavContext;
+  navigationContext?: SportAdventureNavContext | undefined;
+  products?: import("@/lib/storefront-api").StorefrontCatalogProduct[] | null | undefined;
+  categories?: import("@/lib/storefront-api").StorefrontCategory[] | null | undefined;
 };
