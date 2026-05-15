@@ -1,8 +1,10 @@
 import type { ManualPaymentSuccessSource } from "@/lib/checkout/manual-payment";
+import type { StorefrontCartValidateResult } from "@/lib/storefront-api";
 
 export type CheckoutActionState = {
   status: "idle" | "error" | "success";
   message?: string;
+  cartValidation?: StorefrontCartValidateResult;
   fieldErrors?: Partial<Record<import("@/lib/checkout/validation").CheckoutFieldName, string>>;
   orderId?: string;
   orderToken?: string;

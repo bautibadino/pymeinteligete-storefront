@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 const checkoutFormMock = vi.hoisted(() => vi.fn());
+const postCartValidateMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/app/(storefront)/_lib/storefront-shell-data", () => ({
   canAccessCheckout: vi.fn(() => true),
@@ -60,12 +61,52 @@ vi.mock("@/components/storefront/surface-state", () => ({
     createElement("section", { "data-surface-state": "true" }, `${title} ${description}`),
 }));
 
+vi.mock("@/lib/storefront-api", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/storefront-api")>("@/lib/storefront-api");
+
+  return {
+    ...actual,
+    postCartValidate: postCartValidateMock,
+  };
+});
+
 function renderHtml(element: Awaited<ReturnType<typeof import("@/app/(storefront)/checkout/page").default>>): string {
   return renderToStaticMarkup(element).replaceAll("&amp;", "&");
 }
 
 describe("CheckoutPage", () => {
   it("presenta el checkout como una compra real y entrega initialItems al formulario", async () => {
+    postCartValidateMock.mockResolvedValueOnce({
+      items: [
+        {
+          productId: "prod_1",
+          name: "Producto 1",
+          price: 10000,
+          priceWithTax: 12100,
+          requestedQuantity: 2,
+          availableStock: 10,
+          isValid: true,
+        },
+        {
+          productId: "prod_2",
+          name: "Producto 2",
+          price: 5000,
+          priceWithTax: 6050,
+          requestedQuantity: 1,
+          availableStock: 8,
+          isValid: true,
+        },
+      ],
+      isValid: true,
+      warnings: [],
+      summary: {
+        itemCount: 2,
+        subtotal: 25000,
+        taxAmount: 3150,
+        total: 28150,
+      },
+    });
+
     const module = await import("@/app/(storefront)/checkout/page");
 
     const html = renderHtml(
@@ -80,6 +121,15 @@ describe("CheckoutPage", () => {
     expect(html).toContain("Revisá tu pedido, completá los datos de entrega y elegí cómo querés pagar.");
     expect(html).not.toContain("Host");
     expect(html).not.toContain("Medios disponibles");
+    expect(postCartValidateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ host: "demo.tienda.test" }),
+      {
+        items: [
+          { productId: "prod_1", quantity: 2 },
+          { productId: "prod_2", quantity: 1 },
+        ],
+      },
+    );
     expect(checkoutFormMock).toHaveBeenCalled();
     expect(checkoutFormMock.mock.calls[0]?.[0]).toEqual(
       expect.objectContaining({
@@ -87,6 +137,12 @@ describe("CheckoutPage", () => {
           { productId: "prod_1", quantity: 2 },
           { productId: "prod_2", quantity: 1 },
         ],
+        initialCartValidation: expect.objectContaining({
+          isValid: true,
+          summary: expect.objectContaining({
+            total: 28150,
+          }),
+        }),
         publicKey: "pk_test_123",
       }),
     );

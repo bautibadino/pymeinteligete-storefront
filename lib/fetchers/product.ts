@@ -5,6 +5,9 @@ import { requestStorefrontApi } from "@/lib/api/client";
 import { buildStorefrontGetNextOptions } from "@/lib/fetchers/cache";
 import { resolveStorefrontRequestContext } from "@/lib/fetchers/context";
 
+const STOREFRONT_PRODUCT_CACHE_NAMESPACE = "product:pricing-v2";
+const STOREFRONT_PRICING_CUTOVER_VERSION = "pricing-2026-05-15";
+
 type ProductDetailResponse =
   | StorefrontProductDetail
   | {
@@ -33,7 +36,15 @@ export async function getProduct(
     path: STOREFRONT_API_PATHS.product(slug),
     context,
     method: "GET",
-    next: buildStorefrontGetNextOptions("product", context.host, { slug }, context.tenantSlug),
+    query: {
+      _sv: STOREFRONT_PRICING_CUTOVER_VERSION,
+    },
+    next: buildStorefrontGetNextOptions(
+      STOREFRONT_PRODUCT_CACHE_NAMESPACE,
+      context.host,
+      { slug, _sv: STOREFRONT_PRICING_CUTOVER_VERSION },
+      context.tenantSlug,
+    ),
   });
 
   return unwrapProductDetail(response);

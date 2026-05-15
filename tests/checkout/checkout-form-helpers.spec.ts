@@ -3,9 +3,11 @@ import { describe, expect, it } from "vitest";
 import {
   extractFiscalAutofillData,
   resolveCheckoutDisplayItems,
+  resolveCheckoutPricingSummary,
   resolveInitialPaymentStrategy,
 } from "@/components/storefront/checkout/checkout-form";
 import type { StorefrontCartItem } from "@/lib/cart/storefront-cart";
+import type { StorefrontCartValidateResult } from "@/lib/storefront-api";
 
 const CART_ITEMS: StorefrontCartItem[] = [
   {
@@ -24,6 +26,28 @@ const CART_ITEMS: StorefrontCartItem[] = [
   },
 ];
 
+const CART_VALIDATION: StorefrontCartValidateResult = {
+  items: [
+    {
+      productId: "prod_1",
+      name: "Mate Imperial",
+      price: 10000,
+      priceWithTax: 12100,
+      requestedQuantity: 2,
+      availableStock: 10,
+      isValid: true,
+    },
+  ],
+  isValid: true,
+  warnings: [],
+  summary: {
+    itemCount: 1,
+    subtotal: 20000,
+    taxAmount: 4200,
+    total: 24200,
+  },
+};
+
 describe("resolveCheckoutDisplayItems", () => {
   it("enriquece los items del checkout con datos comerciales del carrito real", () => {
     const items = resolveCheckoutDisplayItems(
@@ -39,12 +63,38 @@ describe("resolveCheckoutDisplayItems", () => {
         brand: "Acme",
         href: "/catalogo/mate-imperial",
         imageUrl: "https://cdn.test/mate.jpg",
+        unitBasePriceAmount: null,
+        unitPriceWithTaxAmount: null,
         unitPriceLabel: "$ 12.000",
         linePriceLabel: "$ 24.000",
         linePriceAmount: 24000,
+        isValidated: false,
         isFallback: false,
       },
     ]);
+  });
+
+  it("prioriza los precios validados del backend cuando cart/validate ya resolvió el carrito", () => {
+    const items = resolveCheckoutDisplayItems(
+      [{ productId: "prod_1", quantity: 2 }],
+      CART_ITEMS,
+      CART_VALIDATION,
+    );
+
+    expect(items).toEqual([
+      expect.objectContaining({
+        productId: "prod_1",
+        quantity: 2,
+        title: "Mate Imperial",
+        unitBasePriceAmount: 10000,
+        unitPriceWithTaxAmount: 12100,
+        linePriceAmount: 24200,
+        isValidated: true,
+        isFallback: false,
+      }),
+    ]);
+    expect(items[0]?.unitPriceLabel).toContain("12.100");
+    expect(items[0]?.linePriceLabel).toContain("24.200");
   });
 
   it("mantiene un fallback comprador cuando el item llega por query pero no existe en el carrito local", () => {
@@ -58,12 +108,37 @@ describe("resolveCheckoutDisplayItems", () => {
         productId: "prod_missing",
         quantity: 1,
         title: "Producto seleccionado",
+        unitBasePriceAmount: null,
+        unitPriceWithTaxAmount: null,
         linePriceAmount: null,
         linePriceLabel: null,
         unitPriceLabel: null,
+        isValidated: false,
         isFallback: true,
       },
     ]);
+  });
+});
+
+describe("resolveCheckoutPricingSummary", () => {
+  it("usa el summary de cart/validate como fuente efectiva del total de productos", () => {
+    expect(resolveCheckoutPricingSummary(CART_VALIDATION, 48000)).toEqual({
+      itemCount: 1,
+      merchandiseNetSubtotal: 20000,
+      merchandiseTaxAmount: 4200,
+      merchandiseTotal: 24200,
+      isValidated: true,
+    });
+  });
+
+  it("cae al subtotal local sólo cuando todavía no existe validación del backend", () => {
+    expect(resolveCheckoutPricingSummary(null, 48000)).toEqual({
+      itemCount: null,
+      merchandiseNetSubtotal: null,
+      merchandiseTaxAmount: null,
+      merchandiseTotal: 48000,
+      isValidated: false,
+    });
   });
 });
 

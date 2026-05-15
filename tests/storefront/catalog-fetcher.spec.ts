@@ -56,18 +56,20 @@ describe("getCatalog", () => {
     });
 
     expect(buildStorefrontGetNextOptionsMock).toHaveBeenCalledWith(
-      "catalog:v2:index-sync-v2",
+      "catalog:v2:index-sync-v3",
       "bym.example.com",
       {
+        _sv: "pricing-2026-05-15",
         brand: "Pirelli",
         search: "scorpion",
       },
       undefined,
     );
     expect(readCachedStorefrontGetMock).toHaveBeenCalledWith(
-      "catalog:v2:index-sync-v2",
+      "catalog:v2:index-sync-v3",
       "bym.example.com",
       {
+        _sv: "pricing-2026-05-15",
         brand: "Pirelli",
         search: "scorpion",
       },
@@ -77,7 +79,7 @@ describe("getCatalog", () => {
     expect(requestStorefrontApiMock).toHaveBeenCalledWith(
       expect.objectContaining({
         path: "/api/storefront/v2/catalog/search",
-        query: { brand: "Pirelli", search: "scorpion" },
+        query: { _sv: "pricing-2026-05-15", brand: "Pirelli", search: "scorpion" },
       }),
     );
   });
@@ -107,15 +109,15 @@ describe("getCatalog", () => {
     await getCatalog("bym.example.com");
 
     expect(buildStorefrontGetNextOptionsMock).toHaveBeenCalledWith(
-      "catalog:v2:index-sync-v2",
+      "catalog:v2:index-sync-v3",
       "bym.example.com",
-      undefined,
+      { _sv: "pricing-2026-05-15" },
       undefined,
     );
     expect(readCachedStorefrontGetMock).toHaveBeenCalledWith(
-      "catalog:v2:index-sync-v2",
+      "catalog:v2:index-sync-v3",
       "bym.example.com",
-      undefined,
+      { _sv: "pricing-2026-05-15" },
       undefined,
       expect.any(Function),
     );

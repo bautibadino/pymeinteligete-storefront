@@ -348,6 +348,13 @@ describe("submitCheckoutAction analytics", () => {
     expect(result).toEqual({
       status: "error",
       message: "Producto 1: Solo hay 1 unidades disponibles",
+      cartValidation: expect.objectContaining({
+        isValid: false,
+        warnings: ["Producto 1: Solo hay 1 unidades disponibles"],
+        summary: expect.objectContaining({
+          total: 24200,
+        }),
+      }),
     });
     expect(postCheckoutMock).not.toHaveBeenCalled();
   });

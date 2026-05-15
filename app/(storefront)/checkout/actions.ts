@@ -165,6 +165,7 @@ export async function submitCheckoutAction(
         message:
           cartValidation.warnings[0] ??
           "El carrito cambió y necesita validación antes de finalizar la compra.",
+        cartValidation,
       };
     }
 
