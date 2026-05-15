@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { Route } from "next";
 import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import {
@@ -14,6 +15,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { CartShippingSelector } from "@/components/storefront/cart/cart-shipping-selector";
+import { postStorefrontCartValidate } from "@/lib/cart/cart-validation-client";
 import {
   buildCheckoutHrefFromCartItems,
   type StorefrontCartItem,
@@ -21,13 +23,19 @@ import {
 } from "@/lib/cart/storefront-cart";
 import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { getShippingFinalCost } from "@/lib/shipping/checkout-shipping";
-import type { StorefrontShippingQuoteOption } from "@/lib/types/storefront";
+import type {
+  StorefrontCartValidateResult,
+  StorefrontShippingQuoteOption,
+} from "@/lib/types/storefront";
 import { cn } from "@/lib/utils/cn";
 
 type StorefrontCartContextValue = {
   addItem: (item: Omit<StorefrontCartItem, "quantity">, quantity?: number) => void;
+  cartValidation: StorefrontCartValidateResult | null;
+  cartValidationMessage: string | null;
   clearCart: () => void;
   closeCart: () => void;
+  isCartValidationPending: boolean;
   isOpen: boolean;
   items: StorefrontCartItem[];
   itemsCount: number;
@@ -40,8 +48,11 @@ type StorefrontCartContextValue = {
 
 const DEFAULT_CONTEXT: StorefrontCartContextValue = {
   addItem: () => undefined,
+  cartValidation: null,
+  cartValidationMessage: null,
   clearCart: () => undefined,
   closeCart: () => undefined,
+  isCartValidationPending: false,
   isOpen: false,
   items: [],
   itemsCount: 0,
@@ -66,6 +77,23 @@ function formatCurrency(amount: number) {
     currency: "ARS",
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+export function shouldValidateStorefrontCart(pathname: string | null, isOpen: boolean): boolean {
+  return isOpen || pathname === "/carrito";
+}
+
+export function resolveCartValidationMessage(
+  cartValidation: StorefrontCartValidateResult | null | undefined,
+): string | null {
+  if (!cartValidation || cartValidation.isValid) {
+    return null;
+  }
+
+  return (
+    cartValidation.warnings[0] ??
+    "El carrito cambió y necesita validación antes de continuar al checkout."
+  );
 }
 
 function mergeCartItems(
@@ -157,6 +185,43 @@ function readStoredCart(storageKey: string): StorefrontCartItem[] {
   }
 }
 
+export function resolveStorefrontCartItemsWithPricing(
+  items: StorefrontCartItem[],
+  cartValidation: StorefrontCartValidateResult | null | undefined,
+): StorefrontCartItem[] {
+  const validatedItems = new Map(
+    (cartValidation?.items ?? []).map((item) => [item.productId, item] as const),
+  );
+
+  return items.map((item) => {
+    const validatedItem = validatedItems.get(item.productId);
+
+    if (!validatedItem) {
+      return item;
+    }
+
+    return {
+      ...item,
+      price: {
+        amount: validatedItem.priceWithTax,
+        formatted: formatCurrency(validatedItem.priceWithTax),
+        ...(item.price.currency ? { currency: item.price.currency } : {}),
+      },
+    };
+  });
+}
+
+export function resolveStorefrontCartSubtotal(
+  items: StorefrontCartItem[],
+  cartValidation: StorefrontCartValidateResult | null | undefined,
+): number {
+  if (cartValidation?.summary) {
+    return cartValidation.summary.total;
+  }
+
+  return items.reduce((total, item) => total + item.price.amount * item.quantity, 0);
+}
+
 function FloatingCartButton({
   itemsCount,
   onClick,
@@ -196,11 +261,13 @@ function StorefrontCartSurface({
   items,
   itemsCount,
   isOpen,
+  isCartValidationPending,
   mode,
   openCart,
   removeItem,
   subtotal,
   updateQuantity,
+  cartValidationMessage,
 }: Omit<StorefrontCartContextValue, "addItem" | "toggleCart"> & {
   mode: StorefrontCartUiMode;
 }) {
@@ -336,7 +403,9 @@ function StorefrontCartSurface({
             <div className="shrink-0 space-y-4 border-t border-border bg-paper px-5 py-4 shadow-[0_-12px_30px_rgba(0,0,0,0.04)]">
               <div className="grid gap-2 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted">Subtotal estimado</span>
+                  <span className="text-muted">
+                    {cartValidationMessage ? "Subtotal validado" : "Subtotal estimado"}
+                  </span>
                   <strong className="text-foreground">{formatCurrency(subtotal)}</strong>
                 </div>
                 <div className="flex items-center justify-between">
@@ -350,8 +419,18 @@ function StorefrontCartSurface({
                   <strong className="text-lg text-foreground">{formatCurrency(estimatedTotal)}</strong>
                 </div>
               </div>
+              {isCartValidationPending ? (
+                <p className="text-xs font-medium text-muted-foreground">
+                  Validando precio y stock del carrito...
+                </p>
+              ) : null}
+              {cartValidationMessage ? (
+                <p className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs font-medium text-destructive">
+                  {cartValidationMessage}
+                </p>
+              ) : null}
               <div className="grid gap-2">
-                {selectedShippingOption ? (
+                {selectedShippingOption && !isCartValidationPending && !cartValidationMessage ? (
                   <Button asChild className="w-full">
                     <Link href={checkoutHref as Route} onClick={closeCart}>
                       Finalizar compra
@@ -359,7 +438,11 @@ function StorefrontCartSurface({
                   </Button>
                 ) : (
                   <Button className="w-full" disabled>
-                    Seleccioná un envío para continuar
+                    {isCartValidationPending
+                      ? "Validando carrito..."
+                      : cartValidationMessage
+                        ? "Corregí el carrito para continuar"
+                        : "Seleccioná un envío para continuar"}
                   </Button>
                 )}
                 <Button
@@ -405,11 +488,14 @@ export function StorefrontCartProvider({
   mode = "floating-drawer",
 }: StorefrontCartProviderProps) {
   const storageKey = `pyme-storefront-cart:v2:${host}`;
-  const [items, setItems] = useState<StorefrontCartItem[]>([]);
+  const pathname = usePathname();
+  const [storedItems, setStoredItems] = useState<StorefrontCartItem[]>([]);
+  const [cartValidation, setCartValidation] = useState<StorefrontCartValidateResult | null>(null);
+  const [isCartValidationPending, setIsCartValidationPending] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    setItems(readStoredCart(storageKey));
+    setStoredItems(readStoredCart(storageKey));
   }, [storageKey]);
 
   useEffect(() => {
@@ -417,23 +503,70 @@ export function StorefrontCartProvider({
       return;
     }
 
-    window.localStorage.setItem(storageKey, JSON.stringify(items));
-  }, [items, storageKey]);
+    window.localStorage.setItem(storageKey, JSON.stringify(storedItems));
+  }, [storedItems, storageKey]);
 
-  const itemsCount = items.reduce((total, item) => total + item.quantity, 0);
-  const subtotal = items.reduce((total, item) => total + item.price.amount * item.quantity, 0);
+  useEffect(() => {
+    if (storedItems.length === 0) {
+      setCartValidation(null);
+      setIsCartValidationPending(false);
+      return;
+    }
+
+    if (!shouldValidateStorefrontCart(pathname, isOpen)) {
+      return;
+    }
+
+    let cancelled = false;
+    setIsCartValidationPending(true);
+
+    void postStorefrontCartValidate({
+      items: storedItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+      })),
+    })
+      .then((result) => {
+        if (!cancelled) {
+          setCartValidation(result);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCartValidation(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsCartValidationPending(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, pathname, storedItems]);
+
+  const items = resolveStorefrontCartItemsWithPricing(storedItems, cartValidation);
+  const itemsCount = storedItems.reduce((total, item) => total + item.quantity, 0);
+  const subtotal = resolveStorefrontCartSubtotal(items, cartValidation);
+  const cartValidationMessage = resolveCartValidationMessage(cartValidation);
 
   const value: StorefrontCartContextValue = {
     addItem(item, quantity = 1) {
-      setItems((current) => mergeCartItems(current, item, quantity));
+      setStoredItems((current) => mergeCartItems(current, item, quantity));
       setIsOpen(true);
     },
+    cartValidation,
+    cartValidationMessage,
     clearCart() {
-      setItems([]);
+      setStoredItems([]);
+      setCartValidation(null);
     },
     closeCart() {
       setIsOpen(false);
     },
+    isCartValidationPending,
     isOpen,
     items,
     itemsCount,
@@ -441,7 +574,7 @@ export function StorefrontCartProvider({
       setIsOpen(true);
     },
     removeItem(productId) {
-      setItems((current) => current.filter((item) => item.productId !== productId));
+      setStoredItems((current) => current.filter((item) => item.productId !== productId));
     },
     subtotal,
     toggleCart() {
@@ -449,11 +582,11 @@ export function StorefrontCartProvider({
     },
     updateQuantity(productId, quantity) {
       if (quantity <= 0) {
-        setItems((current) => current.filter((item) => item.productId !== productId));
+        setStoredItems((current) => current.filter((item) => item.productId !== productId));
         return;
       }
 
-      setItems((current) =>
+      setStoredItems((current) =>
         current.map((item) =>
           item.productId === productId ? { ...item, quantity } : item,
         ),
@@ -467,6 +600,9 @@ export function StorefrontCartProvider({
       <StorefrontCartSurface
         clearCart={value.clearCart}
         closeCart={value.closeCart}
+        cartValidation={value.cartValidation}
+        cartValidationMessage={value.cartValidationMessage}
+        isCartValidationPending={value.isCartValidationPending}
         isOpen={value.isOpen}
         items={value.items}
         itemsCount={value.itemsCount}

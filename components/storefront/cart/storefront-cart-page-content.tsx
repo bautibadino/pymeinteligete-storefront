@@ -63,7 +63,9 @@ function getBestPaymentDiscount(
 
 export function StorefrontCartPageContent({ paymentMethods = null }: StorefrontCartPageContentProps) {
   const {
+    cartValidationMessage,
     clearCart,
+    isCartValidationPending,
     items,
     itemsCount,
     removeItem,
@@ -203,7 +205,9 @@ export function StorefrontCartPageContent({ paymentMethods = null }: StorefrontC
 
         <div className="grid gap-2 border-t border-border pt-4 text-sm">
           <div className="flex items-center justify-between">
-            <span className="text-muted">Subtotal estimado</span>
+            <span className="text-muted">
+              {cartValidationMessage ? "Subtotal validado" : "Subtotal estimado"}
+            </span>
             <strong className="text-foreground">{formatCurrency(subtotal)}</strong>
           </div>
           <div className="flex items-center justify-between">
@@ -222,15 +226,29 @@ export function StorefrontCartPageContent({ paymentMethods = null }: StorefrontC
               {formatCurrency(bestPaymentDiscount.amount)} con {bestPaymentDiscount.methodName}.
             </div>
           ) : null}
+          {isCartValidationPending ? (
+            <p className="text-xs font-medium text-muted-foreground">
+              Validando precio y stock del carrito...
+            </p>
+          ) : null}
+          {cartValidationMessage ? (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs font-medium text-destructive">
+              {cartValidationMessage}
+            </div>
+          ) : null}
         </div>
 
-        {selectedShippingOption ? (
+        {selectedShippingOption && !isCartValidationPending && !cartValidationMessage ? (
           <Button asChild className="w-full">
             <Link href={checkoutHref as Route}>Finalizar compra</Link>
           </Button>
         ) : (
           <Button className="w-full" disabled>
-            Seleccioná un envío para continuar
+            {isCartValidationPending
+              ? "Validando carrito..."
+              : cartValidationMessage
+                ? "Corregí el carrito para continuar"
+                : "Seleccioná un envío para continuar"}
           </Button>
         )}
       </aside>

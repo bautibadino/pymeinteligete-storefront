@@ -30,6 +30,7 @@ Variable esperada:
 - `GET /api/storefront/v1/categories`
 - `GET /api/storefront/v1/products/:slug`
 - `GET /api/storefront/v1/payment-methods`
+- `POST /api/storefront/v1/cart/validate`
 - `POST /api/storefront/v1/shipping/quote`
 - `POST /api/storefront/v1/checkout`
 - `POST /api/storefront/v1/payments/process`
@@ -45,6 +46,62 @@ La autenticacion cambia segun el caso:
 - lectura publica: host
 - recursos puntuales: token firmado
 - admin ERP: sesion/JWT del backend principal
+
+## Validación de carrito previa al checkout
+
+`POST /api/storefront/v1/cart/validate` es la fuente efectiva de precio y consistencia antes de crear la orden.
+
+Request canónico:
+
+```json
+{
+  "items": [
+    {
+      "productId": "prod_1",
+      "quantity": 2
+    }
+  ]
+}
+```
+
+Response canónico:
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "productId": "prod_1",
+        "name": "Mate Imperial",
+        "price": 10000,
+        "priceWithTax": 12100,
+        "requestedQuantity": 2,
+        "availableStock": 10,
+        "isValid": true
+      }
+    ],
+    "isValid": true,
+    "warnings": [],
+    "summary": {
+      "itemCount": 1,
+      "subtotal": 20000,
+      "taxAmount": 4200,
+      "total": 24200
+    }
+  }
+}
+```
+
+Boundary operativo en el storefront externo:
+
+- el frontend no recalcula pricing de negocio ni recompone `summary`
+- `items[].price` y `items[].priceWithTax` sólo se usan como datos ya resueltos por backend
+- `summary.total` es el monto efectivo de productos previo a envío/descuentos de checkout
+- `summary.subtotal` y `summary.taxAmount` pueden mostrarse en UI como desglose, pero no se recomputan
+- el checkout puede hacer una validación server-side puntual al render y debe revalidar al submit
+- no se agrega polling para refrescar precios o stock
+- si `isValid=false`, el storefront frena la continuación y muestra `warnings`
 
 ## Cotización de envíos en producto
 

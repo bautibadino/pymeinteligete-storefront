@@ -49,6 +49,7 @@ import { createRandomId } from "@/lib/utils/random-id";
 import type {
   StorefrontPaymentMethod,
   StorefrontPaymentMethods,
+  StorefrontCartValidateResult,
 } from "@/lib/storefront-api";
 import type { StorefrontShippingCheckoutSnapshot } from "@/lib/types/storefront";
 
@@ -61,6 +62,7 @@ type CheckoutFormProps = {
     productId: string;
     quantity?: number;
   }>;
+  initialCartValidation?: StorefrontCartValidateResult | null;
 };
 
 type CheckoutDisplayItem = {
@@ -70,9 +72,12 @@ type CheckoutDisplayItem = {
   brand?: string;
   href?: string;
   imageUrl?: string;
+  unitBasePriceAmount: number | null;
+  unitPriceWithTaxAmount: number | null;
   unitPriceLabel: string | null;
   linePriceLabel: string | null;
   linePriceAmount: number | null;
+  isValidated: boolean;
   isFallback: boolean;
 };
 
@@ -231,9 +236,10 @@ function buildCheckoutAnalyticsItems(items: CheckoutDisplayItem[]): CheckoutAnal
     id: item.productId,
     name: item.title,
     price:
-      item.linePriceAmount !== null && item.quantity > 0
+      item.unitPriceWithTaxAmount ??
+      (item.linePriceAmount !== null && item.quantity > 0
         ? item.linePriceAmount / item.quantity
-        : 0,
+        : 0),
     quantity: item.quantity,
   }));
 }
@@ -242,14 +248,23 @@ function buildCheckoutShippingStorageKey(items: CheckoutDisplayItem[]): string {
   return items
     .map((item) => {
       const unitPrice =
-        item.linePriceAmount !== null && item.quantity > 0
+        item.unitPriceWithTaxAmount ??
+        (item.linePriceAmount !== null && item.quantity > 0
           ? item.linePriceAmount / item.quantity
-          : 0;
+          : 0);
 
       return `${item.productId}:${item.quantity}:${unitPrice}`;
     })
     .sort()
     .join("|");
+}
+
+function buildValidatedItemsMap(
+  cartValidation: StorefrontCartValidateResult | null | undefined,
+): Map<string, StorefrontCartValidateResult["items"][number]> {
+  return new Map(
+    (cartValidation?.items ?? []).map((item) => [item.productId, item] as const),
+  );
 }
 
 function normalizeProvinceName(rawProvince: string | undefined): string {
@@ -311,53 +326,79 @@ function isStubFiscalAutofillData(data: StorefrontFiscalAutofillData): boolean {
 export function resolveCheckoutDisplayItems(
   initialItems: Array<{ productId: string; quantity?: number }> | undefined,
   cartItems: StorefrontCartItem[],
+  cartValidation?: StorefrontCartValidateResult | null,
 ): CheckoutDisplayItem[] {
+  const validatedItems = buildValidatedItemsMap(cartValidation);
+
+  const buildDisplayItem = (
+    productId: string,
+    quantity: number,
+    cartItem?: StorefrontCartItem,
+  ): CheckoutDisplayItem => {
+    const validatedItem = validatedItems.get(productId);
+    const unitBasePriceAmount = validatedItem?.price ?? null;
+    const unitPriceWithTaxAmount = validatedItem?.priceWithTax ?? null;
+    const linePriceAmount =
+      unitPriceWithTaxAmount !== null
+        ? unitPriceWithTaxAmount * quantity
+        : cartItem
+          ? cartItem.price.amount * quantity
+          : null;
+
+    return {
+      productId,
+      quantity,
+      title: cartItem?.name ?? validatedItem?.name ?? "Producto seleccionado",
+      ...(cartItem?.brand ? { brand: cartItem.brand } : {}),
+      ...(cartItem?.href ? { href: cartItem.href } : {}),
+      ...(cartItem?.imageUrl ? { imageUrl: cartItem.imageUrl } : {}),
+      unitBasePriceAmount,
+      unitPriceWithTaxAmount,
+      unitPriceLabel:
+        unitPriceWithTaxAmount !== null
+          ? formatCurrency(unitPriceWithTaxAmount)
+          : cartItem?.price.formatted ?? null,
+      linePriceLabel: linePriceAmount !== null ? formatCurrency(linePriceAmount) : null,
+      linePriceAmount,
+      isValidated: Boolean(validatedItem),
+      isFallback: !cartItem && !validatedItem,
+    };
+  };
+
   if (!initialItems || initialItems.length === 0) {
     return cartItems.map((cartItem) => ({
-      productId: cartItem.productId,
-      quantity: cartItem.quantity,
-      title: cartItem.name,
-      ...(cartItem.brand ? { brand: cartItem.brand } : {}),
-      ...(cartItem.href ? { href: cartItem.href } : {}),
-      ...(cartItem.imageUrl ? { imageUrl: cartItem.imageUrl } : {}),
-      unitPriceLabel: cartItem.price.formatted,
-      linePriceLabel: formatCurrency(cartItem.price.amount * cartItem.quantity),
-      linePriceAmount: cartItem.price.amount * cartItem.quantity,
-      isFallback: false,
+      ...buildDisplayItem(cartItem.productId, cartItem.quantity, cartItem),
     }));
   }
 
   return (initialItems ?? []).map((item) => {
     const quantity = Number.isFinite(item.quantity) && (item.quantity ?? 0) > 0 ? item.quantity ?? 1 : 1;
     const cartItem = cartItems.find((entry) => entry.productId === item.productId);
-
-    if (!cartItem) {
-      return {
-        productId: item.productId,
-        quantity,
-        title: "Producto seleccionado",
-        unitPriceLabel: null,
-        linePriceLabel: null,
-        linePriceAmount: null,
-        isFallback: true,
-      };
-    }
-
-    const linePriceAmount = cartItem.price.amount * quantity;
-
-    return {
-      productId: item.productId,
-      quantity,
-      title: cartItem.name,
-      ...(cartItem.brand ? { brand: cartItem.brand } : {}),
-      ...(cartItem.href ? { href: cartItem.href } : {}),
-      ...(cartItem.imageUrl ? { imageUrl: cartItem.imageUrl } : {}),
-      unitPriceLabel: cartItem.price.formatted,
-      linePriceLabel: formatCurrency(linePriceAmount),
-      linePriceAmount,
-      isFallback: false,
-    };
+    return buildDisplayItem(item.productId, quantity, cartItem);
   });
+}
+
+export function resolveCheckoutPricingSummary(
+  cartValidation: StorefrontCartValidateResult | null | undefined,
+  fallbackSubtotal: number,
+) {
+  if (cartValidation?.summary) {
+    return {
+      itemCount: cartValidation.summary.itemCount,
+      merchandiseNetSubtotal: cartValidation.summary.subtotal,
+      merchandiseTaxAmount: cartValidation.summary.taxAmount,
+      merchandiseTotal: cartValidation.summary.total,
+      isValidated: true,
+    };
+  }
+
+  return {
+    itemCount: null,
+    merchandiseNetSubtotal: null,
+    merchandiseTaxAmount: null,
+    merchandiseTotal: fallbackSubtotal,
+    isValidated: false,
+  };
 }
 
 export function resolveInitialPaymentStrategy(input: {
@@ -448,6 +489,7 @@ function SummaryItem({ item }: { item: CheckoutDisplayItem }) {
         <div className="flex items-center justify-between gap-3 text-sm">
           <span className="text-muted-foreground">
             {item.quantity} {item.quantity === 1 ? "unidad" : "unidades"}
+            {item.unitPriceLabel ? ` · ${item.unitPriceLabel} c/u` : ""}
           </span>
           {item.linePriceLabel ? (
             <span className="font-semibold text-foreground">{item.linePriceLabel}</span>
@@ -543,12 +585,14 @@ export function CheckoutForm({
   installmentsLabel,
   installmentsCount,
   initialItems,
+  initialCartValidation = null,
 }: CheckoutFormProps) {
   const [state, formAction] = useActionState(
     submitCheckoutAction,
     initialCheckoutActionState,
   );
   const { items: cartItems, subtotal } = useStorefrontCart();
+  const effectiveCartValidation = state.cartValidation ?? initialCartValidation;
   const paymentOptions = paymentMethods?.paymentMethods ?? [];
   const automaticPaymentMethods = paymentOptions.filter((method) => method.methodType === "automatic");
   const manualPaymentMethods = paymentOptions.filter((method) => method.methodType === "manual");
@@ -580,18 +624,18 @@ export function CheckoutForm({
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [isLookingUpTaxpayer, setIsLookingUpTaxpayer] = useState(false);
   const displayItems = useMemo(
-    () => resolveCheckoutDisplayItems(initialItems, cartItems),
-    [cartItems, initialItems],
+    () => resolveCheckoutDisplayItems(initialItems, cartItems, effectiveCartValidation),
+    [cartItems, effectiveCartValidation, initialItems],
   );
-  const pricedTotal = useMemo(
-    () => displayItems.reduce((total, item) => total + (item.linePriceAmount ?? 0), 0),
-    [displayItems],
+  const pricingSummary = useMemo(
+    () => resolveCheckoutPricingSummary(effectiveCartValidation, subtotal),
+    [effectiveCartValidation, subtotal],
   );
   const displayItemsCount = useMemo(
     () => displayItems.reduce((total, item) => total + item.quantity, 0),
     [displayItems],
   );
-  const checkoutValue = pricedTotal > 0 ? pricedTotal : subtotal;
+  const checkoutValue = pricingSummary.merchandiseTotal;
   const orderState = useMemo<OrderState | null>(() => {
     if (
       state.status !== "success" ||
@@ -626,6 +670,11 @@ export function CheckoutForm({
       : 0;
   const hasValidSelectedShipping =
     Boolean(selectedShippingSnapshot) && !isSelectedShippingExpired;
+  const cartValidationMessage =
+    effectiveCartValidation && !effectiveCartValidation.isValid
+      ? effectiveCartValidation.warnings[0] ??
+        "El carrito cambió y necesita validación antes de finalizar la compra."
+      : null;
   const checkoutValueWithShipping = checkoutValue + selectedShippingAmount;
   const selectedDiscountAmount = calculateDiscountAmount(
     checkoutValueWithShipping,
@@ -675,7 +724,7 @@ export function CheckoutForm({
     const checkoutSignature = analyticsItems
       .map((item) => `${item.id}:${item.quantity}:${item.price}`)
       .join("|");
-    const storageKey = `checkout:initiate:${checkoutSignature}:${pricedTotal > 0 ? pricedTotal : subtotal}`;
+    const storageKey = `checkout:initiate:${checkoutSignature}:${checkoutValue}`;
 
     if (!markTrackedEvent(window.localStorage, storageKey)) {
       return;
@@ -1223,7 +1272,7 @@ export function CheckoutForm({
 
             <div className="flex justify-end">
               <SubmitButton
-                disabled={!hasValidSelectedShipping}
+                disabled={!hasValidSelectedShipping || Boolean(cartValidationMessage)}
                 paymentStrategy={paymentStrategy}
               />
             </div>
@@ -1232,14 +1281,19 @@ export function CheckoutForm({
                 Seleccioná un envío válido desde el carrito para finalizar la compra.
               </p>
             ) : null}
+            {cartValidationMessage ? (
+              <p className="text-right text-sm text-destructive">
+                {cartValidationMessage}
+              </p>
+            ) : null}
           </div>
         </CheckoutStepCard>
 
-        {state.status === "error" && state.message ? (
-          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-            {state.message}
-          </div>
-        ) : null}
+          {state.status === "error" && state.message ? (
+            <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              {state.message}
+            </div>
+          ) : null}
       </div>
 
       <aside className="space-y-5 lg:self-start">
@@ -1296,8 +1350,22 @@ export function CheckoutForm({
               </div>
             ) : null}
 
+            {pricingSummary.isValidated && pricingSummary.merchandiseNetSubtotal !== null ? (
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>Subtotal neto</span>
+                <span>{formatCurrency(pricingSummary.merchandiseNetSubtotal)}</span>
+              </div>
+            ) : null}
+            {pricingSummary.isValidated &&
+            pricingSummary.merchandiseTaxAmount !== null &&
+            pricingSummary.merchandiseTaxAmount > 0 ? (
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>IVA</span>
+                <span>{formatCurrency(pricingSummary.merchandiseTaxAmount)}</span>
+              </div>
+            ) : null}
             <div className="flex items-center justify-between text-muted-foreground">
-              <span>Subtotal</span>
+              <span>{pricingSummary.isValidated ? "Productos validados" : "Subtotal"}</span>
               <span>{checkoutValue > 0 ? formatCurrency(checkoutValue) : "A confirmar"}</span>
             </div>
             <ShippingSummary

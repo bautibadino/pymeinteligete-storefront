@@ -8,6 +8,7 @@ export {
   getCatalog,
   resolveStorefrontCatalogSource,
 } from "@/lib/fetchers/catalog";
+export { postCartValidate } from "@/lib/fetchers/cart";
 export { getCategories } from "@/lib/fetchers/categories";
 export { getProduct } from "@/lib/fetchers/product";
 export { getPaymentMethods } from "@/lib/fetchers/payment-methods";
@@ -19,6 +20,9 @@ export type {
   ShopStatus,
   StorefrontAddressInput,
   StorefrontBootstrap,
+  StorefrontCartValidateRequest,
+  StorefrontCartValidateResult,
+  StorefrontCartValidatedItem,
   StorefrontBranding,
   StorefrontCatalog,
   StorefrontCatalogFacetOption,

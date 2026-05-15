@@ -15,7 +15,8 @@ import {
 } from "@/lib/storefront/catalog-source";
 
 const STOREFRONT_CATALOG_V2_PATH = "/api/storefront/v2/catalog/search";
-const STOREFRONT_CATALOG_V2_CACHE_NAMESPACE = "catalog:v2:index-sync-v2";
+const STOREFRONT_CATALOG_V2_CACHE_NAMESPACE = "catalog:v2:index-sync-v3";
+const STOREFRONT_PRICING_CUTOVER_VERSION = "pricing-2026-05-15";
 
 function readNonEmptyString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim().length > 0
@@ -126,15 +127,22 @@ export async function getCatalog(
   const source = resolveStorefrontCatalogSource(options?.source);
   // Source travels in the cache namespace so cutovers never mix v1 and v2 entries.
   const cacheSurface = resolveCatalogCacheSurface(source);
+  const requestQuery =
+    source === "v2"
+      ? {
+          ...(normalizedQuery ?? {}),
+          _sv: STOREFRONT_PRICING_CUTOVER_VERSION,
+        }
+      : normalizedQuery;
   const requestOptions = {
     path: resolveCatalogPath(source),
     context,
     method: "GET" as const,
-    next: buildStorefrontGetNextOptions(cacheSurface, context.host, normalizedQuery, context.tenantSlug),
+    next: buildStorefrontGetNextOptions(cacheSurface, context.host, requestQuery, context.tenantSlug),
     ...(options?.origin
       ? { headers: { [STOREFRONT_HEADERS.origin]: options.origin } }
       : {}),
-    ...(normalizedQuery ? { query: normalizedQuery } : {}),
+    ...(requestQuery ? { query: requestQuery } : {}),
   };
   const fetchCatalog = () => requestStorefrontApi<StorefrontCatalog>(requestOptions);
 
@@ -145,7 +153,7 @@ export async function getCatalog(
   return readCachedStorefrontGet(
     cacheSurface,
     context.host,
-    normalizedQuery,
+    requestQuery,
     context.tenantSlug,
     fetchCatalog,
   );

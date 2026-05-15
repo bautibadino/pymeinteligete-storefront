@@ -17,6 +17,7 @@ import {
 } from "@/lib/commerce/installments";
 import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
 import { buildTenantMetadata, resolveTenantSeoSnapshot } from "@/lib/seo";
+import { postCartValidate, type StorefrontCartValidateResult } from "@/lib/storefront-api";
 import { cn } from "@/lib/utils/cn";
 
 type CheckoutPageProps = {
@@ -39,6 +40,18 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   const host = experience.runtime.context.host;
   const displayName = resolveTenantDisplayName(experience.bootstrap, host);
   const initialItems = parseCheckoutItemsFromSearchParams(resolvedSearchParams);
+  let initialCartValidation: StorefrontCartValidateResult | null = null;
+
+  if (initialItems.length > 0) {
+    try {
+      initialCartValidation = await postCartValidate(experience.runtime.context, {
+        items: initialItems,
+      });
+    } catch {
+      initialCartValidation = null;
+    }
+  }
+
   const canCheckout = canAccessCheckout(experience.bootstrap?.tenant.status ?? null);
   const publicKey = experience.bootstrap?.commerce.payment.publicKey;
   const installmentsLabel = getStorefrontInstallmentsLabel(experience.bootstrap);
@@ -94,6 +107,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
           <CheckoutForm
             paymentMethods={experience.paymentMethods}
             initialItems={initialItems}
+            initialCartValidation={initialCartValidation}
             {...(publicKey ? { publicKey } : {})}
             {...(installmentsLabel ? { installmentsLabel } : {})}
             {...(installmentsCount ? { installmentsCount } : {})}
