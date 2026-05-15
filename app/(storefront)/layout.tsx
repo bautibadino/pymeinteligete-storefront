@@ -8,15 +8,16 @@ import { StorefrontCartProvider } from "@/components/storefront/cart/storefront-
 import { StorefrontShell } from "@/components/storefront/storefront-shell";
 import { TenantThemeProvider } from "@/components/theme/TenantThemeProvider";
 import { resolveCustomExperienceKey } from "@/lib/experiences";
-import { isPymeStoreMarketingHost } from "@/lib/marketing/pyme-store-host";
+import { shouldServePymeStoreMarketingLanding } from "@/lib/marketing/pyme-store-host";
 import { resolveRequestHostFromHeaders } from "@/lib/tenancy/resolve-request-host";
 import { resolveEffectiveTenantTheme } from "@/lib/theme";
 
 async function isPymeStoreMarketingRequest(): Promise<boolean> {
   try {
-    const host = resolveRequestHostFromHeaders(await headers());
+    const headerStore = await headers();
+    const host = resolveRequestHostFromHeaders(headerStore);
 
-    return isPymeStoreMarketingHost(host);
+    return shouldServePymeStoreMarketingLanding(host, headerStore);
   } catch {
     return false;
   }

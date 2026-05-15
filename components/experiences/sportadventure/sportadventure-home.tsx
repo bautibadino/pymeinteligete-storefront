@@ -5,9 +5,11 @@ import { useGSAP } from "@gsap/react";
 import { useEffect, useRef, useState } from "react";
 
 import type {
-  SportAdventureHomeProps,
   SportAdventureBrand,
+  SportAdventureHomeProps,
+  SportAdventureNavContext,
 } from "@/lib/experiences/sportadventure";
+import { appendTenantSlugForLocalDevHref } from "@/lib/marketing/pyme-store-host";
 
 gsap.registerPlugin();
 
@@ -153,10 +155,12 @@ function HeroPanel({
   brand,
   logoUrl,
   brandSections,
+  navigationContext,
 }: {
   brand: string;
   logoUrl?: string;
   brandSections: SportAdventureBrand[];
+  navigationContext?: SportAdventureNavContext;
 }) {
   const lines = brand.split(" ");
   return (
@@ -213,7 +217,15 @@ function HeroPanel({
           </span>
         )}
         <a
-          href="/catalogo"
+          href={
+            navigationContext
+              ? appendTenantSlugForLocalDevHref(
+                  "/catalogo",
+                  navigationContext.host,
+                  navigationContext.tenantSlug,
+                )
+              : "/catalogo"
+          }
           style={{
             fontFamily: BODY,
             fontSize: "0.72rem",
@@ -337,7 +349,13 @@ function HeroPanel({
 }
 
 // ─── Brand panel ──────────────────────────────────────────────────────────────
-function BrandPanel({ brand }: { brand: SportAdventureBrand }) {
+function BrandPanel({
+  brand,
+  navigationContext,
+}: {
+  brand: SportAdventureBrand;
+  navigationContext?: SportAdventureNavContext;
+}) {
   return (
     <div
       style={{
@@ -429,7 +447,15 @@ function BrandPanel({ brand }: { brand: SportAdventureBrand }) {
           {brand.eyebrow}
         </span>
         <a
-          href={`/catalogo?marca=${brand.id}`}
+          href={
+            navigationContext
+              ? appendTenantSlugForLocalDevHref(
+                  `/catalogo?marca=${encodeURIComponent(brand.id)}`,
+                  navigationContext.host,
+                  navigationContext.tenantSlug,
+                )
+              : `/catalogo?marca=${encodeURIComponent(brand.id)}`
+          }
           style={{
             fontFamily: BODY,
             fontSize: "0.7rem",
@@ -495,6 +521,7 @@ function BrandPanel({ brand }: { brand: SportAdventureBrand }) {
 export function SportAdventureHome({
   content,
   className,
+  navigationContext,
 }: SportAdventureHomeProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const currentIdxRef = useRef(0);
@@ -673,6 +700,7 @@ export function SportAdventureHome({
           <HeroPanel
             brand={content.brand}
             {...(content.logoUrl !== undefined ? { logoUrl: content.logoUrl } : {})}
+            {...(navigationContext ? { navigationContext } : {})}
             brandSections={content.brandSections}
           />
         </div>
@@ -694,7 +722,10 @@ export function SportAdventureHome({
               transform: "translateY(100%)",
             }}
           >
-            <BrandPanel brand={brand} />
+            <BrandPanel
+              brand={brand}
+              {...(navigationContext ? { navigationContext } : {})}
+            />
           </div>
         ))}
 

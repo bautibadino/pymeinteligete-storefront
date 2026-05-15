@@ -1,0 +1,10 @@
+[mcp_servers.mercadopago-mcp-server]
+bearer_token_env_var = "MP_ACCESS_TOKEN"
+url = "https://mcp.mercadopago.com/mcp"
+
+[mcp_servers.shadcn]
+args = [
+    "shadcn@latest",
+    "mcp",
+]
+command = "npx"

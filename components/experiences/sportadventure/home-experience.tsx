@@ -48,6 +48,10 @@ export function SportAdventureHomeExperience({
     <SportAdventureHome
       {...(className ? { className } : {})}
       content={{ ...baseContent, ...contentOverride }}
+      navigationContext={{
+        host,
+        tenantSlug: bootstrap?.tenant?.tenantSlug ?? null,
+      }}
       palette={{ ...sportAdventurePalette, ...paletteOverride }}
     />
   );

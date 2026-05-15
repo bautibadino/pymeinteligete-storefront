@@ -41,8 +41,14 @@ export type SportAdventureHomeContent = {
   brandSections: SportAdventureBrand[];
 };
 
+export type SportAdventureNavContext = {
+  host: string;
+  tenantSlug?: string | null;
+};
+
 export type SportAdventureHomeProps = {
   content: SportAdventureHomeContent;
   palette?: Partial<SportAdventurePalette>;
   className?: string;
+  navigationContext?: SportAdventureNavContext;
 };

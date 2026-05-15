@@ -16,7 +16,7 @@ import {
   resolveCustomExperienceKey,
 } from "@/lib/experiences";
 import { isBymCustomExperience } from "@/lib/experiences/storefront-experience";
-import { isPymeStoreMarketingHost } from "@/lib/marketing/pyme-store-host";
+import { shouldServePymeStoreMarketingLanding } from "@/lib/marketing/pyme-store-host";
 import { buildPymeStoreMetadata } from "@/lib/marketing/pyme-store-seo";
 import { normalizeModules } from "@/lib/modules";
 import { shouldUsePresentation } from "@/lib/presentation/render-utils";
@@ -30,9 +30,10 @@ type HomePageProps = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
-  const host = resolveRequestHostFromHeaders(await headers());
+  const headerStore = await headers();
+  const host = resolveRequestHostFromHeaders(headerStore);
 
-  if (isPymeStoreMarketingHost(host)) {
+  if (shouldServePymeStoreMarketingLanding(host, headerStore)) {
     return buildPymeStoreMetadata();
   }
 
@@ -57,9 +58,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const requestHost = resolveRequestHostFromHeaders(await headers());
+  const headerStore = await headers();
+  const requestHost = resolveRequestHostFromHeaders(headerStore);
 
-  if (isPymeStoreMarketingHost(requestHost)) {
+  if (shouldServePymeStoreMarketingLanding(requestHost, headerStore)) {
     return <PymeStoreLanding />;
   }
 

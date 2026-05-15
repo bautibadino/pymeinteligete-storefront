@@ -4,9 +4,13 @@ import { useMemo, useState } from "react";
 
 import type { StorefrontProductDetail } from "@/lib/storefront-api";
 import { sportAdventurePalette } from "@/lib/experiences/sportadventure";
+import { appendTenantSlugForLocalDevHref } from "@/lib/marketing/pyme-store-host";
 
 type SportAdventureProductDetailProps = {
   product: StorefrontProductDetail | null;
+  /** Host solicitado (`runtime.context.host`); sólo localhost / loopback añaden `tenantSlug` en URLs. */
+  host: string;
+  tenantSlug?: string | null;
   className?: string;
 };
 
@@ -551,6 +555,8 @@ function initialsFromName(name: string | null | undefined) {
 
 export function SportAdventureProductDetail({
   product,
+  host,
+  tenantSlug,
   className,
 }: SportAdventureProductDetailProps) {
   const images = useMemo(
@@ -640,10 +646,18 @@ export function SportAdventureProductDetail({
                 </div>
 
                 <div className="sa-product-actions">
-                  <a className="sa-product-action" data-variant="primary" href="/checkout">
+                  <a
+                    className="sa-product-action"
+                    data-variant="primary"
+                    href={appendTenantSlugForLocalDevHref("/checkout", host, tenantSlug)}
+                  >
                     Comprar
                   </a>
-                  <a className="sa-product-action" data-variant="secondary" href="/catalogo">
+                  <a
+                    className="sa-product-action"
+                    data-variant="secondary"
+                    href={appendTenantSlugForLocalDevHref("/catalogo", host, tenantSlug)}
+                  >
                     Seguir viendo
                   </a>
                 </div>

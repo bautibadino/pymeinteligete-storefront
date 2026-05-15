@@ -4,7 +4,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import StorefrontLayout from "@/app/(storefront)/layout";
 import HomePage from "@/app/(storefront)/page";
-import { isPymeStoreMarketingHost } from "@/lib/marketing/pyme-store-host";
+import { STOREFRONT_HEADERS } from "@/lib/contracts/storefront-v1";
+import {
+  appendTenantSlugForLocalDevHref,
+  hasExplicitStorefrontTenantSlug,
+  isPymeStoreMarketingHost,
+  shouldServePymeStoreMarketingLanding,
+  withLocalDevTenantSlugHref,
+} from "@/lib/marketing/pyme-store-host";
 import type { StorefrontBootstrap } from "@/lib/storefront-api";
 
 const { headersMock, loadBootstrapExperienceMock, loadHomeExperienceMock } = vi.hoisted(() => ({
@@ -183,6 +190,67 @@ describe("routing comercial pymeinteligente.store", () => {
 
     expect(loadHomeExperienceMock).not.toHaveBeenCalled();
     expect(html).toContain('data-pyme-store-landing="true"');
+  });
+
+  it("appendTenantSlugForLocalDevHref sólo enloopback", () => {
+    expect(
+      appendTenantSlugForLocalDevHref("/catalogo", "localhost", "sportadventure-preview"),
+    ).toContain("tenantSlug=sportadventure-preview");
+    expect(
+      appendTenantSlugForLocalDevHref("/catalogo?marca=ktm", "localhost", "sportadventure-preview"),
+    ).toMatch(/tenantSlug=sportadventure-preview/);
+    expect(appendTenantSlugForLocalDevHref("/catalogo", "www.site.com", "x")).toBe("/catalogo");
+  });
+
+  it("withLocalDevTenantSlugHref enriquece query de Link en localhost", () => {
+    const href = withLocalDevTenantSlugHref("localhost", "sportadventure-preview", {
+      pathname: "/catalogo",
+      query: { page: "2" },
+    });
+    expect(typeof href).toBe("object");
+    if (typeof href === "object") {
+      expect(href.query?.tenantSlug).toBe("sportadventure-preview");
+    }
+  });
+
+  it("localhost con tenantSlug en headers omite la landing comercial", async () => {
+    headersMock.mockResolvedValue(
+      new Headers({
+        host: "localhost",
+        [STOREFRONT_HEADERS.tenantSlug]: "sportadventure-preview",
+      }),
+    );
+    const bootstrap = buildBootstrap();
+    loadBootstrapExperienceMock.mockResolvedValue({
+      runtime: { context: { host: "localhost" } },
+      bootstrap,
+      categories: [],
+      issues: [],
+    });
+    loadHomeExperienceMock.mockResolvedValue({
+      runtime: { context: { host: "localhost" } },
+      bootstrap,
+      categories: [],
+      catalog: { products: [] },
+      paymentMethods: null,
+      issues: [],
+    });
+
+    const page = await HomePage({ searchParams: Promise.resolve({}) });
+    const html = renderHtml(page);
+
+    expect(loadHomeExperienceMock).toHaveBeenCalledTimes(1);
+    expect(html).not.toContain('data-pyme-store-landing="true"');
+  });
+
+  it("shouldServePymeStoreMarketingLanding respeta slug explícito en localhost", () => {
+    const headersWithSlug = new Headers({
+      host: "localhost",
+      [STOREFRONT_HEADERS.tenantSlug]: "sportadventure-preview",
+    });
+
+    expect(hasExplicitStorefrontTenantSlug(headersWithSlug)).toBe(true);
+    expect(shouldServePymeStoreMarketingLanding("localhost", headersWithSlug)).toBe(false);
   });
 
   it("mantiene el flujo storefront actual para BYM", async () => {

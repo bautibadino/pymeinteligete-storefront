@@ -117,7 +117,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <Fragment>
         <ProductViewTracker product={analyticsProduct} />
         {hasPreview ? <PreviewBridge /> : null}
-        <SportAdventureProductExperience product={experience.product} />
+        <SportAdventureProductExperience
+          host={experience.runtime.context.host}
+          product={experience.product}
+          tenantSlug={experience.bootstrap?.tenant?.tenantSlug ?? null}
+        />
       </Fragment>
     );
   }

@@ -5,6 +5,7 @@ export type {
   SportAdventureBrand,
   SportAdventureHomeContent,
   SportAdventureHomeProps,
+  SportAdventureNavContext,
   SportAdventurePalette,
 } from "@/lib/experiences/sportadventure/types";
 export type { SportAdventureExperienceInput } from "@/lib/experiences/sportadventure/home-content";
