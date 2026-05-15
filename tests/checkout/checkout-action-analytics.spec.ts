@@ -7,10 +7,14 @@ import {
   processPaymentAction,
   submitCheckoutAction,
 } from "@/app/(storefront)/checkout/actions";
-import type { StorefrontCheckoutResult } from "@/lib/storefront-api";
+import type {
+  StorefrontCartValidateResult,
+  StorefrontCheckoutResult,
+} from "@/lib/storefront-api";
 
 const {
   getBootstrapMock,
+  postCartValidateMock,
   postCheckoutMock,
   processPaymentMock,
   readAnalyticsIdentityFromRequestMock,
@@ -18,6 +22,7 @@ const {
   unstableRethrowMock,
 } = vi.hoisted(() => ({
   getBootstrapMock: vi.fn(),
+  postCartValidateMock: vi.fn(),
   postCheckoutMock: vi.fn(),
   processPaymentMock: vi.fn(),
   readAnalyticsIdentityFromRequestMock: vi.fn(),
@@ -56,6 +61,7 @@ vi.mock("@/lib/storefront-api", async () => {
   return {
     ...actual,
     getBootstrap: getBootstrapMock,
+    postCartValidate: postCartValidateMock,
     postCheckout: postCheckoutMock,
     processPayment: processPaymentMock,
   };
@@ -78,6 +84,24 @@ function createFormData(entries: Record<string, string | string[]>): FormData {
   return formData;
 }
 
+function createShippingQuoteSnapshot(): string {
+  return JSON.stringify({
+    contractVersion: "storefront.shipping.quote.v1",
+    provider: "andreani",
+    currency: "ARS",
+    optionId: "andreani-home",
+    carrierName: "Andreani",
+    serviceName: "Envío a domicilio",
+    destinationPostalCode: "2645",
+    quotedAt: "2026-05-15T12:00:00.000Z",
+    expiresAt: "2026-05-15T13:00:00.000Z",
+    packages: [],
+    deliveryType: "home_delivery",
+    priceWithTax: 5000,
+    priceWithoutTax: 4132,
+  });
+}
+
 function checkoutResult(
   overrides: Partial<StorefrontCheckoutResult> = {},
 ): StorefrontCheckoutResult {
@@ -91,14 +115,43 @@ function checkoutResult(
   };
 }
 
+function cartValidateResult(
+  overrides: Partial<StorefrontCartValidateResult> = {},
+): StorefrontCartValidateResult {
+  return {
+    items: [
+      {
+        productId: "prod_1",
+        name: "Producto 1",
+        price: 10000,
+        priceWithTax: 12100,
+        requestedQuantity: 2,
+        availableStock: 10,
+        isValid: true,
+      },
+    ],
+    isValid: true,
+    warnings: [],
+    summary: {
+      itemCount: 1,
+      subtotal: 20000,
+      total: 24200,
+      taxAmount: 4200,
+    },
+    ...overrides,
+  };
+}
+
 describe("submitCheckoutAction analytics", () => {
   beforeEach(() => {
     getBootstrapMock.mockReset();
+    postCartValidateMock.mockReset();
     postCheckoutMock.mockReset();
     processPaymentMock.mockReset();
     readAnalyticsIdentityFromRequestMock.mockReset();
     redirectMock.mockReset();
     unstableRethrowMock.mockReset();
+    postCartValidateMock.mockResolvedValue(cartValidateResult());
   });
 
   it("adjunta identidad analytics al checkout publico sin depender del form", async () => {
@@ -124,6 +177,7 @@ describe("submitCheckoutAction analytics", () => {
         shippingCity: "Corral de Bustos",
         shippingProvince: "Cordoba",
         shippingPostalCode: "2645",
+        shippingQuoteSnapshot: createShippingQuoteSnapshot(),
         paymentStrategy: "auto",
         itemProductId: ["prod_1"],
         itemQuantity: ["2"],
@@ -141,6 +195,12 @@ describe("submitCheckoutAction analytics", () => {
           anonymous_id: "anon_1",
         },
       }),
+    );
+    expect(postCartValidateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ host: "tienda.test" }),
+      {
+        items: [{ productId: "prod_1", quantity: 2 }],
+      },
     );
     expect(result).toEqual({
       status: "success",
@@ -174,6 +234,7 @@ describe("submitCheckoutAction analytics", () => {
         shippingCity: "Corral de Bustos",
         shippingProvince: "Cordoba",
         shippingPostalCode: "2645",
+        shippingQuoteSnapshot: createShippingQuoteSnapshot(),
         billingStreet: "Belgrano",
         billingNumber: "123",
         billingCity: "Corral de Bustos",
@@ -233,6 +294,7 @@ describe("submitCheckoutAction analytics", () => {
           shippingCity: "Corral de Bustos",
           shippingProvince: "Cordoba",
           shippingPostalCode: "2645",
+          shippingQuoteSnapshot: createShippingQuoteSnapshot(),
           paymentStrategy: "manual",
           paymentMethodId: "transferencia",
           itemProductId: ["prod_1"],
@@ -250,6 +312,44 @@ describe("submitCheckoutAction analytics", () => {
       }),
     );
     expect(unstableRethrowMock).toHaveBeenCalledWith(redirectError);
+  });
+
+  it("bloquea el checkout cuando cart/validate detecta inconsistencias", async () => {
+    getBootstrapMock.mockResolvedValueOnce({
+      tenant: { status: "active" },
+    });
+    postCartValidateMock.mockResolvedValueOnce(
+      cartValidateResult({
+        isValid: false,
+        warnings: ["Producto 1: Solo hay 1 unidades disponibles"],
+      }),
+    );
+    readAnalyticsIdentityFromRequestMock.mockResolvedValueOnce(null);
+
+    const result = await submitCheckoutAction(
+      initialCheckoutActionState,
+      createFormData({
+        customerName: "Juan Perez",
+        customerEmail: "juan@test.com",
+        customerPhone: "3515551234",
+        shippingStreet: "Belgrano",
+        shippingNumber: "123",
+        shippingCity: "Corral de Bustos",
+        shippingProvince: "Cordoba",
+        shippingPostalCode: "2645",
+        shippingQuoteSnapshot: createShippingQuoteSnapshot(),
+        paymentStrategy: "auto",
+        itemProductId: ["prod_1"],
+        itemQuantity: ["2"],
+        idempotencyKey: "idem_invalid_cart",
+      }),
+    );
+
+    expect(result).toEqual({
+      status: "error",
+      message: "Producto 1: Solo hay 1 unidades disponibles",
+    });
+    expect(postCheckoutMock).not.toHaveBeenCalled();
   });
 
   it("no convierte el redirect de pago aprobado en error genérico", async () => {

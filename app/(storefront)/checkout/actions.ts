@@ -20,6 +20,7 @@ import { getStorefrontRuntimeSnapshot } from "@/lib/runtime/storefront-request-c
 import {
   StorefrontApiError,
   getBootstrap,
+  postCartValidate,
   postCheckout,
   postManualPayment,
   processPayment,
@@ -136,6 +137,7 @@ export async function submitCheckoutAction(
   try {
     const bootstrap = await getBootstrap(runtime.context);
     const analyticsIdentity = await readAnalyticsIdentityFromRequest();
+    const items = parseItems(formData);
     const shippingQuoteSnapshot = readShippingQuoteSnapshot(formData);
     const shippingAddress = buildShippingAddress(formData, shippingQuoteSnapshot);
     const deliverySelection = buildDeliverySelection(shippingQuoteSnapshot);
@@ -153,6 +155,16 @@ export async function submitCheckoutAction(
       return {
         status: "error",
         message: strategyResult.message,
+      };
+    }
+
+    const cartValidation = await postCartValidate(runtime.context, { items });
+    if (!cartValidation.isValid) {
+      return {
+        status: "error",
+        message:
+          cartValidation.warnings[0] ??
+          "El carrito cambió y necesita validación antes de finalizar la compra.",
       };
     }
 
@@ -179,7 +191,7 @@ export async function submitCheckoutAction(
       ...(shippingAddress ? { shippingAddress } : {}),
       ...(shippingQuoteSnapshot ? { shippingQuoteSnapshot } : {}),
       ...(deliverySelection ? { deliverySelection } : {}),
-      items: parseItems(formData),
+      items,
       ...(paymentStrategy === "manual" && selectedPaymentMethodId
         ? { paymentMethodId: selectedPaymentMethodId }
         : {}),

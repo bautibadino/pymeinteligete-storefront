@@ -816,6 +816,33 @@ export interface StorefrontCheckoutItemInput {
   quantity: number;
 }
 
+export interface StorefrontCartValidateRequest {
+  items: StorefrontCheckoutItemInput[];
+}
+
+export interface StorefrontCartValidatedItem {
+  productId: string;
+  name: string;
+  price: number;
+  priceWithTax: number;
+  requestedQuantity: number;
+  availableStock: number;
+  isValid: boolean;
+  warning?: string;
+}
+
+export interface StorefrontCartValidateResult {
+  items: StorefrontCartValidatedItem[];
+  isValid: boolean;
+  warnings: string[];
+  summary: {
+    itemCount: number;
+    subtotal: number;
+    total: number;
+    taxAmount: number;
+  };
+}
+
 export interface StorefrontAnalyticsInput {
   fbc?: string;
   fbp?: string;
