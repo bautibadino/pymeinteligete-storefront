@@ -91,9 +91,10 @@ img {
   min-height: 100dvh;
 }
 
-.tenant-theme:has(> main.custom-experience-root-sportadventure-custom-v1) {
-  overflow: visible;
-  height: auto;
+.tenant-theme:has(.custom-experience-root) {
+  overflow: visible !important;
+  height: auto !important;
+  contain: none !important;
 }
 
 .eyebrow,
@@ -1939,5 +1940,174 @@ img {
 
   .tilt-glare {
     display: none;
+  }
+}
+
+/* ========================================================================== */
+/*  SportAdventure — home scroll experience                                   */
+/* ========================================================================== */
+
+.custom-experience-root-sportadventure-custom-v1 .sa-brand-chip {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.105), rgba(255, 255, 255, 0.06));
+  border: 1px solid rgba(255, 255, 255, 0.105);
+  border-radius: 12px;
+  padding: clamp(14px, 2.7vw, 22px) clamp(18px, 3.7vw, 30px);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  z-index: 2;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-brand-chip:not(.sa-brand-chip--scroll) img {
+  width: clamp(70px, 6.6vw, 128px);
+  height: clamp(34px, 4.8vw, 62px);
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  filter: saturate(1.08) contrast(1.04) drop-shadow(0 0 10px rgba(255, 255, 255, 0.1));
+  transition: filter 0.35s ease;
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-brand-chip--scroll img {
+  width: clamp(48px, 14vw, 100px);
+  height: clamp(28px, 8vw, 52px);
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  filter: saturate(1.05) contrast(1.04) drop-shadow(0 0 8px rgba(255, 255, 255, 0.1));
+}
+
+/* Hover / focus desktop — estado .sa-brand-chip--active (color de marca) */
+.custom-experience-root-sportadventure-custom-v1 .sa-brand-chip--active {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: color-mix(in srgb, var(--brand-accent) 48%, transparent);
+  box-shadow:
+    0 20px 60px color-mix(in srgb, var(--brand-accent) 34%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--brand-accent) 44%, transparent);
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-brand-chip--active img {
+  filter: none;
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-brand-chip--scroll.sa-brand-chip--dark-logo img,
+.custom-experience-root-sportadventure-custom-v1 .sa-brand-chip--active.sa-brand-chip--scroll.sa-brand-chip--dark-logo img {
+  opacity: 0.9;
+  filter:
+    invert(1)
+    grayscale(100%)
+    brightness(0.96)
+    contrast(1.18)
+    drop-shadow(0 0 9px rgba(255, 255, 255, 0.22))
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.16));
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-brands-desktop-grid {
+  width: min(1180px, calc(100% - clamp(56px, 10vw, 180px)));
+  display: grid;
+  grid-template-columns: repeat(6, minmax(128px, 1fr));
+  gap: clamp(14px, 1.4vw, 24px);
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-brands-desktop-grid .sa-brand-chip {
+  min-height: clamp(82px, 9vh, 112px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.135), rgba(255, 255, 255, 0.075));
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-brands-desktop-grid .sa-brand-chip--dark-logo {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.14));
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-brands-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2.8svh, 24px);
+  width: 100%;
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-brands-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(10px, 2.4svh, 18px);
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 5vw, 24px);
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-brands-carousel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.8vh, 18px);
+  overflow: hidden;
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-brands-row {
+  overflow: hidden;
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-brands-track {
+  display: flex;
+  gap: clamp(10px, 1.6vw, 18px);
+  padding-left: clamp(10px, 1.6vw, 18px);
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-act4-panel--link {
+  transition:
+    filter 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-act4-panel--link:hover {
+  filter: brightness(1.1);
+}
+
+.custom-experience-root-sportadventure-custom-v1 .sa-act4-panel--link:focus-visible {
+  outline: 2px solid #ff6a00;
+  outline-offset: -3px;
+}
+
+@media (max-width: 768px) {
+  .custom-experience-root-sportadventure-custom-v1 .sa-act3 {
+    justify-content: center !important;
+    padding-top: clamp(64px, 9svh, 84px);
+    padding-bottom: clamp(48px, 8svh, 72px);
+  }
+
+  .custom-experience-root-sportadventure-custom-v1 .sa-act3-copy {
+    margin-bottom: clamp(22px, 4svh, 36px) !important;
+    padding: 0 clamp(16px, 5vw, 24px);
+  }
+
+  .custom-experience-root-sportadventure-custom-v1 .sa-act4-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+  }
+
+  .custom-experience-root-sportadventure-custom-v1 .sa-act4-panel--tall {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    min-height: 34svh;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .custom-experience-root-sportadventure-custom-v1 .sa-act4-panel {
+    grid-column: 1 !important;
+    min-height: 28svh;
   }
 }
