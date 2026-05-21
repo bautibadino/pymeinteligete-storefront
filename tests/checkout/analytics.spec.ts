@@ -14,6 +14,7 @@ import {
   buildViewItemListPayload,
   buildViewItemPayload,
 } from "@/lib/analytics/events";
+import { enrichAnalyticsIdentity } from "@/lib/analytics/identity";
 import { resolveStorefrontAnalyticsConfig } from "@/lib/analytics/config";
 import { getOrCreateStoredValue, markTrackedEvent } from "@/lib/analytics/storage";
 import type { StorefrontOrderByTokenResult } from "@/lib/storefront-api";
@@ -151,6 +152,39 @@ describe("extractAnalyticsCookies", () => {
     });
 
     expect(cookies.fbc).toBe("fb.1.111.saved");
+  });
+});
+
+describe("enrichAnalyticsIdentity", () => {
+  it("normaliza datos del comprador y preserva ids existentes para matching server-side", () => {
+    const identity = enrichAnalyticsIdentity(
+      {
+        anonymous_id: "anon_1",
+        fbp: "fb.1.123",
+      },
+      {
+        name: "  Juan Perez  ",
+        email: "  Juan.Perez+compras@Example.COM ",
+        phone: " +54 9 351 555-1234 ",
+        city: " Corral de Bustos ",
+        province: " Córdoba ",
+        postalCode: " 2645 ",
+        taxId: " 20-12345678-9 ",
+      },
+    );
+
+    expect(identity).toEqual({
+      anonymous_id: "anon_1",
+      fbp: "fb.1.123",
+      email: "juan.perez+compras@example.com",
+      phone: "5493515551234",
+      first_name: "juan",
+      last_name: "perez",
+      city: "corral de bustos",
+      province: "córdoba",
+      postal_code: "2645",
+      tax_id: "20123456789",
+    });
   });
 });
 
@@ -365,6 +399,7 @@ describe("analytics payload builders", () => {
 
   it("arma Contact con superficie y medio para confirmación/manual payment", () => {
     const payload = buildContactPayload({
+      eventId: "contact_manual_tok_1_whatsapp",
       surface: "checkout-confirmation",
       method: "whatsapp",
       orderToken: "tok_1",
@@ -373,6 +408,7 @@ describe("analytics payload builders", () => {
     });
 
     expect(payload).toEqual({
+      eventId: "contact_manual_tok_1_whatsapp",
       content_name: "Enviar comprobante",
       content_category: "checkout-confirmation",
       contact_method: "whatsapp",

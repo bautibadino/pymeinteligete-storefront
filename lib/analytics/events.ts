@@ -26,6 +26,7 @@ type SingleItemPayloadInput = {
 };
 
 type ContactPayloadInput = {
+  eventId?: string;
   surface: string;
   method: string;
   orderToken: string;
@@ -203,6 +204,7 @@ export function buildPurchasePayload(order: StorefrontOrderByTokenResult) {
 }
 
 export function buildContactPayload({
+  eventId,
   label,
   method,
   orderNumber,
@@ -210,6 +212,7 @@ export function buildContactPayload({
   surface,
 }: ContactPayloadInput) {
   return {
+    ...(eventId ? { eventId } : {}),
     content_name: label,
     content_category: surface,
     contact_method: method,

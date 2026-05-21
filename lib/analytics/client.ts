@@ -1,5 +1,9 @@
 import type { StorefrontAnalyticsConfig } from "@/lib/analytics/config";
 import { extractAnalyticsCookies } from "@/lib/analytics/cookies";
+import {
+  type AnalyticsBuyerIdentityInput,
+  enrichAnalyticsIdentity,
+} from "@/lib/analytics/identity";
 import type { StorefrontAnalyticsInput } from "@/lib/types/storefront";
 
 type AnalyticsPayload = Record<string, unknown>;
@@ -47,10 +51,21 @@ export type StorefrontAnalyticsBridge = {
 };
 
 declare global {
+  type MetaPixelQueueCall = [string, ...unknown[]];
+  type MetaPixelFunction = ((...args: unknown[]) => void) & {
+    callMethod?: (...args: unknown[]) => void;
+    loaded?: boolean;
+    push?: (...args: MetaPixelQueueCall) => number;
+    queue?: MetaPixelQueueCall[];
+    version?: string;
+  };
+
   interface Window {
     __storefrontAnalytics?: StorefrontAnalyticsBridge;
+    __storefrontMetaPixelIds?: Record<string, true>;
+    _fbq?: MetaPixelFunction;
     dataLayer?: unknown[];
-    fbq?: (...args: unknown[]) => void;
+    fbq?: MetaPixelFunction;
     gtag?: (...args: unknown[]) => void;
   }
 }
@@ -157,11 +172,13 @@ function buildServerAnalyticsPayload(
   const currentIdentity = resolveCurrentBrowserIdentity(identity);
 
   if (currentIdentity) {
+    const externalId =
+      currentIdentity.tax_id ?? currentIdentity.email ?? currentIdentity.anonymous_id;
     const user = {
       ...(currentIdentity.fbp ? { fbp: currentIdentity.fbp } : {}),
       ...(currentIdentity.fbc ? { fbc: currentIdentity.fbc } : {}),
       ...(currentIdentity.ga_client_id ? { clientId: currentIdentity.ga_client_id } : {}),
-      ...(currentIdentity.anonymous_id ? { externalId: currentIdentity.anonymous_id } : {}),
+      ...(externalId ? { externalId } : {}),
     };
 
     if (Object.keys(user).length > 0) {
@@ -212,6 +229,55 @@ function postStorefrontServerAnalytics(
   }).catch(() => undefined);
 }
 
+function resolveMetaPixelRegistry(): Record<string, true> | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  window.__storefrontMetaPixelIds ??= {};
+  return window.__storefrontMetaPixelIds;
+}
+
+function ensureMetaPixelBridge(pixelId: string): MetaPixelFunction | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  let fbq = window.fbq;
+
+  if (typeof fbq !== "function") {
+    const queuedFbq = ((...args: unknown[]) => {
+      if (typeof queuedFbq.callMethod === "function") {
+        queuedFbq.callMethod(...args);
+        return;
+      }
+
+      queuedFbq.queue?.push(args as MetaPixelQueueCall);
+    }) as MetaPixelFunction;
+
+    queuedFbq.queue = [];
+    queuedFbq.push = (...args: MetaPixelQueueCall) => queuedFbq.queue?.push(args) ?? 0;
+    queuedFbq.loaded = true;
+    queuedFbq.version = "2.0";
+
+    fbq = queuedFbq;
+    window.fbq = queuedFbq;
+  }
+
+  if (!window._fbq) {
+    window._fbq = fbq;
+  }
+
+  const initializedPixels = resolveMetaPixelRegistry();
+
+  if (initializedPixels && !initializedPixels[pixelId]) {
+    fbq("init", pixelId);
+    initializedPixels[pixelId] = true;
+  }
+
+  return fbq;
+}
+
 function createAnalyticsBridge(
   initialConfig: StorefrontAnalyticsConfig,
   initialIdentity: StorefrontAnalyticsInput | undefined,
@@ -238,13 +304,16 @@ function createAnalyticsBridge(
       const metaEventName = metaEvent ?? event;
       const googleEventName = googleEvent ?? event;
 
-      if (config.meta.enabled && config.meta.pixelId && typeof window.fbq === "function") {
+      if (config.meta.enabled && config.meta.pixelId) {
+        const fbq = ensureMetaPixelBridge(config.meta.pixelId);
         const eventOptions = eventId ? { eventID: eventId } : undefined;
 
-        if (eventOptions) {
-          window.fbq("track", metaEventName, metaPayload ?? {}, eventOptions);
-        } else {
-          window.fbq("track", metaEventName, metaPayload ?? {});
+        if (typeof fbq === "function") {
+          if (eventOptions) {
+            fbq("track", metaEventName, metaPayload ?? {}, eventOptions);
+          } else {
+            fbq("track", metaEventName, metaPayload ?? {});
+          }
         }
       }
 
@@ -257,7 +326,10 @@ function createAnalyticsBridge(
         window.gtag("event", googleEventName, payload);
       }
 
-      if (serverEvent !== null) {
+      const shouldPostServerAnalytics =
+        serverEvent !== null && (config.meta.enabled || config.google.enabled);
+
+      if (shouldPostServerAnalytics) {
         postStorefrontServerAnalytics(serverEvent ?? metaEvent ?? event, analyticsPayload, identity, eventId);
       }
     },
@@ -283,6 +355,18 @@ export function getStorefrontAnalyticsBridge(): StorefrontAnalyticsBridge | unde
   }
 
   return window.__storefrontAnalytics;
+}
+
+export function enrichStorefrontAnalyticsBuyerIdentity(
+  buyer: AnalyticsBuyerIdentityInput,
+): StorefrontAnalyticsInput | undefined {
+  const bridge = getStorefrontAnalyticsBridge();
+
+  if (!bridge) {
+    return undefined;
+  }
+
+  return bridge.identify(enrichAnalyticsIdentity(bridge.getIdentity(), buyer));
 }
 
 export function trackStorefrontAnalyticsEvent(command: StorefrontAnalyticsTrackCommand) {

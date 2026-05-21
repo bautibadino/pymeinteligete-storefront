@@ -7,6 +7,7 @@ import type {
   CheckoutActionState,
   ManualPaymentActionState,
 } from "@/app/(storefront)/checkout/action-state";
+import { enrichAnalyticsIdentity } from "@/lib/analytics/identity";
 import { readAnalyticsIdentityFromRequest } from "@/lib/analytics/server";
 import { resolveCheckoutStrategy } from "@/lib/checkout/strategy";
 import {
@@ -141,6 +142,16 @@ export async function submitCheckoutAction(
     const shippingQuoteSnapshot = readShippingQuoteSnapshot(formData);
     const shippingAddress = buildShippingAddress(formData, shippingQuoteSnapshot);
     const deliverySelection = buildDeliverySelection(shippingQuoteSnapshot);
+    const enrichedAnalyticsIdentity = enrichAnalyticsIdentity(analyticsIdentity, {
+      name: readTrimmedString(formData, "customerName"),
+      email: readTrimmedString(formData, "customerEmail"),
+      phone: readTrimmedString(formData, "customerPhone"),
+      city: shippingAddress?.city ?? readTrimmedString(formData, "billingCity"),
+      province: shippingAddress?.province ?? readTrimmedString(formData, "billingProvince"),
+      postalCode: shippingAddress?.postalCode ?? readTrimmedString(formData, "billingPostalCode"),
+      taxId:
+        readTrimmedString(formData, "customerTaxId") ?? readTrimmedString(formData, "customerDni"),
+    });
 
     if (!canAccessCheckout(bootstrap.tenant.status)) {
       return {
@@ -215,7 +226,7 @@ export async function submitCheckoutAction(
         ? { notes: readTrimmedString(formData, "orderNotes") }
         : {}),
       idempotencyKey: readTrimmedString(formData, "idempotencyKey"),
-      ...(analyticsIdentity ? { analytics: analyticsIdentity } : {}),
+      ...(enrichedAnalyticsIdentity ? { analytics: enrichedAnalyticsIdentity } : {}),
     });
 
     if (paymentStrategy === "auto") {

@@ -56,29 +56,32 @@ describe("pyme store marketing tracking", () => {
 
   it("envia WhatsApp como generate_lead a GA4 y Lead/Contact a Meta mediante el bridge existente", () => {
     const track = vi.fn();
+    vi.spyOn(Date, "now").mockReturnValue(1717000000000);
 
     trackMarketingCta(
       { kind: "whatsapp", label: "Hablar por WhatsApp", surface: "hero" },
       { track },
     );
 
-    expect(track).toHaveBeenCalledTimes(2);
-    expect(track).toHaveBeenNthCalledWith(1, {
-      event: "generate_lead",
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith({
+      event: "Lead",
+      googleEvent: "generate_lead",
+      metaEvent: "Lead",
       googlePayload: {
         content_category: "pyme-store-marketing",
         content_name: "Hablar por WhatsApp",
         contact_method: "whatsapp",
         surface: "hero",
       },
-    });
-    expect(track).toHaveBeenNthCalledWith(2, {
-      event: "Lead",
       metaPayload: {
         content_category: "pyme-store-marketing",
         content_name: "Hablar por WhatsApp",
         contact_method: "whatsapp",
         surface: "hero",
+      },
+      options: {
+        eventId: "marketing_whatsapp_hero_hablar_por_whatsapp_1717000000000",
       },
     });
   });

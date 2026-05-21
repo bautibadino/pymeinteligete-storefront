@@ -92,10 +92,10 @@ describe("storefront analytics client bridge", () => {
 
     const bridge = installStorefrontAnalyticsBridge(
       {
-        meta: { enabled: false },
+        meta: { enabled: true, pixelId: "px_789" },
         google: { enabled: false },
       },
-      { anonymous_id: "anon_1" },
+      { anonymous_id: "anon_1", email: "compras@bym.test" },
     );
 
     bridge?.track({
@@ -117,9 +117,76 @@ describe("storefront analytics client bridge", () => {
       eventName: "AddToCart",
       user: {
         clientId: "987654321.123456789",
-        externalId: "anon_1",
+        externalId: "compras@bym.test",
         fbp: "fb.1.123",
       },
     });
+  });
+
+  it("no golpea el proxy interno si el tenant no tiene analytics activos", () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+
+    (globalThis as any).window = {
+      location: {
+        pathname: "/checkout",
+        search: "",
+      },
+    };
+    vi.stubGlobal("fetch", fetchMock);
+
+    const bridge = installStorefrontAnalyticsBridge(
+      {
+        meta: { enabled: false },
+        google: { enabled: false },
+      },
+      { anonymous_id: "anon_disabled" },
+    );
+
+    bridge?.track({
+      event: "Contact",
+      metaEvent: "Contact",
+      metaPayload: {
+        eventId: "contact_disabled",
+        content_name: "Sin analytics",
+      },
+      options: { eventId: "contact_disabled" },
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("encola eventos de Meta aunque el pixel todavía no haya cargado en el browser", () => {
+    (globalThis as any).window = {
+      location: {
+        pathname: "/checkout",
+        search: "",
+      },
+    };
+
+    const bridge = installStorefrontAnalyticsBridge(
+      {
+        meta: { enabled: true, pixelId: "px_456" },
+        google: { enabled: false },
+      },
+      { anonymous_id: "anon_2" },
+    );
+
+    bridge?.track({
+      event: "AddToCart",
+      metaEvent: "AddToCart",
+      metaPayload: {
+        content_ids: ["prod_2"],
+        currency: "ARS",
+        value: 12500,
+      },
+    });
+
+    const fbq = (globalThis as any).window.fbq;
+
+    expect(typeof fbq).toBe("function");
+    expect(fbq.queue).toEqual([
+      ["init", "px_456"],
+      ["track", "AddToCart", { content_ids: ["prod_2"], currency: "ARS", value: 12500 }],
+    ]);
   });
 });

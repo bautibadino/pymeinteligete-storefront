@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trackStorefrontAnalyticsEvent } from "@/lib/analytics/client";
 import { buildLeadPayload } from "@/lib/analytics/events";
+import { identifyContactAnalyticsBuyer } from "./analytics-identity";
 
 type BymContactFallbackFormProps = {
   email?: string;
@@ -84,6 +85,12 @@ export function BymContactFallbackForm({
       label: "Formulario rápido BYM",
       method: href.startsWith("https://") ? "whatsapp" : "email",
       surface: "contact-page",
+    });
+
+    identifyContactAnalyticsBuyer({
+      name: values.name,
+      email: values.email,
+      phone: values.phone,
     });
 
     trackStorefrontAnalyticsEvent({

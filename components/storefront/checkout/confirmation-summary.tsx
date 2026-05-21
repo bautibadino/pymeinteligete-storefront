@@ -166,6 +166,7 @@ export function ConfirmationSummary({
             <ManualPaymentInstructions
               details={manualPaymentDetails}
               orderNumber={order.orderNumber}
+              customer={order.customer}
             />
           ) : null}
 
@@ -189,6 +190,7 @@ export function ConfirmationSummary({
               <ManualPaymentForm
                 orderToken={orderToken}
                 paymentMethods={manualPaymentMethods}
+                customer={order.customer}
               />
             </div>
           ) : null}

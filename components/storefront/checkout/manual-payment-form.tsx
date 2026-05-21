@@ -15,11 +15,13 @@ import { useStorefrontCart } from "@/components/storefront/cart/storefront-cart-
 import { buildManualPaymentSuccessDetails } from "@/lib/checkout/manual-payment";
 import { resolvePaymentMethodOptionValue } from "@/lib/checkout/payment-method-option";
 import type { StorefrontPaymentMethod } from "@/lib/storefront-api";
+import type { StorefrontOrderCustomer } from "@/lib/types/storefront";
 import { ManualPaymentInstructions } from "./manual-payment-instructions";
 
 type ManualPaymentFormProps = {
   orderToken: string;
   paymentMethods: StorefrontPaymentMethod[];
+  customer?: StorefrontOrderCustomer;
 };
 
 function SubmitButton() {
@@ -32,7 +34,13 @@ function SubmitButton() {
   );
 }
 
-function ManualPaymentSuccessCard({ state }: { state: ManualPaymentActionState }) {
+function ManualPaymentSuccessCard({
+  state,
+  customer,
+}: {
+  state: ManualPaymentActionState;
+  customer?: StorefrontOrderCustomer;
+}) {
   if (
     state.status !== "success" ||
     !state.paymentAttemptId ||
@@ -55,10 +63,19 @@ function ManualPaymentSuccessCard({ state }: { state: ManualPaymentActionState }
     ...(state.contactInfo ? { contactInfo: state.contactInfo } : {}),
   });
 
-  return <ManualPaymentInstructions details={details} />;
+  return (
+    <ManualPaymentInstructions
+      details={details}
+      {...(customer ? { customer } : {})}
+    />
+  );
 }
 
-export function ManualPaymentForm({ orderToken, paymentMethods }: ManualPaymentFormProps) {
+export function ManualPaymentForm({
+  orderToken,
+  paymentMethods,
+  customer,
+}: ManualPaymentFormProps) {
   const [state, formAction] = useActionState(
     submitManualPaymentAction,
     initialManualPaymentActionState,
@@ -72,7 +89,7 @@ export function ManualPaymentForm({ orderToken, paymentMethods }: ManualPaymentF
   }, [clearCart, state.status]);
 
   if (state.status === "success") {
-    return <ManualPaymentSuccessCard state={state} />;
+    return <ManualPaymentSuccessCard state={state} {...(customer ? { customer } : {})} />;
   }
 
   return (

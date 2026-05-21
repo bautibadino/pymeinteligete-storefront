@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
@@ -18,6 +18,7 @@ import type {
   StorefrontContactFormField,
   StorefrontContactFormValue,
 } from "@/lib/storefront-api";
+import { identifyContactAnalyticsBuyerFromForm } from "./analytics-identity";
 
 type ContactFormInputValue = StorefrontContactFormValue | "";
 export type ContactFormValues = Record<string, ContactFormInputValue>;
@@ -223,16 +224,19 @@ export function DynamicContactForm({ contactForm, className }: DynamicContactFor
     [contactForm.fields],
   );
   const [values, setValues] = useState<ContactFormValues>(initialValues);
+  const submittedValuesRef = useRef<ContactFormValues>(initialValues);
   const [fieldErrors, setFieldErrors] = useState<ContactFormFieldErrors>({});
   const contactFormEventKey = contactForm.title?.trim().toLowerCase().replace(/\s+/g, "-") ?? "contact";
 
   useEffect(() => {
     setValues(initialValues);
+    submittedValuesRef.current = initialValues;
     setFieldErrors({});
   }, [initialValues]);
 
   useEffect(() => {
     if (state.status === "success") {
+      identifyContactAnalyticsBuyerFromForm(contactForm.fields, submittedValuesRef.current);
       setValues(initialValues);
       setFieldErrors({});
       const payload = buildLeadPayload({
@@ -253,7 +257,7 @@ export function DynamicContactForm({ contactForm, className }: DynamicContactFor
         },
       });
     }
-  }, [contactForm.title, contactFormEventKey, initialValues, state.status]);
+  }, [contactForm.fields, contactForm.title, contactFormEventKey, initialValues, state.status]);
 
   function setFieldValue(key: string, value: ContactFormInputValue) {
     setValues((currentValues) => ({
@@ -277,7 +281,10 @@ export function DynamicContactForm({ contactForm, className }: DynamicContactFor
     if (Object.keys(nextErrors).length > 0) {
       event.preventDefault();
       setFieldErrors(nextErrors);
+      return;
     }
+
+    submittedValuesRef.current = values;
   }
 
   return (

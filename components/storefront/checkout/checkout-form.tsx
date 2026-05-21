@@ -52,6 +52,7 @@ import type {
   StorefrontCartValidateResult,
 } from "@/lib/storefront-api";
 import type { StorefrontShippingCheckoutSnapshot } from "@/lib/types/storefront";
+import { identifyCheckoutAnalyticsBuyer } from "./analytics-identity";
 
 type CheckoutFormProps = {
   paymentMethods: StorefrontPaymentMethods | null;
@@ -736,6 +737,18 @@ export function CheckoutForm({
       items: analyticsItems,
     });
 
+    identifyCheckoutAnalyticsBuyer({
+      ...(formValues.customerName ? { name: formValues.customerName } : {}),
+      ...(formValues.customerEmail ? { email: formValues.customerEmail } : {}),
+      ...(formValues.customerPhone ? { phone: formValues.customerPhone } : {}),
+      ...(formValues.shippingCity ? { city: formValues.shippingCity } : {}),
+      ...(formValues.shippingProvince ? { province: formValues.shippingProvince } : {}),
+      ...(formValues.shippingPostalCode ? { postalCode: formValues.shippingPostalCode } : {}),
+      ...(identifiedCustomer?.taxId ?? formValues.customerDni
+        ? { taxId: identifiedCustomer?.taxId ?? formValues.customerDni }
+        : {}),
+    });
+
     trackStorefrontAnalyticsEvent({
       event: "InitiateCheckout",
       googleEvent: "begin_checkout",
@@ -746,7 +759,18 @@ export function CheckoutForm({
         eventId: payload.eventId,
       },
     });
-  }, [checkoutValue, displayItems]);
+  }, [
+    checkoutValue,
+    displayItems,
+    formValues.customerDni,
+    formValues.customerEmail,
+    formValues.customerName,
+    formValues.customerPhone,
+    formValues.shippingCity,
+    formValues.shippingPostalCode,
+    formValues.shippingProvince,
+    identifiedCustomer?.taxId,
+  ]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -802,6 +826,27 @@ export function CheckoutForm({
       methodLabel: selectedMethodLabel,
       value: checkoutValue,
       items: analyticsItems,
+    });
+
+    const locationCity = mustCollectHomeShippingAddress
+      ? formValues.shippingCity
+      : billingAddress?.city;
+    const locationProvince = mustCollectHomeShippingAddress
+      ? formValues.shippingProvince
+      : billingAddress?.province;
+    const locationPostalCode =
+      formValues.shippingPostalCode || billingAddress?.postalCode;
+
+    identifyCheckoutAnalyticsBuyer({
+      ...(formValues.customerName ? { name: formValues.customerName } : {}),
+      ...(formValues.customerEmail ? { email: formValues.customerEmail } : {}),
+      ...(formValues.customerPhone ? { phone: formValues.customerPhone } : {}),
+      ...(locationCity ? { city: locationCity } : {}),
+      ...(locationProvince ? { province: locationProvince } : {}),
+      ...(locationPostalCode ? { postalCode: locationPostalCode } : {}),
+      ...(identifiedCustomer?.taxId ?? formValues.customerDni
+        ? { taxId: identifiedCustomer?.taxId ?? formValues.customerDni }
+        : {}),
     });
 
     trackStorefrontAnalyticsEvent({

@@ -38,7 +38,11 @@ function persistCookie(name: string, value: string, maxAge: number) {
 function renderMetaBootstrap(pixelId: string) {
   return `
     window.fbq = window.fbq || function() {
-      (window.fbq.q = window.fbq.q || []).push(arguments);
+      if (window.fbq.callMethod) {
+        window.fbq.callMethod.apply(window.fbq, arguments);
+      } else {
+        window.fbq.queue.push(Array.from(arguments));
+      }
     };
     if (!window._fbq) {
       window._fbq = window.fbq;
@@ -46,7 +50,11 @@ function renderMetaBootstrap(pixelId: string) {
     window.fbq.loaded = true;
     window.fbq.version = "2.0";
     window.fbq.queue = window.fbq.queue || [];
-    window.fbq("init", ${JSON.stringify(pixelId)});
+    window.__storefrontMetaPixelIds = window.__storefrontMetaPixelIds || {};
+    if (!window.__storefrontMetaPixelIds[${JSON.stringify(pixelId)}]) {
+      window.fbq("init", ${JSON.stringify(pixelId)});
+      window.__storefrontMetaPixelIds[${JSON.stringify(pixelId)}] = true;
+    }
   `;
 }
 

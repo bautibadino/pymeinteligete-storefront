@@ -67,14 +67,20 @@ export function trackMarketingCta(
 ) {
   if (tracking.kind === "whatsapp") {
     const payload = buildMarketingWhatsAppPayload(tracking);
+    const eventId = `marketing_whatsapp_${tracking.surface}_${tracking.label
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")}_${Date.now()}`;
 
     transport.track({
-      event: "generate_lead",
-      googlePayload: payload,
-    });
-    transport.track({
       event: tracking.metaEvent ?? "Lead",
+      googleEvent: "generate_lead",
+      metaEvent: tracking.metaEvent ?? "Lead",
+      googlePayload: payload,
       metaPayload: payload,
+      options: {
+        eventId,
+      },
     });
     return;
   }

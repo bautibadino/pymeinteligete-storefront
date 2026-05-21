@@ -15,10 +15,13 @@ import { Button } from "@/components/ui/button";
 import { trackStorefrontAnalyticsEvent } from "@/lib/analytics/client";
 import { buildContactPayload } from "@/lib/analytics/events";
 import type { ManualPaymentSuccessDetails } from "@/lib/checkout/manual-payment";
+import type { StorefrontOrderCustomer } from "@/lib/types/storefront";
+import { identifyCheckoutAnalyticsBuyer } from "./analytics-identity";
 
 type ManualPaymentInstructionsProps = {
   details: ManualPaymentSuccessDetails;
   orderNumber?: string;
+  customer?: StorefrontOrderCustomer;
 };
 
 function formatAmount(amount: number): string {
@@ -40,13 +43,22 @@ function trackContact(
   method: "whatsapp" | "email" | "phone",
   details: ManualPaymentSuccessDetails,
   reference: string,
+  customer?: StorefrontOrderCustomer,
 ) {
+  const eventId = `contact_manual_${details.orderToken}_${method}`;
   const payload = buildContactPayload({
+    eventId,
     surface: "checkout-confirmation",
     method,
     orderToken: details.orderToken,
     orderNumber: reference,
     label: "Enviar comprobante",
+  });
+
+  identifyCheckoutAnalyticsBuyer({
+    ...(customer?.name ? { name: customer.name } : {}),
+    ...(customer?.email ? { email: customer.email } : {}),
+    ...(customer?.phone ? { phone: customer.phone } : {}),
   });
 
   trackStorefrontAnalyticsEvent({
@@ -55,12 +67,16 @@ function trackContact(
     metaEvent: "Contact",
     metaPayload: payload,
     googlePayload: payload,
+    options: {
+      eventId,
+    },
   });
 }
 
 export function ManualPaymentInstructions({
   details,
   orderNumber,
+  customer,
 }: ManualPaymentInstructionsProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const reference = orderNumber ?? details.orderId;
@@ -76,7 +92,7 @@ export function ManualPaymentInstructions({
   }
 
   function handleWhatsapp(value: string) {
-    trackContact("whatsapp", details, reference);
+    trackContact("whatsapp", details, reference, customer);
     const phone = value.replace(/\D/g, "");
     const message = encodeURIComponent(
       `Hola. Ya transferí el pago del pedido ${reference} por ${formatAmount(details.amount)} y quiero enviar el comprobante.`,
@@ -85,7 +101,7 @@ export function ManualPaymentInstructions({
   }
 
   function handleEmail(value: string) {
-    trackContact("email", details, reference);
+    trackContact("email", details, reference, customer);
     const subject = encodeURIComponent(`Comprobante de pago pedido ${reference}`);
     const body = encodeURIComponent(
       `Hola,\n\nYa transferí el pago del pedido ${reference} por ${formatAmount(details.amount)}.\nAdjunto el comprobante.\n`,
@@ -94,7 +110,7 @@ export function ManualPaymentInstructions({
   }
 
   function handlePhone(value: string) {
-    trackContact("phone", details, reference);
+    trackContact("phone", details, reference, customer);
     window.location.href = `tel:${value.replace(/\s+/g, "")}`;
   }
 

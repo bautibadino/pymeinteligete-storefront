@@ -848,6 +848,14 @@ export interface StorefrontAnalyticsInput {
   fbp?: string;
   ga_client_id?: string;
   anonymous_id?: string;
+  email?: string;
+  phone?: string;
+  first_name?: string;
+  last_name?: string;
+  city?: string;
+  province?: string;
+  postal_code?: string;
+  tax_id?: string;
 }
 
 export interface StorefrontCheckoutRequest {

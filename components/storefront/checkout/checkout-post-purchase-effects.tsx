@@ -11,6 +11,7 @@ import {
   shouldTrackPurchase,
 } from "@/lib/checkout/post-checkout";
 import type { StorefrontOrderByTokenResult } from "@/lib/storefront-api";
+import { identifyCheckoutAnalyticsBuyer } from "./analytics-identity";
 
 type CheckoutPostPurchaseEffectsProps = {
   order: StorefrontOrderByTokenResult;
@@ -27,6 +28,19 @@ export function CheckoutPostPurchaseEffects({
     }
 
     if (shouldTrackPurchase(order) && markTrackedEvent(window.localStorage, `purchase:${order.orderNumber}`)) {
+      identifyCheckoutAnalyticsBuyer({
+        ...(order.customer.name ? { name: order.customer.name } : {}),
+        ...(order.customer.email ? { email: order.customer.email } : {}),
+        ...(order.customer.phone ? { phone: order.customer.phone } : {}),
+        ...(order.shippingAddress.city ? { city: order.shippingAddress.city } : {}),
+        ...(order.shippingAddress.province
+          ? { province: order.shippingAddress.province }
+          : {}),
+        ...(order.shippingAddress.postalCode
+          ? { postalCode: order.shippingAddress.postalCode }
+          : {}),
+      });
+
       const payload = buildPurchasePayload(order);
       trackStorefrontAnalyticsEvent({
         event: "Purchase",

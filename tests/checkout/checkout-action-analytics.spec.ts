@@ -193,6 +193,13 @@ describe("submitCheckoutAction analytics", () => {
           fbp: "fbp.123",
           ga_client_id: "987654321.123456789",
           anonymous_id: "anon_1",
+          email: "juan@test.com",
+          phone: "3515551234",
+          first_name: "juan",
+          last_name: "perez",
+          city: "corral de bustos",
+          province: "cordoba",
+          postal_code: "2645",
         },
       }),
     );

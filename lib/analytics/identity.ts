@@ -12,6 +12,16 @@ import type { StorefrontAnalyticsInput } from "@/lib/types/storefront";
 
 type StorageLike = Pick<Storage, "getItem" | "setItem">;
 
+export type AnalyticsBuyerIdentityInput = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+  province?: string;
+  postalCode?: string;
+  taxId?: string;
+};
+
 type ResolveAnalyticsIdentityInput = {
   cookie: string;
   hostname: string;
@@ -43,6 +53,40 @@ function persistStoredFbc(
   persistCookie?.(ANALYTICS_COOKIE_KEYS.fbc, value, ANALYTICS_COOKIE_MAX_AGE_SECONDS);
 }
 
+function normalizeMatchingText(value: string | undefined): string | undefined {
+  const normalizedValue = value?.trim();
+  return normalizedValue ? normalizedValue.toLocaleLowerCase("es-AR") : undefined;
+}
+
+function normalizeDigits(value: string | undefined): string | undefined {
+  const digits = value?.replace(/\D/g, "");
+  return digits ? digits : undefined;
+}
+
+function normalizePhone(value: string | undefined): string | undefined {
+  return normalizeDigits(value);
+}
+
+function extractNameParts(value: string | undefined): {
+  first_name?: string;
+  last_name?: string;
+} {
+  const normalizedName = normalizeMatchingText(value);
+
+  if (!normalizedName) {
+    return {};
+  }
+
+  const nameParts = normalizedName.split(/\s+/).filter(Boolean);
+  const firstName = nameParts[0];
+  const lastName = nameParts.slice(1).join(" ");
+
+  return {
+    ...(firstName ? { first_name: firstName } : {}),
+    ...(lastName ? { last_name: lastName } : {}),
+  };
+}
+
 function compactAnalyticsIdentity(
   identity: Partial<StorefrontAnalyticsInput>,
 ): StorefrontAnalyticsInput | undefined {
@@ -64,7 +108,62 @@ function compactAnalyticsIdentity(
     nextIdentity.anonymous_id = identity.anonymous_id;
   }
 
+  if (identity.email) {
+    nextIdentity.email = identity.email;
+  }
+
+  if (identity.phone) {
+    nextIdentity.phone = identity.phone;
+  }
+
+  if (identity.first_name) {
+    nextIdentity.first_name = identity.first_name;
+  }
+
+  if (identity.last_name) {
+    nextIdentity.last_name = identity.last_name;
+  }
+
+  if (identity.city) {
+    nextIdentity.city = identity.city;
+  }
+
+  if (identity.province) {
+    nextIdentity.province = identity.province;
+  }
+
+  if (identity.postal_code) {
+    nextIdentity.postal_code = identity.postal_code;
+  }
+
+  if (identity.tax_id) {
+    nextIdentity.tax_id = identity.tax_id;
+  }
+
   return Object.keys(nextIdentity).length > 0 ? nextIdentity : undefined;
+}
+
+export function enrichAnalyticsIdentity(
+  identity: StorefrontAnalyticsInput | undefined,
+  buyer: AnalyticsBuyerIdentityInput,
+): StorefrontAnalyticsInput | undefined {
+  const email = normalizeMatchingText(buyer.email);
+  const phone = normalizePhone(buyer.phone);
+  const city = normalizeMatchingText(buyer.city);
+  const province = normalizeMatchingText(buyer.province);
+  const postalCode = buyer.postalCode?.trim();
+  const taxId = normalizeDigits(buyer.taxId);
+
+  return compactAnalyticsIdentity({
+    ...identity,
+    ...(email ? { email } : {}),
+    ...(phone ? { phone } : {}),
+    ...extractNameParts(buyer.name),
+    ...(city ? { city } : {}),
+    ...(province ? { province } : {}),
+    ...(postalCode ? { postal_code: postalCode } : {}),
+    ...(taxId ? { tax_id: taxId } : {}),
+  });
 }
 
 export function resolveAnalyticsIdentity({

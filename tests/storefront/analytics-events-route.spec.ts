@@ -46,7 +46,13 @@ describe("storefront analytics events proxy route", () => {
     const response = await POST(
       new Request("https://storefront.test/api/storefront/v1/analytics/events", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          cookie: "_fbp=fb.1.123; sf_fbc=fb.1.saved; _ga=GA1.1.987654321.123456789",
+          "user-agent": "Mozilla/5.0 Test Browser",
+          "x-forwarded-for": "203.0.113.10, 10.0.0.1",
+          "x-real-ip": "203.0.113.11",
+        },
         body: JSON.stringify(body),
       }),
     );
@@ -58,7 +64,18 @@ describe("storefront analytics events proxy route", () => {
     const init = fetchMock.mock.calls[0]?.[1];
     expect(init?.method).toBe("POST");
     expect(init?.cache).toBe("no-store");
-    expect(init?.body).toBe(JSON.stringify(body));
+    expect(init?.body).toBe(
+      JSON.stringify({
+        ...body,
+        user: {
+          fbp: "fb.1.123",
+          fbc: "fb.1.saved",
+          clientId: "987654321.123456789",
+          clientUserAgent: "Mozilla/5.0 Test Browser",
+          clientIpAddress: "203.0.113.10",
+        },
+      }),
+    );
 
     const headers = init?.headers as Headers;
     expect(headers.get("content-type")).toBe("application/json");
@@ -66,6 +83,9 @@ describe("storefront analytics events proxy route", () => {
     expect(headers.get("x-storefront-version")).toBe("storefront@test");
     expect(headers.get("x-request-id")).toBe("req_analytics_1");
     expect(headers.get("x-tenant-slug")).toBe("bym");
+    expect(headers.get("user-agent")).toBe("Mozilla/5.0 Test Browser");
+    expect(headers.get("x-forwarded-for")).toBe("203.0.113.10, 10.0.0.1");
+    expect(headers.get("x-real-ip")).toBe("203.0.113.11");
 
     await expect(response.json()).resolves.toEqual({
       success: true,
