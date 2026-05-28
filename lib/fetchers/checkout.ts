@@ -2,6 +2,8 @@ import { STOREFRONT_API_PATHS } from "@/lib/contracts/storefront-v1";
 import type {
   StorefrontCheckoutRequest,
   StorefrontCheckoutResult,
+  StorefrontCheckoutSessionRequest,
+  StorefrontCheckoutSessionResult,
   StorefrontFetchInput,
   StorefrontProcessPaymentRequest,
   StorefrontProcessPaymentResult,
@@ -18,6 +20,23 @@ export async function postCheckout(
 
   return requestStorefrontApi<StorefrontCheckoutResult, StorefrontCheckoutRequest>({
     path: STOREFRONT_API_PATHS.checkout,
+    context,
+    method: "POST",
+    body: payload,
+  });
+}
+
+export async function postCheckoutSession(
+  input: StorefrontFetchInput,
+  payload: StorefrontCheckoutSessionRequest,
+): Promise<StorefrontCheckoutSessionResult> {
+  const context = resolveStorefrontRequestContext(input);
+
+  return requestStorefrontApi<
+    StorefrontCheckoutSessionResult,
+    StorefrontCheckoutSessionRequest
+  >({
+    path: STOREFRONT_API_PATHS.checkoutSession,
     context,
     method: "POST",
     body: payload,

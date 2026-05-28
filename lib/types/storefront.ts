@@ -875,6 +875,7 @@ export interface StorefrontCheckoutRequest {
   paymentMethodId?: string;
   notes?: string;
   idempotencyKey?: string;
+  shopCartId?: string;
   analytics?: StorefrontAnalyticsInput;
 }
 
@@ -885,6 +886,40 @@ export interface StorefrontCheckoutResult {
   total: number;
   payerEmail: string;
   idempotent?: boolean;
+}
+
+export interface StorefrontCheckoutSessionItemInput {
+  productId: string;
+  quantity: number;
+  price?: number;
+  name?: string;
+  image?: string;
+}
+
+export interface StorefrontCheckoutSessionRequest {
+  event: "checkout_opened" | "identity_updated" | "order_created";
+  shopCartId?: string;
+  sessionId?: string;
+  anonymousId?: string;
+  host?: string;
+  source?: string;
+  currency?: string;
+  subtotal?: number;
+  total?: number;
+  items?: StorefrontCheckoutSessionItemInput[];
+  customer?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
+  orderId?: string;
+  orderToken?: string;
+}
+
+export interface StorefrontCheckoutSessionResult {
+  shopCartId: string;
+  status: "active" | "converted" | "abandoned" | "merged";
+  checkoutState?: "opened" | "identified" | "converted" | "abandoned";
 }
 
 // ─────────────────────────────────────────────────────────────
