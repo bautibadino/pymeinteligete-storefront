@@ -21,6 +21,7 @@ import {
 } from "@/lib/shipping/checkout-shipping";
 import { buildShippingQuotePackageFromCartItems } from "@/lib/shipping/product-package";
 import {
+  buildShippingCartKey,
   clearSelectedShippingOption,
   normalizeShippingPostalCode,
   persistSelectedShippingOption,
@@ -77,10 +78,12 @@ function getQuoteErrorMessage(error: unknown): string {
 }
 
 function buildCartShippingStorageKey(items: StorefrontCartItem[]): string {
-  return items
-    .map((item) => `${item.productId}:${item.quantity}:${item.price.amount}`)
-    .sort()
-    .join("|");
+  return buildShippingCartKey(
+    items.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+    })),
+  );
 }
 
 function buildShippingQuoteItems(items: StorefrontCartItem[]) {

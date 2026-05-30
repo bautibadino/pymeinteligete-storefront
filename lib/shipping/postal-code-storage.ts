@@ -11,6 +11,11 @@ export type StorefrontShippingStorageScope = {
   deliveryMode?: "home_delivery" | "carrier_branch" | "pickup";
 };
 
+export type StorefrontShippingCartKeyItem = {
+  productId: string;
+  quantity?: number;
+};
+
 type ScopedSelectedShippingOption<TSnapshot> = {
   scope: Required<StorefrontShippingStorageScope>;
   snapshot: TSnapshot;
@@ -32,6 +37,20 @@ export function buildShippingStorageScope(
     cartKey: scope.cartKey?.trim() ?? "",
     deliveryMode: scope.deliveryMode ?? "home_delivery",
   };
+}
+
+export function buildShippingCartKey(items: StorefrontShippingCartKeyItem[]): string {
+  return items
+    .map((item) => {
+      const quantity =
+        typeof item.quantity === "number" && Number.isFinite(item.quantity) && item.quantity > 0
+          ? item.quantity
+          : 1;
+
+      return `${item.productId}:${quantity}`;
+    })
+    .sort()
+    .join("|");
 }
 
 function buildPostalCodeStorageKey(scope?: StorefrontShippingStorageScope): string {

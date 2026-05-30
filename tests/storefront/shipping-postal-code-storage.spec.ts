@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   STOREFRONT_SHIPPING_POSTAL_CODE_STORAGE_KEY,
   STOREFRONT_SELECTED_SHIPPING_OPTION_STORAGE_KEY,
+  buildShippingCartKey,
   buildShippingStorageScope,
   clearSelectedShippingOption,
   normalizeShippingPostalCode,
@@ -110,5 +111,19 @@ describe("shipping postal code storage", () => {
         deliveryMode: "home_delivery",
       }),
     ).toBeNull();
+  });
+
+  it("genera una cartKey estable entre carrito y checkout aunque cambie el precio validado", () => {
+    const cartKeyFromCart = buildShippingCartKey([
+      { productId: "prod-a", quantity: 1 },
+      { productId: "prod-b", quantity: 2 },
+    ]);
+    const cartKeyFromCheckout = buildShippingCartKey([
+      { productId: "prod-b", quantity: 2 },
+      { productId: "prod-a", quantity: 1 },
+    ]);
+
+    expect(cartKeyFromCart).toBe("prod-a:1|prod-b:2");
+    expect(cartKeyFromCheckout).toBe(cartKeyFromCart);
   });
 });

@@ -42,6 +42,7 @@ import {
   requiresHomeShippingAddress,
 } from "@/lib/shipping/checkout-shipping";
 import {
+  buildShippingCartKey,
   readStoredSelectedShippingOption,
   type StorefrontShippingStorageScope,
 } from "@/lib/shipping/postal-code-storage";
@@ -246,18 +247,12 @@ function buildCheckoutAnalyticsItems(items: CheckoutDisplayItem[]): CheckoutAnal
 }
 
 function buildCheckoutShippingStorageKey(items: CheckoutDisplayItem[]): string {
-  return items
-    .map((item) => {
-      const unitPrice =
-        item.unitPriceWithTaxAmount ??
-        (item.linePriceAmount !== null && item.quantity > 0
-          ? item.linePriceAmount / item.quantity
-          : 0);
-
-      return `${item.productId}:${item.quantity}:${unitPrice}`;
-    })
-    .sort()
-    .join("|");
+  return buildShippingCartKey(
+    items.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+    })),
+  );
 }
 
 function buildValidatedItemsMap(
