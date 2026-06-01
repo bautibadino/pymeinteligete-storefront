@@ -13,7 +13,7 @@ export { getCategories } from "@/lib/fetchers/categories";
 export { getProduct } from "@/lib/fetchers/product";
 export { getPaymentMethods } from "@/lib/fetchers/payment-methods";
 export { postContactForm } from "@/lib/fetchers/contact";
-export { postCheckout, processPayment } from "@/lib/fetchers/checkout";
+export { postCheckout, postCheckoutSession, processPayment } from "@/lib/fetchers/checkout";
 export { getOrderByToken, postManualPayment } from "@/lib/fetchers/orders";
 export type { StorefrontCatalogOrigin, StorefrontCatalogSource } from "@/lib/fetchers/catalog";
 export type {
@@ -33,6 +33,8 @@ export type {
   StorefrontCheckoutItemInput,
   StorefrontCheckoutRequest,
   StorefrontCheckoutResult,
+  StorefrontCheckoutSessionRequest,
+  StorefrontCheckoutSessionResult,
   StorefrontContentModule,
   StorefrontContact,
   StorefrontContactForm,

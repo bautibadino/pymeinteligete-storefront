@@ -21,6 +21,7 @@ export const STOREFRONT_API_PATHS = {
   paymentMethods: `${STOREFRONT_API_PREFIX}/payment-methods`,
   contact: `${STOREFRONT_API_PREFIX}/contact`,
   checkout: `${STOREFRONT_API_PREFIX}/checkout`,
+  checkoutSession: `${STOREFRONT_API_PREFIX}/checkout/session`,
   processPayment: `${STOREFRONT_API_PREFIX}/payments/process`,
   product(slug: string) {
     return `${STOREFRONT_API_PREFIX}/products/${encodeURIComponent(slug)}`;

@@ -23,6 +23,7 @@ import {
   getBootstrap,
   postCartValidate,
   postCheckout,
+  postCheckoutSession,
   postManualPayment,
   processPayment,
 } from "@/lib/storefront-api";
@@ -32,6 +33,7 @@ import {
 } from "@/lib/shipping/checkout-shipping";
 import type {
   StorefrontAddressInput,
+  StorefrontCheckoutSessionRequest,
   StorefrontShippingCheckoutSnapshot,
 } from "@/lib/types/storefront";
 
@@ -108,6 +110,27 @@ function buildDeliverySelection(snapshot: StorefrontShippingCheckoutSnapshot | n
       : {}),
     ...(snapshot.pickupLocation ? { selectedPickupLocation: snapshot.pickupLocation } : {}),
   };
+}
+
+export async function syncCheckoutSessionAction(
+  payload: StorefrontCheckoutSessionRequest,
+): Promise<{ success: boolean; shopCartId?: string; checkoutState?: string }> {
+  try {
+    const runtime = await getStorefrontRuntimeSnapshot();
+    const result = await postCheckoutSession(runtime.context, payload);
+
+    return {
+      success: true,
+      shopCartId: result.shopCartId,
+      ...(result.checkoutState ? { checkoutState: result.checkoutState } : {}),
+    };
+  } catch (error) {
+    unstable_rethrow(error);
+
+    return {
+      success: false,
+    };
+  }
 }
 
 export async function submitCheckoutAction(
@@ -226,6 +249,9 @@ export async function submitCheckoutAction(
         ? { notes: readTrimmedString(formData, "orderNotes") }
         : {}),
       idempotencyKey: readTrimmedString(formData, "idempotencyKey"),
+      ...(readTrimmedString(formData, "shopCartId")
+        ? { shopCartId: readTrimmedString(formData, "shopCartId") }
+        : {}),
       ...(enrichedAnalyticsIdentity ? { analytics: enrichedAnalyticsIdentity } : {}),
     });
 

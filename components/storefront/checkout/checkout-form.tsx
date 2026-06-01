@@ -17,7 +17,10 @@ import {
   type CheckoutActionState,
   initialCheckoutActionState,
 } from "@/app/(storefront)/checkout/action-state";
-import { submitCheckoutAction } from "@/app/(storefront)/checkout/actions";
+import {
+  submitCheckoutAction,
+  syncCheckoutSessionAction,
+} from "@/app/(storefront)/checkout/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +29,7 @@ import { useStorefrontCart } from "@/components/storefront/cart/storefront-cart-
 import { CheckoutStepCard } from "@/components/storefront/checkout/checkout-step-card";
 import { PaymentBrick } from "@/components/storefront/checkout/payment-brick";
 import { trackStorefrontAnalyticsEvent } from "@/lib/analytics/client";
+import { resolveAnalyticsIdentity } from "@/lib/analytics/identity";
 import { buildAddPaymentInfoPayload, buildInitiateCheckoutPayload } from "@/lib/analytics/events";
 import { markTrackedEvent } from "@/lib/analytics/storage";
 import type { StorefrontCartItem } from "@/lib/cart/storefront-cart";
@@ -654,7 +658,11 @@ export function CheckoutForm({
   }, [state]);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const idempotencyKeyRef = useRef<string>(createRandomId());
+  const checkoutSessionIdRef = useRef<string>(createRandomId());
+  const hasSyncedCheckoutSessionRef = useRef(false);
+  const lastIdentitySyncRef = useRef<string | null>(null);
   const lastTrackedPaymentMethodRef = useRef<string | null>(null);
+  const [shopCartId, setShopCartId] = useState("");
   const identifiedCustomer = fiscalAutofill?.customer ?? null;
   const billingAddress = fiscalAutofill?.billingAddress;
   const hasPaymentOptions = paymentOptions.length > 0;
@@ -765,6 +773,100 @@ export function CheckoutForm({
     formValues.shippingPostalCode,
     formValues.shippingProvince,
     identifiedCustomer?.taxId,
+  ]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || displayItems.length === 0 || hasSyncedCheckoutSessionRef.current) {
+      return;
+    }
+
+    hasSyncedCheckoutSessionRef.current = true;
+
+    const analyticsIdentity = resolveAnalyticsIdentity({
+      cookie: document.cookie,
+      hostname: window.location.host,
+      search: window.location.search,
+      storage: window.localStorage,
+    });
+
+    void syncCheckoutSessionAction({
+      event: "checkout_opened",
+      sessionId: checkoutSessionIdRef.current,
+      ...(analyticsIdentity?.anonymous_id
+        ? { anonymousId: analyticsIdentity.anonymous_id }
+        : {}),
+      source: "storefront_external",
+      currency: "ARS",
+      subtotal: pricingSummary.merchandiseTotal,
+      total: checkoutValueWithShipping,
+      items: displayItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        ...(item.unitBasePriceAmount !== null ? { price: item.unitBasePriceAmount } : {}),
+        name: item.title,
+        ...(item.imageUrl ? { image: item.imageUrl } : {}),
+      })),
+    }).then((result) => {
+      if (result.success && result.shopCartId) {
+        setShopCartId(result.shopCartId);
+      }
+    });
+  }, [checkoutValueWithShipping, displayItems, pricingSummary.merchandiseTotal]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !shopCartId) {
+      return;
+    }
+
+    const resolvedName = formValues.customerName.trim();
+    const resolvedEmail = formValues.customerEmail.trim();
+    const resolvedPhone = formValues.customerPhone.trim();
+
+    if (!resolvedName && !resolvedEmail && !resolvedPhone) {
+      return;
+    }
+
+    const signature = `${resolvedName}|${resolvedEmail}|${resolvedPhone}`;
+    if (lastIdentitySyncRef.current === signature) {
+      return;
+    }
+    lastIdentitySyncRef.current = signature;
+
+    const analyticsIdentity = resolveAnalyticsIdentity({
+      cookie: document.cookie,
+      hostname: window.location.host,
+      search: window.location.search,
+      storage: window.localStorage,
+    });
+
+    void syncCheckoutSessionAction({
+      event: "identity_updated",
+      shopCartId,
+      sessionId: checkoutSessionIdRef.current,
+      ...(analyticsIdentity?.anonymous_id
+        ? { anonymousId: analyticsIdentity.anonymous_id }
+        : {}),
+      source: "storefront_external",
+      currency: "ARS",
+      subtotal: pricingSummary.merchandiseTotal,
+      total: checkoutValueWithShipping,
+      customer: {
+        ...(resolvedName ? { name: resolvedName } : {}),
+        ...(resolvedEmail ? { email: resolvedEmail } : {}),
+        ...(resolvedPhone ? { phone: resolvedPhone } : {}),
+      },
+    }).then((result) => {
+      if (result.success && result.shopCartId) {
+        setShopCartId(result.shopCartId);
+      }
+    });
+  }, [
+    checkoutValueWithShipping,
+    formValues.customerEmail,
+    formValues.customerName,
+    formValues.customerPhone,
+    pricingSummary.merchandiseTotal,
+    shopCartId,
   ]);
 
   useEffect(() => {
@@ -996,6 +1098,7 @@ export function CheckoutForm({
       className="mx-auto grid w-full max-w-[1180px] gap-8 lg:items-start lg:grid-cols-[minmax(0,1fr)_340px]"
     >
       <input type="hidden" name="idempotencyKey" value={idempotencyKeyRef.current} />
+      <input type="hidden" name="shopCartId" value={shopCartId} />
       <input type="hidden" name="paymentStrategy" value={paymentStrategy} />
       <input type="hidden" name="paymentMethodId" value={selectedPaymentMethodId} />
       <input
