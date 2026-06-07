@@ -29,6 +29,24 @@ function encodeScopeValue(value: string): string {
   return encodeURIComponent(value).replaceAll("%", "_");
 }
 
+export function buildShippingStorageCartKey(
+  items: StorefrontShippingCartKeyItem[],
+): string {
+  return items
+    .map((item) => {
+      const quantity =
+        Number.isFinite(item.quantity) && (item.quantity ?? 0) > 0 ? item.quantity! : 1;
+
+      return `${item.productId}:${quantity}`;
+    })
+    .sort()
+    .join("|");
+}
+
+export function buildShippingCartKey(items: StorefrontShippingCartKeyItem[]): string {
+  return buildShippingStorageCartKey(items);
+}
+
 export function buildShippingStorageScope(
   scope: StorefrontShippingStorageScope,
 ): Required<StorefrontShippingStorageScope> {
@@ -37,20 +55,6 @@ export function buildShippingStorageScope(
     cartKey: scope.cartKey?.trim() ?? "",
     deliveryMode: scope.deliveryMode ?? "home_delivery",
   };
-}
-
-export function buildShippingCartKey(items: StorefrontShippingCartKeyItem[]): string {
-  return items
-    .map((item) => {
-      const quantity =
-        typeof item.quantity === "number" && Number.isFinite(item.quantity) && item.quantity > 0
-          ? item.quantity
-          : 1;
-
-      return `${item.productId}:${quantity}`;
-    })
-    .sort()
-    .join("|");
 }
 
 function buildPostalCodeStorageKey(scope?: StorefrontShippingStorageScope): string {

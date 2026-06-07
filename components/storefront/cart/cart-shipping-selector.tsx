@@ -21,7 +21,7 @@ import {
 } from "@/lib/shipping/checkout-shipping";
 import { buildShippingQuotePackageFromCartItems } from "@/lib/shipping/product-package";
 import {
-  buildShippingCartKey,
+  buildShippingStorageCartKey,
   clearSelectedShippingOption,
   normalizeShippingPostalCode,
   persistSelectedShippingOption,
@@ -45,8 +45,13 @@ import { cn } from "@/lib/utils/cn";
 
 type CartShippingSelectorProps = {
   className?: string;
-  items: StorefrontCartItem[];
-  onSelectedOptionChange: (option: StorefrontShippingQuoteOption | null) => void;
+  items: Array<
+    Pick<StorefrontCartItem, "brand" | "name" | "price" | "productId" | "quantity">
+  >;
+  onSelectedOptionChange: (
+    snapshot: StorefrontShippingCheckoutSnapshot | null,
+  ) => void;
+  requireCarrierBranchSelection?: boolean;
 };
 
 function formatMoney(amount: number, currency = "ARS") {
@@ -76,17 +81,11 @@ function getQuoteErrorMessage(error: unknown): string {
 
   return "No pudimos cotizar el envío en este momento.";
 }
-
-function buildCartShippingStorageKey(items: StorefrontCartItem[]): string {
-  return buildShippingCartKey(
-    items.map((item) => ({
-      productId: item.productId,
-      quantity: item.quantity,
-    })),
-  );
-}
-
-function buildShippingQuoteItems(items: StorefrontCartItem[]) {
+function buildShippingQuoteItems(
+  items: Array<
+    Pick<StorefrontCartItem, "brand" | "name" | "price" | "productId" | "quantity">
+  >,
+) {
   return items.map((item) => ({
     productId: item.productId,
     lineTotal: item.price.amount * item.quantity,
@@ -137,23 +136,27 @@ export function CartShippingSelector({
   className,
   items,
   onSelectedOptionChange,
+  requireCarrierBranchSelection = true,
 }: CartShippingSelectorProps) {
   const [postalCode, setPostalCode] = useState("");
   const [quote, setQuote] = useState<StorefrontShippingQuoteResponse | null>(null);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  const [selectedSnapshot, setSelectedSnapshot] =
+    useState<StorefrontShippingCheckoutSnapshot | null>(null);
   const [carrierBranches, setCarrierBranches] = useState<StorefrontCarrierBranch[]>([]);
   const [selectedCarrierBranchId, setSelectedCarrierBranchId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [branchMessage, setBranchMessage] = useState<string | null>(null);
   const [isQuoting, setIsQuoting] = useState(false);
   const [isLoadingBranches, setIsLoadingBranches] = useState(false);
+  const hasHydratedItemsRef = useRef(false);
   const trackedShippingRef = useRef<string | null>(null);
 
   const quotePackage = buildShippingQuotePackageFromCartItems(items);
   const storageScope = useMemo(
     (): StorefrontShippingStorageScope => ({
       host: typeof window === "undefined" ? "" : window.location.host,
-      cartKey: buildCartShippingStorageKey(items),
+      cartKey: buildShippingStorageCartKey(items),
     }),
     [items],
   );
@@ -162,9 +165,18 @@ export function CartShippingSelector({
     options.find((option) => option.optionId === selectedOptionId) ?? null;
   const selectedBaseDeliveryMode = getShippingDeliveryMode(selectedBaseOption);
   const needsCarrierBranchSelection =
-    selectedBaseOption?.provider === "andreani" && selectedBaseDeliveryMode === "carrier_branch";
+    selectedBaseOption?.provider === "andreani" &&
+    selectedBaseDeliveryMode === "carrier_branch" &&
+    requireCarrierBranchSelection;
   const selectedCarrierBranch =
     carrierBranches.find((branch) => getBranchId(branch) === selectedCarrierBranchId) ?? null;
+  const selectedOptionForStorage = useMemo(
+    () =>
+      selectedBaseOption && needsCarrierBranchSelection && selectedCarrierBranch
+        ? withSelectedCarrierBranch(selectedBaseOption, selectedCarrierBranch)
+        : selectedBaseOption,
+    [needsCarrierBranchSelection, selectedBaseOption, selectedCarrierBranch],
+  );
   const selectedOptionForCheckout = useMemo(
     () =>
       selectedBaseOption && needsCarrierBranchSelection
@@ -194,19 +206,31 @@ export function CartShippingSelector({
       }
 
       setSelectedOptionId(storedSnapshot.optionId);
+      setSelectedSnapshot(storedSnapshot);
+      if (storedSnapshot.selectedCarrierBranch) {
+        setSelectedCarrierBranchId(getBranchId(storedSnapshot.selectedCarrierBranch));
+      }
     }
   }, [storageScope]);
 
   useEffect(() => {
-    onSelectedOptionChange(selectedOptionForCheckout);
+    onSelectedOptionChange(selectedSnapshot);
+  }, [onSelectedOptionChange, selectedSnapshot]);
 
-    if (selectedOptionForCheckout) {
-      const selectedSnapshot = selectedOptionForCheckout.checkoutSnapshot;
-      const selectedShippingCost = getShippingFinalCost(selectedOptionForCheckout);
+  useEffect(() => {
+    if (selectedOptionId && options.length === 0) {
+      return;
+    }
 
-      persistSelectedShippingOption(window.localStorage, selectedSnapshot, {
+    if (selectedOptionForStorage) {
+      const nextSnapshot = selectedOptionForStorage.checkoutSnapshot;
+      const selectedShippingCost = getShippingFinalCost(selectedOptionForStorage);
+
+      setSelectedSnapshot(nextSnapshot);
+
+      persistSelectedShippingOption(window.localStorage, nextSnapshot, {
         ...storageScope,
-        deliveryMode: getShippingDeliveryMode(selectedSnapshot),
+        deliveryMode: getShippingDeliveryMode(nextSnapshot),
       });
       const analyticsItems = items.map((item) => ({
         id: item.productId,
@@ -218,9 +242,13 @@ export function CartShippingSelector({
       const cartSignature = analyticsItems
         .map((item) => `${item.id}:${item.quantity}:${item.price}`)
         .join("|");
-      const trackingKey = `${selectedOptionForCheckout.optionId}:${selectedOptionForCheckout.checkoutSnapshot.destinationPostalCode}:${selectedCarrierBranchId ?? ""}:${cartSignature}`;
+      const trackingKey = `${selectedOptionForStorage.optionId}:${selectedOptionForStorage.checkoutSnapshot.destinationPostalCode}:${selectedCarrierBranchId ?? ""}:${cartSignature}`;
 
-      if (trackedShippingRef.current !== trackingKey && analyticsItems.length > 0) {
+      if (
+        trackedShippingRef.current !== trackingKey &&
+        analyticsItems.length > 0 &&
+        selectedOptionForCheckout
+      ) {
         trackedShippingRef.current = trackingKey;
         const cartValue = analyticsItems.reduce(
           (total, item) => total + item.price * item.quantity,
@@ -247,8 +275,17 @@ export function CartShippingSelector({
       return;
     }
 
+    setSelectedSnapshot(null);
     clearSelectedShippingOption(window.localStorage, storageScope);
-  }, [items, onSelectedOptionChange, selectedCarrierBranchId, selectedOptionForCheckout, storageScope]);
+  }, [
+    items,
+    options.length,
+    selectedCarrierBranchId,
+    selectedOptionForCheckout,
+    selectedOptionForStorage,
+    selectedOptionId,
+    storageScope,
+  ]);
 
   useEffect(() => {
     if (!selectedBaseOption || !needsCarrierBranchSelection) {
@@ -283,6 +320,17 @@ export function CartShippingSelector({
           return;
         }
 
+        const persistedBranchId = selectedSnapshot?.selectedCarrierBranch
+          ? getBranchId(selectedSnapshot.selectedCarrierBranch)
+          : null;
+        const matchedBranch = persistedBranchId
+          ? result.branches.find((branch) => getBranchId(branch) === persistedBranchId)
+          : null;
+        if (matchedBranch) {
+          setSelectedCarrierBranchId(getBranchId(matchedBranch));
+          return;
+        }
+
         const onlyBranch = result.branches[0];
         if (result.branches.length === 1 && onlyBranch) {
           setSelectedCarrierBranchId(getBranchId(onlyBranch));
@@ -306,11 +354,21 @@ export function CartShippingSelector({
     selectedBaseOption?.checkoutSnapshot.destinationPostalCode,
     selectedBaseOption?.optionId,
     selectedBaseOption?.providerServiceCode,
+    selectedSnapshot?.selectedCarrierBranch?.branchId,
+    selectedSnapshot?.selectedCarrierBranch?.id,
+    selectedSnapshot?.selectedCarrierBranch?.code,
+    selectedSnapshot?.selectedCarrierBranch?.name,
   ]);
 
   useEffect(() => {
+    if (!hasHydratedItemsRef.current) {
+      hasHydratedItemsRef.current = true;
+      return;
+    }
+
     setQuote(null);
     setSelectedOptionId(null);
+    setSelectedSnapshot(null);
     setCarrierBranches([]);
     setSelectedCarrierBranchId(null);
     setBranchMessage(null);
@@ -336,9 +394,14 @@ export function CartShippingSelector({
         options: result.options.map(normalizeShippingQuoteOptionCosts),
       };
       const firstOption = normalizedResult.options[0] ?? null;
+      const hasCurrentSelection = normalizedResult.options.some(
+        (option) => option.optionId === selectedOptionId,
+      );
 
       setQuote(normalizedResult);
-      setSelectedOptionId(firstOption?.optionId ?? null);
+      setSelectedOptionId(
+        hasCurrentSelection ? selectedOptionId : (firstOption?.optionId ?? null),
+      );
       setMessage(
         normalizedResult.available && normalizedResult.options.length > 0
           ? null
@@ -347,6 +410,7 @@ export function CartShippingSelector({
     } catch (error) {
       setQuote(null);
       setSelectedOptionId(null);
+      setSelectedSnapshot(null);
       setMessage(getQuoteErrorMessage(error));
     } finally {
       setIsQuoting(false);
@@ -371,6 +435,7 @@ export function CartShippingSelector({
     if (!normalizedPostalCode) {
       setQuote(null);
       setSelectedOptionId(null);
+      setSelectedSnapshot(null);
       setCarrierBranches([]);
       setSelectedCarrierBranchId(null);
       setBranchMessage(null);
@@ -427,7 +492,11 @@ export function CartShippingSelector({
 
       {options.length > 0 ? (
         <div className="grid gap-2">
-          <p className="text-xs text-muted">Elegí cómo querés recibir tu compra.</p>
+          <p className="text-xs text-muted">
+            {requireCarrierBranchSelection
+              ? "Elegí cómo querés recibir tu compra."
+              : "Cotizá una opción rápida. La sucursal final se define en el checkout."}
+          </p>
           <ul
             className="grid max-h-[min(280px,36vh)] gap-2 overflow-y-auto pr-1"
             aria-label="Opciones de envío del carrito"
@@ -523,7 +592,9 @@ export function CartShippingSelector({
                       </strong>
                     </span>
                   </label>
-                  {selected && getShippingDeliveryMode(option) === "carrier_branch" ? (
+                  {selected &&
+                  getShippingDeliveryMode(option) === "carrier_branch" &&
+                  requireCarrierBranchSelection ? (
                     <div className="mt-2 grid gap-2 rounded-xl border border-border bg-background p-3">
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
@@ -584,6 +655,12 @@ export function CartShippingSelector({
                           Elegí una sucursal para mantener este envío y continuar.
                         </p>
                       ) : null}
+                    </div>
+                  ) : selected &&
+                    getShippingDeliveryMode(option) === "carrier_branch" &&
+                    !requireCarrierBranchSelection ? (
+                    <div className="mt-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-950">
+                      La sucursal de retiro la elegís al finalizar la compra.
                     </div>
                   ) : null}
                 </li>

@@ -40,6 +40,13 @@ const CARRIER_BRANCH_SNAPSHOT: StorefrontShippingCheckoutSnapshot = {
   },
 };
 
+const CARRIER_BRANCH_WITHOUT_BRANCH_SNAPSHOT: StorefrontShippingCheckoutSnapshot = {
+  ...HOME_DELIVERY_SNAPSHOT,
+  optionId: "andreani:branch:002",
+  serviceName: "Andreani - retiro en sucursal",
+  deliveryType: "carrier_branch",
+};
+
 const PICKUP_SNAPSHOT: StorefrontShippingCheckoutSnapshot = {
   ...HOME_DELIVERY_SNAPSHOT,
   provider: "pickup",
@@ -242,7 +249,23 @@ describe("buildFieldErrors", () => {
     });
     const errors = buildFieldErrors(formData);
 
-    expect(errors.shippingQuoteSnapshot).toBe("Seleccioná un envío válido desde el carrito.");
+    expect(errors.shippingQuoteSnapshot).toBe("Seleccioná un envío válido para continuar.");
+  });
+
+  it("exige la sucursal final cuando el envío es retiro en sucursal", () => {
+    const formData = createFormData({
+      customerName: "Juan Perez",
+      customerEmail: "juan@mail.com",
+      customerPhone: "3515551234",
+      shippingQuoteSnapshot: stringifySnapshot(CARRIER_BRANCH_WITHOUT_BRANCH_SNAPSHOT),
+      itemProductId: ["prod_1"],
+      itemQuantity: ["2"],
+    });
+    const errors = buildFieldErrors(formData);
+
+    expect(errors.shippingQuoteSnapshot).toBe(
+      "Elegí la sucursal de retiro antes de continuar.",
+    );
   });
 
   it("no exige dirección domiciliaria para retiro en sucursal Andreani", () => {

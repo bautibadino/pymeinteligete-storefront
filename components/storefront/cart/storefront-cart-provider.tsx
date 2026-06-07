@@ -25,7 +25,7 @@ import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { getShippingFinalCost } from "@/lib/shipping/checkout-shipping";
 import type {
   StorefrontCartValidateResult,
-  StorefrontShippingQuoteOption,
+  StorefrontShippingCheckoutSnapshot,
 } from "@/lib/types/storefront";
 import { cn } from "@/lib/utils/cn";
 
@@ -272,15 +272,17 @@ function StorefrontCartSurface({
   mode: StorefrontCartUiMode;
 }) {
   const checkoutHref = buildCheckoutHrefFromCartItems(items);
-  const [selectedShippingOption, setSelectedShippingOption] =
-    useState<StorefrontShippingQuoteOption | null>(null);
+  const [selectedShippingSnapshot, setSelectedShippingSnapshot] =
+    useState<StorefrontShippingCheckoutSnapshot | null>(null);
   const handleSelectedShippingOptionChange = useCallback(
-    (option: StorefrontShippingQuoteOption | null) => {
-      setSelectedShippingOption(option);
+    (snapshot: StorefrontShippingCheckoutSnapshot | null) => {
+      setSelectedShippingSnapshot(snapshot);
     },
     [],
   );
-  const shippingCost = selectedShippingOption ? getShippingFinalCost(selectedShippingOption) : 0;
+  const shippingCost = selectedShippingSnapshot
+    ? getShippingFinalCost(selectedShippingSnapshot)
+    : 0;
   const estimatedTotal = subtotal + shippingCost;
 
   return (
@@ -397,6 +399,7 @@ function StorefrontCartSurface({
                 className="mt-5"
                 items={items}
                 onSelectedOptionChange={handleSelectedShippingOptionChange}
+                requireCarrierBranchSelection={false}
               />
             </div>
 
@@ -411,7 +414,7 @@ function StorefrontCartSurface({
                 <div className="flex items-center justify-between">
                   <span className="text-muted">Envío seleccionado</span>
                   <strong className="text-foreground">
-                    {selectedShippingOption ? formatCurrency(shippingCost) : "A seleccionar"}
+                    {selectedShippingSnapshot ? formatCurrency(shippingCost) : "A seleccionar"}
                   </strong>
                 </div>
                 <div className="flex items-center justify-between border-t border-border pt-2">
@@ -430,7 +433,7 @@ function StorefrontCartSurface({
                 </p>
               ) : null}
               <div className="grid gap-2">
-                {selectedShippingOption && !isCartValidationPending && !cartValidationMessage ? (
+                {selectedShippingSnapshot && !isCartValidationPending && !cartValidationMessage ? (
                   <Button asChild className="w-full">
                     <Link href={checkoutHref as Route} onClick={closeCart}>
                       Finalizar compra

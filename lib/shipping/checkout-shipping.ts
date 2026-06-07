@@ -191,6 +191,24 @@ export function requiresHomeShippingAddress(
   return getShippingDeliveryMode(value) === "home_delivery";
 }
 
+export function isShippingSelectionReadyForCheckout(
+  snapshot: StorefrontShippingCheckoutSnapshot | null | undefined,
+): boolean {
+  if (!snapshot) {
+    return false;
+  }
+
+  switch (getShippingDeliveryMode(snapshot)) {
+    case "carrier_branch":
+      return Boolean(snapshot.selectedCarrierBranch?.name);
+    case "pickup":
+      return Boolean(snapshot.pickupLocation?.name);
+    case "home_delivery":
+    default:
+      return true;
+  }
+}
+
 export function normalizeShippingQuoteOptionCosts(
   option: StorefrontShippingQuoteOption,
 ): StorefrontShippingQuoteOption {

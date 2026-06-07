@@ -1,5 +1,5 @@
-import type { ProductDetailData } from "@/lib/modules/product-detail";
 import type { StorefrontCartItem } from "@/lib/cart/storefront-cart";
+import type { ProductDetailData } from "@/lib/modules/product-detail";
 import type { StorefrontProductDetail, StorefrontShippingQuotePackage } from "@/lib/types/storefront";
 
 export const DEFAULT_STOREFRONT_SHIPPING_WEIGHT_KG = 5;
@@ -16,6 +16,9 @@ type ShippingPackageProduct = {
     height?: number | undefined;
   } | undefined;
 };
+
+type ShippingPackageCartItem = Pick<StorefrontCartItem, "price" | "productId" | "quantity"> &
+  Partial<Pick<StorefrontCartItem, "href" | "name" | "slug">>;
 
 function readPositiveNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
@@ -66,7 +69,7 @@ export function buildShippingQuotePackageFromProductDetailData(
 }
 
 export function buildShippingQuotePackageFromCartItems(
-  items: StorefrontCartItem[],
+  items: ShippingPackageCartItem[],
 ): StorefrontShippingQuotePackage | null {
   if (items.length === 0) {
     return null;

@@ -1,4 +1,6 @@
 import {
+  getShippingDeliveryMode,
+  isShippingSelectionReadyForCheckout,
   normalizeStoredShippingCheckoutSnapshot,
   requiresHomeShippingAddress,
 } from "@/lib/shipping/checkout-shipping";
@@ -94,7 +96,12 @@ export function buildFieldErrors(formData: FormData): CheckoutFieldErrors {
   }
 
   if (!shippingQuoteSnapshot) {
-    errors.shippingQuoteSnapshot = "Seleccioná un envío válido desde el carrito.";
+    errors.shippingQuoteSnapshot = "Seleccioná un envío válido para continuar.";
+  } else if (!isShippingSelectionReadyForCheckout(shippingQuoteSnapshot)) {
+    errors.shippingQuoteSnapshot =
+      getShippingDeliveryMode(shippingQuoteSnapshot) === "carrier_branch"
+        ? "Elegí la sucursal de retiro antes de continuar."
+        : "Seleccioná un punto de retiro válido antes de continuar.";
   }
 
   if (mustValidateHomeAddress && !readTrimmedString(formData, "shippingStreet")) {

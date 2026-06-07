@@ -14,7 +14,7 @@ import { getShippingFinalCost } from "@/lib/shipping/checkout-shipping";
 import type {
   StorefrontPaymentMethod,
   StorefrontPaymentMethods,
-  StorefrontShippingQuoteOption,
+  StorefrontShippingCheckoutSnapshot,
 } from "@/lib/types/storefront";
 
 type StorefrontCartPageContentProps = {
@@ -72,16 +72,18 @@ export function StorefrontCartPageContent({ paymentMethods = null }: StorefrontC
     subtotal,
     updateQuantity,
   } = useStorefrontCart();
-  const [selectedShippingOption, setSelectedShippingOption] =
-    useState<StorefrontShippingQuoteOption | null>(null);
+  const [selectedShippingSnapshot, setSelectedShippingSnapshot] =
+    useState<StorefrontShippingCheckoutSnapshot | null>(null);
   const checkoutHref = buildCheckoutHrefFromCartItems(items);
-  const shippingCost = selectedShippingOption ? getShippingFinalCost(selectedShippingOption) : 0;
+  const shippingCost = selectedShippingSnapshot
+    ? getShippingFinalCost(selectedShippingSnapshot)
+    : 0;
   const estimatedTotal = subtotal + shippingCost;
   const bestPaymentDiscount = getBestPaymentDiscount(estimatedTotal, paymentMethods);
 
   const handleSelectedShippingOptionChange = useCallback(
-    (option: StorefrontShippingQuoteOption | null) => {
-      setSelectedShippingOption(option);
+    (snapshot: StorefrontShippingCheckoutSnapshot | null) => {
+      setSelectedShippingSnapshot(snapshot);
     },
     [],
   );
@@ -201,6 +203,7 @@ export function StorefrontCartPageContent({ paymentMethods = null }: StorefrontC
         <CartShippingSelector
           items={items}
           onSelectedOptionChange={handleSelectedShippingOptionChange}
+          requireCarrierBranchSelection={false}
         />
 
         <div className="grid gap-2 border-t border-border pt-4 text-sm">
@@ -213,7 +216,7 @@ export function StorefrontCartPageContent({ paymentMethods = null }: StorefrontC
           <div className="flex items-center justify-between">
             <span className="text-muted">Envío seleccionado</span>
             <strong className="text-foreground">
-              {selectedShippingOption ? formatCurrency(shippingCost) : "A seleccionar"}
+              {selectedShippingSnapshot ? formatCurrency(shippingCost) : "A seleccionar"}
             </strong>
           </div>
           <div className="flex items-center justify-between border-t border-border pt-3">
@@ -238,7 +241,7 @@ export function StorefrontCartPageContent({ paymentMethods = null }: StorefrontC
           ) : null}
         </div>
 
-        {selectedShippingOption && !isCartValidationPending && !cartValidationMessage ? (
+        {selectedShippingSnapshot && !isCartValidationPending && !cartValidationMessage ? (
           <Button asChild className="w-full">
             <Link href={checkoutHref as Route}>Finalizar compra</Link>
           </Button>

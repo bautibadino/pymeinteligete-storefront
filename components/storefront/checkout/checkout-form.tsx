@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { CartShippingSelector } from "@/components/storefront/cart/cart-shipping-selector";
 import { useStorefrontCart } from "@/components/storefront/cart/storefront-cart-provider";
 import { CheckoutStepCard } from "@/components/storefront/checkout/checkout-step-card";
 import { PaymentBrick } from "@/components/storefront/checkout/payment-brick";
@@ -38,14 +39,9 @@ import {
   getShippingOriginalCost,
   hasExplicitShippingBenefit,
   isShippingCheckoutSnapshotExpired,
-  normalizeStoredShippingCheckoutSnapshot,
+  isShippingSelectionReadyForCheckout,
   requiresHomeShippingAddress,
 } from "@/lib/shipping/checkout-shipping";
-import {
-  buildShippingCartKey,
-  readStoredSelectedShippingOption,
-  type StorefrontShippingStorageScope,
-} from "@/lib/shipping/postal-code-storage";
 import { createRandomId } from "@/lib/utils/random-id";
 import type {
   StorefrontPaymentMethod,
@@ -245,14 +241,25 @@ function buildCheckoutAnalyticsItems(items: CheckoutDisplayItem[]): CheckoutAnal
     quantity: item.quantity,
   }));
 }
-
-function buildCheckoutShippingStorageKey(items: CheckoutDisplayItem[]): string {
-  return buildShippingCartKey(
-    items.map((item) => ({
-      productId: item.productId,
-      quantity: item.quantity,
-    })),
-  );
+function buildCheckoutShippingItems(
+  items: CheckoutDisplayItem[],
+): Array<
+  Pick<StorefrontCartItem, "brand" | "name" | "price" | "productId" | "quantity">
+> {
+  return items.map((item) => ({
+    productId: item.productId,
+    quantity: item.quantity,
+    name: item.title,
+    ...(item.brand ? { brand: item.brand } : {}),
+    price: {
+      amount:
+        item.unitPriceWithTaxAmount ??
+        (item.linePriceAmount !== null && item.quantity > 0
+          ? item.linePriceAmount / item.quantity
+          : 0),
+      formatted: item.unitPriceLabel ?? item.linePriceLabel ?? formatCurrency(0),
+    },
+  }));
 }
 
 function buildValidatedItemsMap(
@@ -508,7 +515,7 @@ function ShippingSummary({
   if (!snapshot) {
     return (
       <div className="rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
-        No hay un envío seleccionado desde el carrito.
+        Todavía no elegiste un envío para este pedido.
       </div>
     );
   }
@@ -568,7 +575,11 @@ function ShippingSummary({
       </div>
       {expired ? (
         <p className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-950">
-          Esta cotización venció. Volvé al carrito y cotizá nuevamente antes de finalizar.
+          Esta cotización venció. Volvé a cotizar el envío antes de finalizar.
+        </p>
+      ) : getShippingDeliveryMode(snapshot) === "carrier_branch" && !snapshot.selectedCarrierBranch ? (
+        <p className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-950">
+          Falta elegir la sucursal de retiro para completar este envío.
         </p>
       ) : null}
     </div>
@@ -665,7 +676,9 @@ export function CheckoutForm({
       ? getShippingFinalCost(selectedShippingSnapshot)
       : 0;
   const hasValidSelectedShipping =
-    Boolean(selectedShippingSnapshot) && !isSelectedShippingExpired;
+    Boolean(selectedShippingSnapshot) &&
+    !isSelectedShippingExpired &&
+    isShippingSelectionReadyForCheckout(selectedShippingSnapshot);
   const cartValidationMessage =
     effectiveCartValidation && !effectiveCartValidation.isValid
       ? effectiveCartValidation.warnings[0] ??
@@ -687,11 +700,8 @@ export function CheckoutForm({
     selectedDiscountedTotalWithShipping > 0
       ? Math.round(selectedDiscountedTotalWithShipping / installmentsCount)
       : null;
-  const shippingStorageScope = useMemo(
-    (): StorefrontShippingStorageScope => ({
-      host: typeof window === "undefined" ? "" : window.location.host,
-      cartKey: buildCheckoutShippingStorageKey(displayItems),
-    }),
+  const checkoutShippingItems = useMemo(
+    () => buildCheckoutShippingItems(displayItems),
     [displayItems],
   );
   const mustCollectHomeShippingAddress =
@@ -767,18 +777,16 @@ export function CheckoutForm({
     identifiedCustomer?.taxId,
   ]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
+  function updateField(field: keyof CheckoutFormValues, value: string) {
+    setFormValues((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
 
-    const snapshot = normalizeStoredShippingCheckoutSnapshot(
-      readStoredSelectedShippingOption<StorefrontShippingCheckoutSnapshot>(
-        window.localStorage,
-        shippingStorageScope,
-      ),
-    );
-
+  function handleShippingSelectionChange(
+    snapshot: StorefrontShippingCheckoutSnapshot | null,
+  ) {
     setSelectedShippingSnapshot(snapshot);
     setIsSelectedShippingExpired(snapshot ? isShippingCheckoutSnapshotExpired(snapshot) : false);
 
@@ -789,13 +797,6 @@ export function CheckoutForm({
           : { ...current, shippingPostalCode: snapshot.destinationPostalCode },
       );
     }
-  }, [shippingStorageScope]);
-
-  function updateField(field: keyof CheckoutFormValues, value: string) {
-    setFormValues((current) => ({
-      ...current,
-      [field]: value,
-    }));
   }
 
   function handlePaymentSelection(
@@ -1116,95 +1117,102 @@ export function CheckoutForm({
         <CheckoutStepCard
           step="2"
           title="Entrega"
-          description={
-            mustCollectHomeShippingAddress
-              ? "Completá la dirección donde querés recibir el pedido. Si el domicilio fiscal sirve, sólo revisás y corregís lo necesario."
-              : "La entrega se toma desde el envío seleccionado en el carrito."
-          }
+          description="Cotizá el envío final y completá sólo los datos necesarios para recibir o retirar tu pedido."
         >
-          {mustCollectHomeShippingAddress ? (
-            <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-5">
+            <CartShippingSelector
+              className="border-0 pt-0"
+              items={checkoutShippingItems}
+              onSelectedOptionChange={handleShippingSelectionChange}
+            />
+            <ShippingSummary
+              snapshot={selectedShippingSnapshot}
+              expired={isSelectedShippingExpired}
+            />
+            <FieldError field="shippingQuoteSnapshot" state={state} />
+
+            {mustCollectHomeShippingAddress ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="space-y-2">
+                  <span className="text-sm font-medium text-foreground">Calle</span>
+                  <Input
+                    name="shippingStreet"
+                    value={formValues.shippingStreet}
+                    onChange={(event) => updateField("shippingStreet", event.target.value)}
+                    placeholder="Belgrano"
+                    className="h-11"
+                  />
+                  <FieldError field="shippingStreet" state={state} />
+                </label>
+                <label className="space-y-2">
+                  <span className="text-sm font-medium text-foreground">Número</span>
+                  <Input
+                    name="shippingNumber"
+                    value={formValues.shippingNumber}
+                    onChange={(event) => updateField("shippingNumber", event.target.value)}
+                    placeholder="123"
+                    className="h-11"
+                  />
+                  <FieldError field="shippingNumber" state={state} />
+                </label>
+                <label className="space-y-2">
+                  <span className="text-sm font-medium text-foreground">Ciudad</span>
+                  <Input
+                    name="shippingCity"
+                    value={formValues.shippingCity}
+                    onChange={(event) => updateField("shippingCity", event.target.value)}
+                    placeholder="Corral de Bustos"
+                    className="h-11"
+                  />
+                  <FieldError field="shippingCity" state={state} />
+                </label>
+                <label className="space-y-2">
+                  <span className="text-sm font-medium text-foreground">Provincia</span>
+                  <select
+                    name="shippingProvince"
+                    value={formValues.shippingProvince}
+                    onChange={(event) => updateField("shippingProvince", event.target.value)}
+                    className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <option value="">Seleccioná una provincia</option>
+                    {PROVINCES.map((province) => (
+                      <option key={province} value={province}>
+                        {province}
+                      </option>
+                    ))}
+                  </select>
+                  <FieldError field="shippingProvince" state={state} />
+                </label>
+                <label className="space-y-2 sm:max-w-[220px]">
+                  <span className="text-sm font-medium text-foreground">Código postal</span>
+                  <Input
+                    name="shippingPostalCode"
+                    value={formValues.shippingPostalCode}
+                    onChange={(event) => updateField("shippingPostalCode", event.target.value)}
+                    placeholder="2645"
+                    className="h-11"
+                  />
+                  <FieldError field="shippingPostalCode" state={state} />
+                </label>
+                <label className="space-y-2 sm:col-span-2">
+                  <span className="text-sm font-medium text-foreground">
+                    Indicaciones de entrega
+                  </span>
+                  <textarea
+                    name="shippingNotes"
+                    rows={4}
+                    value={formValues.shippingNotes}
+                    onChange={(event) => updateField("shippingNotes", event.target.value)}
+                    placeholder="Ejemplo: avisar antes de llegar o entregar por la tarde."
+                    className="min-h-[120px] w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
+                </label>
+              </div>
+            ) : (
               <label className="space-y-2">
-                <span className="text-sm font-medium text-foreground">Calle</span>
-                <Input
-                  name="shippingStreet"
-                  value={formValues.shippingStreet}
-                  onChange={(event) => updateField("shippingStreet", event.target.value)}
-                  placeholder="Belgrano"
-                  className="h-11"
-                />
-                <FieldError field="shippingStreet" state={state} />
-              </label>
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-foreground">Número</span>
-                <Input
-                  name="shippingNumber"
-                  value={formValues.shippingNumber}
-                  onChange={(event) => updateField("shippingNumber", event.target.value)}
-                  placeholder="123"
-                  className="h-11"
-                />
-                <FieldError field="shippingNumber" state={state} />
-              </label>
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-foreground">Ciudad</span>
-                <Input
-                  name="shippingCity"
-                  value={formValues.shippingCity}
-                  onChange={(event) => updateField("shippingCity", event.target.value)}
-                  placeholder="Corral de Bustos"
-                  className="h-11"
-                />
-                <FieldError field="shippingCity" state={state} />
-              </label>
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-foreground">Provincia</span>
-                <select
-                  name="shippingProvince"
-                  value={formValues.shippingProvince}
-                  onChange={(event) => updateField("shippingProvince", event.target.value)}
-                  className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="">Seleccioná una provincia</option>
-                  {PROVINCES.map((province) => (
-                    <option key={province} value={province}>
-                      {province}
-                    </option>
-                  ))}
-                </select>
-                <FieldError field="shippingProvince" state={state} />
-              </label>
-              <label className="space-y-2 sm:max-w-[220px]">
-                <span className="text-sm font-medium text-foreground">Código postal</span>
-                <Input
-                  name="shippingPostalCode"
-                  value={formValues.shippingPostalCode}
-                  onChange={(event) => updateField("shippingPostalCode", event.target.value)}
-                  placeholder="2645"
-                  className="h-11"
-                />
-                <FieldError field="shippingPostalCode" state={state} />
-              </label>
-              <label className="space-y-2 sm:col-span-2">
-                <span className="text-sm font-medium text-foreground">Indicaciones de entrega</span>
-                <textarea
-                  name="shippingNotes"
-                  rows={4}
-                  value={formValues.shippingNotes}
-                  onChange={(event) => updateField("shippingNotes", event.target.value)}
-                  placeholder="Ejemplo: avisar antes de llegar o entregar por la tarde."
-                  className="min-h-[120px] w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                />
-              </label>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              <ShippingSummary
-                snapshot={selectedShippingSnapshot}
-                expired={isSelectedShippingExpired}
-              />
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-foreground">Indicaciones para la entrega</span>
+                <span className="text-sm font-medium text-foreground">
+                  Indicaciones para la entrega
+                </span>
                 <textarea
                   name="shippingNotes"
                   rows={4}
@@ -1214,8 +1222,8 @@ export function CheckoutForm({
                   className="min-h-[120px] w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 />
               </label>
-            </div>
-          )}
+            )}
+          </div>
         </CheckoutStepCard>
 
         <CheckoutStepCard
@@ -1318,7 +1326,7 @@ export function CheckoutForm({
             </div>
             {!hasValidSelectedShipping ? (
               <p className="text-right text-sm text-muted-foreground">
-                Seleccioná un envío válido desde el carrito para finalizar la compra.
+                Seleccioná y completá un envío válido para finalizar la compra.
               </p>
             ) : null}
             {cartValidationMessage ? (

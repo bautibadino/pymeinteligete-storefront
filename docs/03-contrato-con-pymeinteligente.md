@@ -172,12 +172,14 @@ Campos canónicos para el storefront externo:
 - `options[].serviceName`: servicio/opción visible para el comprador.
 - `options[].priceWithTax`: costo final que se muestra en UI.
 - `currency`: moneda de todas las opciones.
-- `checkoutSnapshot`: snapshot inmutable que deberá viajar al checkout en una fase siguiente cuando se implemente selección de envío.
+- `checkoutSnapshot`: snapshot inmutable que debe viajar intacto al checkout como `shippingQuoteSnapshot`.
 
 Alcance actual:
 
 - La PDP solo muestra opciones y costos.
-- El carrito permite cotizar por código postal, seleccionar una opción y sumar el costo al total estimado.
-- La opción elegida se guarda en `localStorage` como snapshot bajo `pymeinteligente.storefront.shipping.selectedOption.v1`.
-- El envío del snapshot seleccionado al checkout/backend de orden queda preparado por contrato, pero todavía no está implementado en `POST /api/storefront/v1/checkout`.
+- El carrito permite cotizar por código postal, elegir una opción rápida y sumar el costo al total estimado.
+- Si la opción requiere retiro en sucursal, la sucursal final se define en checkout, no en el carrito.
+- El checkout puede precargar un snapshot guardado, volver a cotizar y hacer la selección final del envío antes de crear la orden.
+- La opción elegida se guarda en `localStorage` como snapshot bajo `pymeinteligente.storefront.shipping.selectedOption.v1`, scopeada por `host` y composición del carrito.
+- `POST /api/storefront/v1/checkout` envía `shippingQuoteSnapshot` cuando el comprador ya dejó una selección final válida.
 - La creación de envío, etiquetas y tracking siguen siendo responsabilidad del ERP.

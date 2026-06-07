@@ -5,6 +5,24 @@ import {
   hasFieldErrors,
   readTrimmedString,
 } from "@/lib/checkout/validation";
+import type { StorefrontShippingCheckoutSnapshot } from "@/lib/types/storefront";
+
+const HOME_DELIVERY_SNAPSHOT: StorefrontShippingCheckoutSnapshot = {
+  contractVersion: "storefront.shipping.quote.v1",
+  provider: "andreani",
+  optionId: "andreani:home:standard",
+  carrierName: "Andreani",
+  serviceName: "Envío estándar",
+  deliveryType: "home_delivery",
+  priceWithTax: 14068,
+  priceWithoutTax: 11626.45,
+  currency: "ARS",
+  destinationPostalCode: "2645",
+  originPostalCode: "5000",
+  packages: [{ declaredValue: 100000, volumeCm3: 5000, weightKg: 1 }],
+  quotedAt: "2026-05-06T22:00:00.000Z",
+  expiresAt: "2026-05-06T22:15:00.000Z",
+};
 
 function createFormData(entries: Record<string, string | string[]>): FormData {
   const formData = new FormData();
@@ -28,11 +46,13 @@ describe("Checkout flow: auto strategy (Payment Brick)", () => {
       paymentStrategy: "auto",
       customerName: "Juan Perez",
       customerEmail: "juan@mail.com",
+      customerPhone: "3515551234",
       shippingStreet: "Belgrano",
       shippingNumber: "123",
       shippingCity: "Corral de Bustos",
       shippingProvince: "Cordoba",
       shippingPostalCode: "2645",
+      shippingQuoteSnapshot: JSON.stringify(HOME_DELIVERY_SNAPSHOT),
       itemProductId: ["prod_1"],
       itemQuantity: ["2"],
     });
@@ -154,11 +174,13 @@ describe("Checkout flow: none and manual strategies (regresión)", () => {
       paymentStrategy: "none",
       customerName: "Juan Perez",
       customerEmail: "juan@mail.com",
+      customerPhone: "3515551234",
       shippingStreet: "Belgrano",
       shippingNumber: "123",
       shippingCity: "Corral de Bustos",
       shippingProvince: "Cordoba",
       shippingPostalCode: "2645",
+      shippingQuoteSnapshot: JSON.stringify(HOME_DELIVERY_SNAPSHOT),
       itemProductId: ["prod_1"],
       itemQuantity: ["2"],
     });
@@ -174,11 +196,13 @@ describe("Checkout flow: none and manual strategies (regresión)", () => {
       paymentStrategy: "manual",
       customerName: "Juan Perez",
       customerEmail: "juan@mail.com",
+      customerPhone: "3515551234",
       shippingStreet: "Belgrano",
       shippingNumber: "123",
       shippingCity: "Corral de Bustos",
       shippingProvince: "Cordoba",
       shippingPostalCode: "2645",
+      shippingQuoteSnapshot: JSON.stringify(HOME_DELIVERY_SNAPSHOT),
       itemProductId: ["prod_1"],
       itemQuantity: ["2"],
     });
