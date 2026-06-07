@@ -9,9 +9,15 @@ export type StorefrontGoogleAnalyticsConfig = {
   measurementId?: string;
 };
 
+export type StorefrontTikTokAnalyticsConfig = {
+  enabled: boolean;
+  pixelId?: string;
+};
+
 export type StorefrontAnalyticsConfig = {
   meta: StorefrontMetaAnalyticsConfig;
   google: StorefrontGoogleAnalyticsConfig;
+  tiktok?: StorefrontTikTokAnalyticsConfig;
 };
 
 type AnalyticsRuntimeSource = {
@@ -37,10 +43,12 @@ export function resolveStorefrontAnalyticsConfig(
   const pixel = isRecord(analytics?.pixel) ? analytics.pixel : null;
   const google = isRecord(analytics?.google) ? analytics.google : null;
   const ga = isRecord(analytics?.ga) ? analytics.ga : null;
+  const tiktok = isRecord(analytics?.tiktok) ? analytics.tiktok : null;
 
   const pixelId = readString(pixel?.pixelId) ?? readString(analytics?.pixelId);
   const testEventCode = readString(pixel?.testEventCode);
   const measurementId = readString(google?.measurementId) ?? readString(ga?.gaId);
+  const tiktokPixelId = readString(tiktok?.pixelId);
 
   return {
     meta: {
@@ -53,6 +61,10 @@ export function resolveStorefrontAnalyticsConfig(
         (readBoolean(google?.enabled) ?? readBoolean(ga?.enabled) ?? Boolean(measurementId)) &&
         Boolean(measurementId),
       ...(measurementId ? { measurementId } : {}),
+    },
+    tiktok: {
+      enabled: (readBoolean(tiktok?.enabled) ?? Boolean(tiktokPixelId)) && Boolean(tiktokPixelId),
+      ...(tiktokPixelId ? { pixelId: tiktokPixelId } : {}),
     },
   };
 }

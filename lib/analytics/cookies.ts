@@ -5,7 +5,9 @@ type ExtractAnalyticsCookiesInput = {
   hostname?: string;
   now?: () => number;
   persistFbc?: (value: string) => void;
+  persistTtclid?: (value: string) => void;
   readStoredFbc?: () => string | undefined;
+  readStoredTtclid?: () => string | undefined;
   search?: string;
 };
 
@@ -49,12 +51,15 @@ export function extractAnalyticsCookies({
   cookie,
   now = Date.now,
   persistFbc,
+  persistTtclid,
   readStoredFbc,
+  readStoredTtclid,
   search,
 }: ExtractAnalyticsCookiesInput) {
   const parsedCookies = parseCookieString(cookie);
   const searchParams = new URLSearchParams(search?.startsWith("?") ? search.slice(1) : search);
   const fbclid = searchParams.get("fbclid");
+  const ttclidFromQuery = searchParams.get("ttclid") ?? undefined;
   const rawFbc =
     parsedCookies._fbc ??
     parsedCookies[ANALYTICS_COOKIE_KEYS.fbc] ??
@@ -64,15 +69,27 @@ export function extractAnalyticsCookies({
   const ga_client_id = normalizeGaClientId(
     parsedCookies._ga ?? parsedCookies[ANALYTICS_COOKIE_KEYS.gaClientId],
   );
+  const ttclid =
+    ttclidFromQuery ??
+    parsedCookies.ttclid ??
+    parsedCookies[ANALYTICS_COOKIE_KEYS.ttclid] ??
+    readStoredTtclid?.();
+  const ttp = parsedCookies._ttp;
 
   if (fbclid && fbc) {
     persistFbc?.(fbc);
+  }
+
+  if (ttclidFromQuery) {
+    persistTtclid?.(ttclidFromQuery);
   }
 
   return {
     ...(fbc ? { fbc } : {}),
     ...(fbp ? { fbp } : {}),
     ...(ga_client_id ? { ga_client_id } : {}),
+    ...(ttclid ? { ttclid } : {}),
+    ...(ttp ? { ttp } : {}),
   };
 }
 

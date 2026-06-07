@@ -123,6 +123,134 @@ describe("storefront analytics client bridge", () => {
     });
   });
 
+  it("dispara ttq y enriquece el payload server-side con ttp y ttclid", () => {
+    const ttq = {
+      load: vi.fn(),
+      page: vi.fn(),
+      track: vi.fn(),
+    };
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+
+    (globalThis as any).window = {
+      location: {
+        pathname: "/checkout",
+        search: "?step=payment",
+      },
+      ttq,
+    };
+    (globalThis as any).document = {
+      cookie: "_ttp=ttp_cookie_value",
+    };
+    vi.stubGlobal("fetch", fetchMock);
+
+    const bridge = installStorefrontAnalyticsBridge(
+      {
+        meta: { enabled: false },
+        google: { enabled: false },
+        tiktok: { enabled: true, pixelId: "D8IURFJC77U450KRIBUG" },
+      },
+      {
+        anonymous_id: "anon_1",
+        ttclid: "ttclid_query_value",
+      },
+    );
+
+    bridge?.track({
+      event: "AddToCart",
+      metaPayload: {
+        content_ids: ["prod_1"],
+        content_type: "product",
+        currency: "ARS",
+        eventId: "evt_tt_1",
+        items: [{ id: "prod_1", name: "Producto", price: 15000, quantity: 1 }],
+        value: 15000,
+      },
+      options: { eventId: "evt_tt_1" },
+      serverEvent: "AddToCart",
+      tiktokEvent: "AddToCart",
+      tiktokPayload: {
+        content_id: "prod_1",
+        content_type: "product",
+        currency: "ARS",
+        value: 15000,
+      },
+    });
+
+    expect(ttq.track).toHaveBeenCalledWith(
+      "AddToCart",
+      expect.objectContaining({
+        content_id: "prod_1",
+        currency: "ARS",
+        value: 15000,
+      }),
+    );
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toMatchObject({
+      eventName: "AddToCart",
+      eventId: "evt_tt_1",
+      user: {
+        externalId: "anon_1",
+        ttclid: "ttclid_query_value",
+        ttp: "ttp_cookie_value",
+      },
+    });
+  });
+
+  it("deriva un payload TikTok deduplicable aunque el caller sólo provea el payload commerce compartido", () => {
+    const ttq = {
+      load: vi.fn(),
+      page: vi.fn(),
+      track: vi.fn(),
+    };
+
+    (globalThis as any).window = {
+      location: {
+        href: "https://bym.pyme.test/producto/prod-1",
+        pathname: "/producto/prod-1",
+        search: "",
+      },
+      ttq,
+    };
+
+    const bridge = installStorefrontAnalyticsBridge(
+      {
+        meta: { enabled: false },
+        google: { enabled: false },
+        tiktok: { enabled: true, pixelId: "D8IURFJC77U450KRIBUG" },
+      },
+      { anonymous_id: "anon_1" },
+    );
+
+    bridge?.track({
+      event: "AddToCart",
+      metaEvent: "AddToCart",
+      metaPayload: {
+        content_ids: ["prod_1"],
+        content_type: "product",
+        currency: "ARS",
+        items: [{ id: "prod_1", name: "Cubierta 205/55R16", price: 15000, quantity: 2 }],
+        value: 30000,
+      },
+      options: { eventId: "evt_tt_derived_1" },
+      serverEvent: null,
+    });
+
+    expect(ttq.track).toHaveBeenCalledWith(
+      "AddToCart",
+      expect.objectContaining({
+        content_id: "prod_1",
+        content_ids: ["prod_1"],
+        content_name: "Cubierta 205/55R16",
+        content_type: "product",
+        currency: "ARS",
+        description: "Cubierta 205/55R16",
+        event_id: "evt_tt_derived_1",
+        quantity: 2,
+        url: "https://bym.pyme.test/producto/prod-1",
+        value: 30000,
+      }),
+    );
+  });
+
   it("no golpea el proxy interno si el tenant no tiene analytics activos", () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
 
@@ -138,6 +266,7 @@ describe("storefront analytics client bridge", () => {
       {
         meta: { enabled: false },
         google: { enabled: false },
+        tiktok: { enabled: false },
       },
       { anonymous_id: "anon_disabled" },
     );

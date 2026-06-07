@@ -67,6 +67,37 @@ function renderGoogleBootstrap(measurementId: string) {
   `;
 }
 
+function renderTikTokBootstrap(pixelId: string) {
+  return `
+    window.ttq = window.ttq || function() {
+      window.ttq.queue = window.ttq.queue || [];
+      window.ttq.queue.push(Array.from(arguments));
+    };
+    window.ttq.queue = window.ttq.queue || [];
+    window.ttq.instance = window.ttq.instance || {};
+    window.ttq.load = window.ttq.load || function(id) {
+      window.ttq.instance[id] = true;
+      window.ttq.queue.push(["load", id]);
+    };
+    window.ttq.page = window.ttq.page || function(payload) {
+      if (payload && Object.keys(payload).length > 0) {
+        window.ttq.queue.push(["page", payload]);
+        return;
+      }
+
+      window.ttq.queue.push(["page"]);
+    };
+    window.ttq.track = window.ttq.track || function(event, payload) {
+      window.ttq.queue.push(["track", event, payload || {}]);
+    };
+    window.__storefrontTikTokPixelIds = window.__storefrontTikTokPixelIds || {};
+    if (!window.__storefrontTikTokPixelIds[${JSON.stringify(pixelId)}]) {
+      window.ttq.load(${JSON.stringify(pixelId)});
+      window.__storefrontTikTokPixelIds[${JSON.stringify(pixelId)}] = true;
+    }
+  `;
+}
+
 export function buildPageViewAnalyticsCommand({
   href,
   path,
@@ -98,6 +129,7 @@ export function StorefrontAnalyticsProvider({
   host,
 }: StorefrontAnalyticsProviderProps) {
   const config = useMemo(() => resolveStorefrontAnalyticsConfig(bootstrap), [bootstrap]);
+  const tiktokConfig = config.tiktok;
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const lastTrackedPageRef = useRef<string | null>(null);
@@ -154,6 +186,18 @@ export function StorefrontAnalyticsProvider({
           />
           <Script id="storefront-google-analytics-init" strategy="afterInteractive">
             {renderGoogleBootstrap(config.google.measurementId)}
+          </Script>
+        </>
+      ) : null}
+      {tiktokConfig?.enabled && tiktokConfig.pixelId ? (
+        <>
+          <Script
+            id="storefront-tiktok-pixel"
+            strategy="afterInteractive"
+            src="https://analytics.tiktok.com/i18n/pixel/events.js"
+          />
+          <Script id="storefront-tiktok-pixel-init" strategy="afterInteractive">
+            {renderTikTokBootstrap(tiktokConfig.pixelId)}
           </Script>
         </>
       ) : null}

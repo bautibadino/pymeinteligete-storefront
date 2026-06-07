@@ -310,8 +310,25 @@ export interface StorefrontPixelConfig {
   testEventCode?: string;
 }
 
+export interface StorefrontGoogleAnalyticsRuntimeConfig {
+  enabled: boolean;
+  measurementId?: string;
+}
+
+export interface StorefrontTikTokAnalyticsConfig {
+  enabled: boolean;
+  pixelId?: string;
+}
+
 export interface StorefrontAnalytics {
   pixel?: StorefrontPixelConfig;
+  google?: StorefrontGoogleAnalyticsRuntimeConfig;
+  ga?: {
+    enabled?: boolean;
+    gaId?: string;
+  };
+  tiktok?: StorefrontTikTokAnalyticsConfig;
+  pixelId?: string;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -847,6 +864,8 @@ export interface StorefrontAnalyticsInput {
   fbc?: string;
   fbp?: string;
   ga_client_id?: string;
+  ttclid?: string;
+  ttp?: string;
   anonymous_id?: string;
   email?: string;
   phone?: string;

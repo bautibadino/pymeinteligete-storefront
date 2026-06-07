@@ -14,7 +14,7 @@ import {
   buildViewItemListPayload,
   buildViewItemPayload,
 } from "@/lib/analytics/events";
-import { enrichAnalyticsIdentity } from "@/lib/analytics/identity";
+import { enrichAnalyticsIdentity, resolveAnalyticsIdentity } from "@/lib/analytics/identity";
 import { resolveStorefrontAnalyticsConfig } from "@/lib/analytics/config";
 import { getOrCreateStoredValue, markTrackedEvent } from "@/lib/analytics/storage";
 import type { StorefrontOrderByTokenResult } from "@/lib/storefront-api";
@@ -100,6 +100,9 @@ describe("resolveStorefrontAnalyticsConfig", () => {
         enabled: true,
         measurementId: "G-TEST123",
       },
+      tiktok: {
+        enabled: false,
+      },
     });
   });
 
@@ -120,6 +123,22 @@ describe("resolveStorefrontAnalyticsConfig", () => {
     expect(config.google).toEqual({
       enabled: true,
       measurementId: "G-LEGACY",
+    });
+  });
+
+  it("resuelve TikTok host-driven desde bootstrap sin hardcodes por tenant", () => {
+    const config = resolveStorefrontAnalyticsConfig({
+      analytics: {
+        tiktok: {
+          enabled: true,
+          pixelId: "D8IURFJC77U450KRIBUG",
+        },
+      },
+    });
+
+    expect(config.tiktok).toEqual({
+      enabled: true,
+      pixelId: "D8IURFJC77U450KRIBUG",
     });
   });
 });
@@ -153,6 +172,23 @@ describe("extractAnalyticsCookies", () => {
 
     expect(cookies.fbc).toBe("fb.1.111.saved");
   });
+
+  it("extrae _ttp desde cookie y ttclid desde query string", () => {
+    const persistTtclid = vi.fn();
+
+    const cookies = extractAnalyticsCookies({
+      cookie: "_ttp=ttp_cookie_value",
+      search: "?ttclid=ttclid_query_value",
+      hostname: "tienda.demo.com",
+      persistTtclid,
+      readStoredFbc: () => undefined,
+      readStoredTtclid: () => undefined,
+    });
+
+    expect(cookies.ttp).toBe("ttp_cookie_value");
+    expect(cookies.ttclid).toBe("ttclid_query_value");
+    expect(persistTtclid).toHaveBeenCalledWith("ttclid_query_value");
+  });
 });
 
 describe("enrichAnalyticsIdentity", () => {
@@ -185,6 +221,54 @@ describe("enrichAnalyticsIdentity", () => {
       postal_code: "2645",
       tax_id: "20123456789",
     });
+  });
+
+  it("preserva ttp y ttclid cuando enriquece identidad de analytics", () => {
+    const identity = enrichAnalyticsIdentity(
+      {
+        anonymous_id: "anon_1",
+        ttclid: "ttclid_query_value",
+        ttp: "ttp_cookie_value",
+      },
+      {
+        email: " buyer@example.com ",
+      },
+    );
+
+    expect(identity).toEqual({
+      anonymous_id: "anon_1",
+      email: "buyer@example.com",
+      ttclid: "ttclid_query_value",
+      ttp: "ttp_cookie_value",
+    });
+  });
+});
+
+describe("resolveAnalyticsIdentity", () => {
+  it("propaga ttclid dentro de la identidad resuelta y lo persiste para navegación posterior", () => {
+    const persistCookie = vi.fn();
+    const storage = createStorage();
+
+    const identity = resolveAnalyticsIdentity({
+      cookie: "_ttp=ttp_cookie_value",
+      hostname: "tienda.demo.com",
+      persistCookie,
+      randomId: () => "anon_1",
+      search: "?ttclid=ttclid_query_value",
+      storage,
+    });
+
+    expect(identity).toMatchObject({
+      anonymous_id: "anon_1",
+      ttclid: "ttclid_query_value",
+      ttp: "ttp_cookie_value",
+    });
+    expect(storage.getItem("storefront.analytics.ttclid")).toBe("ttclid_query_value");
+    expect(persistCookie).toHaveBeenCalledWith(
+      "sf_ttclid",
+      "ttclid_query_value",
+      60 * 60 * 24 * 365,
+    );
   });
 });
 

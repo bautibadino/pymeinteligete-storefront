@@ -27,6 +27,8 @@ type ServerAnalyticsPayload = {
     fbc?: string;
     clientId?: string;
     externalId?: string;
+    ttclid?: string;
+    ttp?: string;
   };
 };
 
@@ -36,6 +38,8 @@ export type StorefrontAnalyticsTrackCommand = {
   metaPayload?: AnalyticsPayload;
   metaEvent?: string;
   googlePayload?: AnalyticsPayload;
+  tiktokEvent?: string;
+  tiktokPayload?: AnalyticsPayload;
   serverEvent?: string | null;
   options?: {
     eventId?: string;
@@ -59,14 +63,24 @@ declare global {
     queue?: MetaPixelQueueCall[];
     version?: string;
   };
+  type TikTokPixelQueueCall = [string, ...unknown[]];
+  type TikTokPixelFunction = ((...args: unknown[]) => void) & {
+    instance?: Record<string, true>;
+    load?: (pixelId: string) => void;
+    page?: (payload?: Record<string, unknown>) => void;
+    queue?: TikTokPixelQueueCall[];
+    track?: (event: string, payload?: Record<string, unknown>) => void;
+  };
 
   interface Window {
     __storefrontAnalytics?: StorefrontAnalyticsBridge;
     __storefrontMetaPixelIds?: Record<string, true>;
+    __storefrontTikTokPixelIds?: Record<string, true>;
     _fbq?: MetaPixelFunction;
     dataLayer?: unknown[];
     fbq?: MetaPixelFunction;
     gtag?: (...args: unknown[]) => void;
+    ttq?: TikTokPixelFunction;
   }
 }
 
@@ -80,6 +94,168 @@ function readString(value: unknown): string | undefined {
 
 function readNumber(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function compactPayloadRecord<T extends Record<string, unknown>>(value: T): T {
+  return Object.fromEntries(
+    Object.entries(value).filter(([, entry]) => entry !== undefined && entry !== null && entry !== ""),
+  ) as T;
+}
+
+function readStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const values = value
+    .map((entry) =>
+      typeof entry === "string" || typeof entry === "number" ? String(entry) : undefined,
+    )
+    .filter((entry): entry is string => Boolean(entry));
+
+  return values.length > 0 ? values : undefined;
+}
+
+type TikTokContentsItem = {
+  brand?: string;
+  content_category?: string;
+  content_id: string;
+  content_name?: string;
+  price?: number;
+  quantity?: number;
+};
+
+function buildTikTokContents(payload: AnalyticsPayload | undefined): TikTokContentsItem[] | undefined {
+  if (!payload || !Array.isArray(payload.items)) {
+    return undefined;
+  }
+
+  const contents = payload.items.flatMap((item) => {
+    if (!isRecord(item)) {
+      return [];
+    }
+
+    const contentId = readString(item.id);
+    if (!contentId) {
+      return [];
+    }
+
+    const entry: TikTokContentsItem = {
+      content_id: contentId,
+    };
+    const brand = readString(item.brand);
+    const category = readString(item.category);
+    const contentName = readString(item.name);
+    const price = readNumber(item.price);
+    const quantity = readNumber(item.quantity);
+
+    if (brand) {
+      entry.brand = brand;
+    }
+
+    if (category) {
+      entry.content_category = category;
+    }
+
+    if (contentName) {
+      entry.content_name = contentName;
+    }
+
+    if (price !== undefined) {
+      entry.price = price;
+    }
+
+    if (quantity !== undefined) {
+      entry.quantity = quantity;
+    }
+
+    return [entry];
+  });
+
+  return contents.length > 0 ? contents : undefined;
+}
+
+function resolveTikTokUrl(): string | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  return readString(window.location.href);
+}
+
+function sanitizeTikTokPayloadExtras(payload: AnalyticsPayload | undefined): Record<string, unknown> {
+  if (!payload) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(payload).filter(([key, value]) => {
+      if (value === undefined || value === null || value === "") {
+        return false;
+      }
+
+      return ![
+        "content_ids",
+        "content_name",
+        "content_type",
+        "currency",
+        "eventId",
+        "items",
+        "num_items",
+        "order_number",
+        "order_token",
+        "value",
+      ].includes(key);
+    }),
+  );
+}
+
+function buildTikTokPixelPayload(
+  payload: AnalyticsPayload | undefined,
+  eventId: string | undefined,
+): AnalyticsPayload {
+  const source = payload;
+  const contents = buildTikTokContents(source);
+  const contentIds = readStringArray(source?.content_ids);
+  const contentId =
+    readString(source?.content_id) ?? contentIds?.[0] ?? contents?.[0]?.content_id;
+  const contentName =
+    readString(source?.content_name) ?? contents?.[0]?.content_name;
+  const contentType =
+    source?.content_type === "product" || source?.content_type === "product_group"
+      ? source.content_type
+      : undefined;
+  const quantity =
+    readNumber(source?.quantity) ??
+    readNumber(source?.num_items) ??
+    (contents
+      ? contents.reduce((total, item) => total + (item.quantity ?? 1), 0)
+      : undefined);
+  const normalizedPayload: Record<string, unknown> = compactPayloadRecord({
+    ...sanitizeTikTokPayloadExtras(source),
+    ...(contentId ? { content_id: contentId } : {}),
+    ...(contentIds ? { content_ids: contentIds } : {}),
+    ...(contentName ? { content_name: contentName } : {}),
+    ...(contentType ? { content_type: contentType } : {}),
+    ...(readString(source?.currency) ? { currency: readString(source?.currency) } : {}),
+    ...(readString(source?.description) ?? contentName
+      ? { description: readString(source?.description) ?? contentName }
+      : {}),
+    ...(eventId ? { event_id: eventId } : {}),
+    ...(quantity !== undefined ? { quantity } : {}),
+    ...(resolveTikTokUrl() ? { url: resolveTikTokUrl() } : {}),
+    ...(readNumber(source?.value) !== undefined ? { value: readNumber(source?.value) } : {}),
+    ...(contents ? { contents } : {}),
+  });
+
+  if ("search_string" in normalizedPayload && !("query" in normalizedPayload)) {
+    const searchString = readString(normalizedPayload.search_string);
+    if (searchString) {
+      normalizedPayload.query = searchString;
+    }
+  }
+
+  return normalizedPayload;
 }
 
 function buildServerAnalyticsPayload(
@@ -179,6 +355,8 @@ function buildServerAnalyticsPayload(
       ...(currentIdentity.fbc ? { fbc: currentIdentity.fbc } : {}),
       ...(currentIdentity.ga_client_id ? { clientId: currentIdentity.ga_client_id } : {}),
       ...(externalId ? { externalId } : {}),
+      ...(currentIdentity.ttclid ? { ttclid: currentIdentity.ttclid } : {}),
+      ...(currentIdentity.ttp ? { ttp: currentIdentity.ttp } : {}),
     };
 
     if (Object.keys(user).length > 0) {
@@ -238,6 +416,15 @@ function resolveMetaPixelRegistry(): Record<string, true> | undefined {
   return window.__storefrontMetaPixelIds;
 }
 
+function resolveTikTokPixelRegistry(): Record<string, true> | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  window.__storefrontTikTokPixelIds ??= {};
+  return window.__storefrontTikTokPixelIds;
+}
+
 function ensureMetaPixelBridge(pixelId: string): MetaPixelFunction | undefined {
   if (typeof window === "undefined") {
     return undefined;
@@ -278,6 +465,60 @@ function ensureMetaPixelBridge(pixelId: string): MetaPixelFunction | undefined {
   return fbq;
 }
 
+function createQueuedTikTokBridge(): TikTokPixelFunction {
+  const ttq = ((method: string, ...args: unknown[]) => {
+    ttq.queue?.push([method, ...args]);
+  }) as TikTokPixelFunction;
+
+  ttq.queue = [];
+  ttq.instance = {};
+  ttq.load = (pixelId: string) => {
+    if (ttq.instance) {
+      ttq.instance[pixelId] = true;
+    }
+
+    ttq.queue?.push(["load", pixelId]);
+  };
+  ttq.page = (payload?: Record<string, unknown>) => {
+    if (payload && Object.keys(payload).length > 0) {
+      ttq.queue?.push(["page", payload]);
+      return;
+    }
+
+    ttq.queue?.push(["page"]);
+  };
+  ttq.track = (event: string, payload?: Record<string, unknown>) => {
+    ttq.queue?.push(["track", event, payload ?? {}]);
+  };
+
+  return ttq;
+}
+
+function ensureTikTokPixelBridge(pixelId: string): TikTokPixelFunction | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  let ttq = window.ttq;
+
+  if (!ttq || (typeof ttq !== "function" && !isRecord(ttq))) {
+    ttq = createQueuedTikTokBridge();
+    window.ttq = ttq;
+  }
+
+  const bridge = ttq as TikTokPixelFunction;
+
+  bridge.instance ??= {};
+  const initializedPixels = resolveTikTokPixelRegistry();
+
+  if (initializedPixels && !initializedPixels[pixelId]) {
+    bridge.load?.(pixelId);
+    initializedPixels[pixelId] = true;
+  }
+
+  return bridge;
+}
+
 function createAnalyticsBridge(
   initialConfig: StorefrontAnalyticsConfig,
   initialIdentity: StorefrontAnalyticsInput | undefined,
@@ -293,16 +534,28 @@ function createAnalyticsBridge(
       identity = nextIdentity;
       return identity;
     },
-    track: ({ event, googleEvent, googlePayload, metaEvent, metaPayload, options, serverEvent }) => {
+    track: ({
+      event,
+      googleEvent,
+      googlePayload,
+      metaEvent,
+      metaPayload,
+      options,
+      serverEvent,
+      tiktokEvent,
+      tiktokPayload,
+    }) => {
       if (typeof window === "undefined") {
         return;
       }
 
-      const analyticsPayload = metaPayload ?? googlePayload;
+      const analyticsPayload = metaPayload ?? googlePayload ?? tiktokPayload;
       const eventId = options?.eventId;
 
       const metaEventName = metaEvent ?? event;
       const googleEventName = googleEvent ?? event;
+      const tiktokEventName = tiktokEvent ?? event;
+      const tiktokConfig = config.tiktok;
 
       if (config.meta.enabled && config.meta.pixelId) {
         const fbq = ensureMetaPixelBridge(config.meta.pixelId);
@@ -326,11 +579,31 @@ function createAnalyticsBridge(
         window.gtag("event", googleEventName, payload);
       }
 
+      if (tiktokConfig?.enabled && tiktokConfig.pixelId) {
+        const ttq = ensureTikTokPixelBridge(tiktokConfig.pixelId);
+        const payload = buildTikTokPixelPayload(
+          tiktokPayload ?? metaPayload ?? googlePayload,
+          eventId,
+        );
+
+        if (tiktokEventName === "PageView") {
+          ttq?.page?.(payload);
+        } else {
+          ttq?.track?.(tiktokEventName, payload);
+        }
+      }
+
       const shouldPostServerAnalytics =
-        serverEvent !== null && (config.meta.enabled || config.google.enabled);
+        serverEvent !== null &&
+        (config.meta.enabled || config.google.enabled || tiktokConfig?.enabled === true);
 
       if (shouldPostServerAnalytics) {
-        postStorefrontServerAnalytics(serverEvent ?? metaEvent ?? event, analyticsPayload, identity, eventId);
+        postStorefrontServerAnalytics(
+          serverEvent ?? metaEvent ?? tiktokEvent ?? event,
+          analyticsPayload,
+          identity,
+          eventId,
+        );
       }
     },
   };

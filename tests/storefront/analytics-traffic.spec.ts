@@ -116,4 +116,35 @@ describe("storefront analytics traffic", () => {
       ["track", "PageView", { page_path: "/catalogo" }],
     ]);
   });
+
+  it("genera bootstrap de TikTok sólo cuando el tenant lo habilita por runtime", () => {
+    const html = renderHtml(
+      createElement(
+        StorefrontAnalyticsProvider,
+        {
+          bootstrap: {
+            analytics: {
+              tiktok: {
+                enabled: true,
+                pixelId: "D8IURFJC77U450KRIBUG",
+              },
+            },
+          } as StorefrontBootstrap,
+          children: createElement("div", null, "child"),
+          host: "demo.test",
+        },
+      ),
+    );
+
+    expect(html).toContain('id="storefront-tiktok-pixel"');
+    expect(html).toContain("https://analytics.tiktok.com/i18n/pixel/events.js");
+
+    const scriptContent = extractScriptContent(html, "storefront-tiktok-pixel-init");
+    const runtimeWindow: Record<string, unknown> = {};
+
+    new Function("window", scriptContent)(runtimeWindow);
+
+    expect(runtimeWindow.ttq).toBeDefined();
+    expect((runtimeWindow.ttq as { instance?: unknown }).instance).toBeDefined();
+  });
 });

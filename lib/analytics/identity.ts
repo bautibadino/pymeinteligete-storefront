@@ -53,6 +53,15 @@ function persistStoredFbc(
   persistCookie?.(ANALYTICS_COOKIE_KEYS.fbc, value, ANALYTICS_COOKIE_MAX_AGE_SECONDS);
 }
 
+function persistStoredTtclid(
+  value: string,
+  storage: StorageLike | undefined,
+  persistCookie: ResolveAnalyticsIdentityInput["persistCookie"],
+) {
+  storage?.setItem(ANALYTICS_STORAGE_KEYS.ttclid, value);
+  persistCookie?.(ANALYTICS_COOKIE_KEYS.ttclid, value, ANALYTICS_COOKIE_MAX_AGE_SECONDS);
+}
+
 function normalizeMatchingText(value: string | undefined): string | undefined {
   const normalizedValue = value?.trim();
   return normalizedValue ? normalizedValue.toLocaleLowerCase("es-AR") : undefined;
@@ -102,6 +111,14 @@ function compactAnalyticsIdentity(
 
   if (identity.ga_client_id) {
     nextIdentity.ga_client_id = identity.ga_client_id;
+  }
+
+  if (identity.ttclid) {
+    nextIdentity.ttclid = identity.ttclid;
+  }
+
+  if (identity.ttp) {
+    nextIdentity.ttp = identity.ttp;
   }
 
   if (identity.anonymous_id) {
@@ -195,9 +212,14 @@ export function resolveAnalyticsIdentity({
     search,
     ...(now ? { now } : {}),
     persistFbc: (value) => persistStoredFbc(value, storage, persistCookie),
+    persistTtclid: (value) => persistStoredTtclid(value, storage, persistCookie),
     readStoredFbc: () =>
       readCookieValue(cookie, ANALYTICS_COOKIE_KEYS.fbc) ??
       storage?.getItem(ANALYTICS_STORAGE_KEYS.fbc) ??
+      undefined,
+    readStoredTtclid: () =>
+      readCookieValue(cookie, ANALYTICS_COOKIE_KEYS.ttclid) ??
+      storage?.getItem(ANALYTICS_STORAGE_KEYS.ttclid) ??
       undefined,
   });
 
