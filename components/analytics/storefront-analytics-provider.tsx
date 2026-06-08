@@ -69,30 +69,35 @@ function renderGoogleBootstrap(measurementId: string) {
 
 function renderTikTokBootstrap(pixelId: string) {
   return `
-    window.ttq = window.ttq || function() {
-      window.ttq.queue = window.ttq.queue || [];
-      window.ttq.queue.push(Array.from(arguments));
+    window.TiktokAnalyticsObject = "ttq";
+    var ttq = window.ttq = window.ttq || [];
+    ttq.methods = ["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"];
+    ttq.setAndDefer = function(t,e) {
+      t[e] = function() {
+        t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
+      };
     };
-    window.ttq.queue = window.ttq.queue || [];
-    window.ttq.instance = window.ttq.instance || {};
-    window.ttq.load = window.ttq.load || function(id) {
-      window.ttq.instance[id] = true;
-      window.ttq.queue.push(["load", id]);
-    };
-    window.ttq.page = window.ttq.page || function(payload) {
-      if (payload && Object.keys(payload).length > 0) {
-        window.ttq.queue.push(["page", payload]);
-        return;
+    for (var i = 0; i < ttq.methods.length; i++) {
+      ttq.setAndDefer(ttq, ttq.methods[i]);
+    }
+    ttq.instance = function(t) {
+      for (var e = ttq._i[t] || [], n = 0; n < ttq.methods.length; n++) {
+        ttq.setAndDefer(e, ttq.methods[n]);
       }
-
-      window.ttq.queue.push(["page"]);
+      return e;
     };
-    window.ttq.track = window.ttq.track || function(event, payload) {
-      window.ttq.queue.push(["track", event, payload || {}]);
+    ttq.load = function(e, n) {
+      ttq._i = ttq._i || {};
+      ttq._i[e] = [];
+      ttq._i[e]._u = "https://analytics.tiktok.com/i18n/pixel/events.js";
+      ttq._t = ttq._t || {};
+      ttq._t[e] = +new Date();
+      ttq._o = ttq._o || {};
+      ttq._o[e] = n || {};
     };
     window.__storefrontTikTokPixelIds = window.__storefrontTikTokPixelIds || {};
     if (!window.__storefrontTikTokPixelIds[${JSON.stringify(pixelId)}]) {
-      window.ttq.load(${JSON.stringify(pixelId)});
+      ttq.load(${JSON.stringify(pixelId)});
       window.__storefrontTikTokPixelIds[${JSON.stringify(pixelId)}] = true;
     }
   `;
@@ -191,14 +196,14 @@ export function StorefrontAnalyticsProvider({
       ) : null}
       {tiktokConfig?.enabled && tiktokConfig.pixelId ? (
         <>
-          <Script
-            id="storefront-tiktok-pixel"
-            strategy="afterInteractive"
-            src="https://analytics.tiktok.com/i18n/pixel/events.js"
-          />
           <Script id="storefront-tiktok-pixel-init" strategy="afterInteractive">
             {renderTikTokBootstrap(tiktokConfig.pixelId)}
           </Script>
+          <Script
+            id="storefront-tiktok-pixel"
+            strategy="afterInteractive"
+            src={`https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=${tiktokConfig.pixelId}&lib=ttq`}
+          />
         </>
       ) : null}
       {children}
