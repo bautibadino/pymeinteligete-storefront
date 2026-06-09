@@ -5,6 +5,7 @@ type ExtractAnalyticsCookiesInput = {
   hostname?: string;
   now?: () => number;
   persistFbc?: (value: string) => void;
+  persistFbp?: (value: string) => void;
   persistTtclid?: (value: string) => void;
   readStoredFbc?: () => string | undefined;
   readStoredTtclid?: () => string | undefined;
@@ -47,10 +48,16 @@ export function buildFacebookClickIdCookie(fbclid: string, timestamp: number): s
   return `fb.2.${timestamp}.${fbclid}`;
 }
 
+export function buildFacebookBrowserIdCookie(timestamp: number): string {
+  const randomPart = Math.floor(Math.random() * 2147483647);
+  return `fb.1.${timestamp}.${randomPart}`;
+}
+
 export function extractAnalyticsCookies({
   cookie,
   now = Date.now,
   persistFbc,
+  persistFbp,
   persistTtclid,
   readStoredFbc,
   readStoredTtclid,
@@ -65,7 +72,12 @@ export function extractAnalyticsCookies({
     parsedCookies[ANALYTICS_COOKIE_KEYS.fbc] ??
     readStoredFbc?.();
   const fbc = fbclid ? buildFacebookClickIdCookie(fbclid, now()) : rawFbc;
-  const fbp = parsedCookies._fbp ?? parsedCookies[ANALYTICS_COOKIE_KEYS.fbp];
+  let fbp = parsedCookies._fbp ?? parsedCookies[ANALYTICS_COOKIE_KEYS.fbp];
+
+  if (!fbp) {
+    fbp = buildFacebookBrowserIdCookie(now());
+    persistFbp?.(fbp);
+  }
   const ga_client_id = normalizeGaClientId(
     parsedCookies._ga ?? parsedCookies[ANALYTICS_COOKIE_KEYS.gaClientId],
   );

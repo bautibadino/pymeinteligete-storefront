@@ -212,6 +212,7 @@ export function resolveAnalyticsIdentity({
     search,
     ...(now ? { now } : {}),
     persistFbc: (value) => persistStoredFbc(value, storage, persistCookie),
+    persistFbp: (value) => persistCookie?.(ANALYTICS_COOKIE_KEYS.fbp, value, ANALYTICS_COOKIE_MAX_AGE_SECONDS),
     persistTtclid: (value) => persistStoredTtclid(value, storage, persistCookie),
     readStoredFbc: () =>
       readCookieValue(cookie, ANALYTICS_COOKIE_KEYS.fbc) ??
