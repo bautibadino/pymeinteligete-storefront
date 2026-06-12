@@ -8,6 +8,12 @@ import { trackStorefrontAnalyticsEvent } from "@/lib/analytics/client";
 import { buildAddShippingInfoPayload } from "@/lib/analytics/events";
 import type { StorefrontCartItem } from "@/lib/cart/storefront-cart";
 import {
+  type PreferredCarrierBranchSelection,
+  getCarrierBranchId,
+  resolveCarrierBranchSelectionId,
+  resolvePreferredCarrierBranch,
+} from "@/lib/shipping/carrier-branch-selection";
+import {
   getShippingBenefitLabel,
   getShippingBenefitHintLabel,
   getShippingDeliveryMode,
@@ -92,11 +98,6 @@ function buildShippingQuoteItems(
   }));
 }
 
-function getBranchId(branch: StorefrontCarrierBranch): string {
-  const code = typeof branch.code === "string" ? branch.code : undefined;
-  return branch.branchId ?? branch.id ?? code ?? branch.name;
-}
-
 function getBranchDescription(branch: StorefrontCarrierBranch): string {
   return [
     branch.address,
@@ -151,6 +152,8 @@ export function CartShippingSelector({
   const [isLoadingBranches, setIsLoadingBranches] = useState(false);
   const hasHydratedItemsRef = useRef(false);
   const trackedShippingRef = useRef<string | null>(null);
+  const preferredCarrierBranchRef =
+    useRef<PreferredCarrierBranchSelection | null>(null);
 
   const quotePackage = buildShippingQuotePackageFromCartItems(items);
   const storageScope = useMemo(
@@ -169,22 +172,33 @@ export function CartShippingSelector({
     selectedBaseDeliveryMode === "carrier_branch" &&
     requireCarrierBranchSelection;
   const selectedCarrierBranch =
-    carrierBranches.find((branch) => getBranchId(branch) === selectedCarrierBranchId) ?? null;
+    carrierBranches.find((branch) => getCarrierBranchId(branch) === selectedCarrierBranchId) ?? null;
+  const selectedCarrierBranchContext = selectedBaseOption
+    ? {
+        optionId: selectedBaseOption.optionId,
+        destinationPostalCode: selectedBaseOption.checkoutSnapshot.destinationPostalCode,
+      }
+    : null;
+  const preferredCarrierBranch = resolvePreferredCarrierBranch(
+    selectedCarrierBranchContext,
+    selectedCarrierBranch,
+    preferredCarrierBranchRef.current,
+  );
   const selectedOptionForStorage = useMemo(
     () =>
-      selectedBaseOption && needsCarrierBranchSelection && selectedCarrierBranch
-        ? withSelectedCarrierBranch(selectedBaseOption, selectedCarrierBranch)
+      selectedBaseOption && needsCarrierBranchSelection && preferredCarrierBranch
+        ? withSelectedCarrierBranch(selectedBaseOption, preferredCarrierBranch)
         : selectedBaseOption,
-    [needsCarrierBranchSelection, selectedBaseOption, selectedCarrierBranch],
+    [needsCarrierBranchSelection, preferredCarrierBranch, selectedBaseOption],
   );
   const selectedOptionForCheckout = useMemo(
     () =>
       selectedBaseOption && needsCarrierBranchSelection
-        ? selectedCarrierBranch
-          ? withSelectedCarrierBranch(selectedBaseOption, selectedCarrierBranch)
+        ? preferredCarrierBranch
+          ? withSelectedCarrierBranch(selectedBaseOption, preferredCarrierBranch)
           : null
         : selectedBaseOption,
-    [needsCarrierBranchSelection, selectedBaseOption, selectedCarrierBranch],
+    [needsCarrierBranchSelection, preferredCarrierBranch, selectedBaseOption],
   );
 
   useEffect(() => {
@@ -208,7 +222,12 @@ export function CartShippingSelector({
       setSelectedOptionId(storedSnapshot.optionId);
       setSelectedSnapshot(storedSnapshot);
       if (storedSnapshot.selectedCarrierBranch) {
-        setSelectedCarrierBranchId(getBranchId(storedSnapshot.selectedCarrierBranch));
+        setSelectedCarrierBranchId(getCarrierBranchId(storedSnapshot.selectedCarrierBranch));
+        preferredCarrierBranchRef.current = {
+          optionId: storedSnapshot.optionId,
+          destinationPostalCode: storedSnapshot.destinationPostalCode,
+          branch: storedSnapshot.selectedCarrierBranch,
+        };
       }
     }
   }, [storageScope]);
@@ -288,6 +307,21 @@ export function CartShippingSelector({
   ]);
 
   useEffect(() => {
+    if (!selectedCarrierBranch || !selectedCarrierBranchContext) {
+      return;
+    }
+
+    preferredCarrierBranchRef.current = {
+      ...selectedCarrierBranchContext,
+      branch: selectedCarrierBranch,
+    };
+  }, [
+    selectedCarrierBranch,
+    selectedCarrierBranchContext?.destinationPostalCode,
+    selectedCarrierBranchContext?.optionId,
+  ]);
+
+  useEffect(() => {
     if (!selectedBaseOption || !needsCarrierBranchSelection) {
       setCarrierBranches([]);
       setSelectedCarrierBranchId(null);
@@ -320,20 +354,23 @@ export function CartShippingSelector({
           return;
         }
 
-        const persistedBranchId = selectedSnapshot?.selectedCarrierBranch
-          ? getBranchId(selectedSnapshot.selectedCarrierBranch)
-          : null;
-        const matchedBranch = persistedBranchId
-          ? result.branches.find((branch) => getBranchId(branch) === persistedBranchId)
-          : null;
-        if (matchedBranch) {
-          setSelectedCarrierBranchId(getBranchId(matchedBranch));
+        const matchedBranchId = resolveCarrierBranchSelectionId(
+          result.branches,
+          {
+            optionId: selectedBaseOption.optionId,
+            destinationPostalCode: postalCode,
+          },
+          preferredCarrierBranchRef.current,
+        );
+
+        if (matchedBranchId) {
+          setSelectedCarrierBranchId(matchedBranchId);
           return;
         }
 
         const onlyBranch = result.branches[0];
         if (result.branches.length === 1 && onlyBranch) {
-          setSelectedCarrierBranchId(getBranchId(onlyBranch));
+          setSelectedCarrierBranchId(getCarrierBranchId(onlyBranch));
         }
       })
       .catch(() => {
@@ -354,10 +391,6 @@ export function CartShippingSelector({
     selectedBaseOption?.checkoutSnapshot.destinationPostalCode,
     selectedBaseOption?.optionId,
     selectedBaseOption?.providerServiceCode,
-    selectedSnapshot?.selectedCarrierBranch?.branchId,
-    selectedSnapshot?.selectedCarrierBranch?.id,
-    selectedSnapshot?.selectedCarrierBranch?.code,
-    selectedSnapshot?.selectedCarrierBranch?.name,
   ]);
 
   useEffect(() => {
@@ -498,7 +531,10 @@ export function CartShippingSelector({
               : "Cotizá una opción rápida. La sucursal final se define en el checkout."}
           </p>
           <ul
-            className="grid max-h-[min(280px,36vh)] gap-2 overflow-y-auto pr-1"
+            className={cn(
+              "grid gap-2 pr-1",
+              requireCarrierBranchSelection ? "" : "max-h-[min(280px,36vh)] overflow-y-auto",
+            )}
             aria-label="Opciones de envío del carrito"
           >
             {options.map((option) => {
@@ -611,9 +647,9 @@ export function CartShippingSelector({
                         <p className="text-xs leading-5 text-muted">{branchMessage}</p>
                       ) : null}
                       {carrierBranches.length > 0 ? (
-                        <ul className="grid max-h-56 gap-2 overflow-y-auto pr-1">
+                        <ul className="grid gap-2 pr-1">
                           {carrierBranches.map((branch) => {
-                            const branchId = getBranchId(branch);
+                            const branchId = getCarrierBranchId(branch);
                             const branchSelected = branchId === selectedCarrierBranchId;
                             const branchDescription = getBranchDescription(branch);
 
