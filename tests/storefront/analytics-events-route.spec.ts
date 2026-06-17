@@ -118,4 +118,44 @@ describe("storefront analytics events proxy route", () => {
       code: "MISSING_API_BASE_URL",
     });
   });
+
+  it("filtra PageView de bots antes de reenviar al ERP", async () => {
+    const fetchMock = vi.fn();
+
+    vi.stubGlobal("fetch", fetchMock);
+    getStorefrontRuntimeSnapshotMock.mockResolvedValue({
+      apiBaseUrl: "https://erp.pyme.test",
+      hasApiBaseUrl: true,
+      context: {
+        host: "bym.pyme.test",
+        requestId: "req_analytics_3",
+        storefrontVersion: "storefront@test",
+      },
+    });
+
+    const response = await POST(
+      new Request("https://storefront.test/api/storefront/v1/analytics/events", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "user-agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+        },
+        body: JSON.stringify({
+          eventName: "PageView",
+          path: "/catalogo",
+        }),
+      }),
+    );
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(202);
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      data: {
+        accepted: false,
+        delivered: false,
+        reason: "bot_user_agent_filtered",
+      },
+    });
+  });
 });

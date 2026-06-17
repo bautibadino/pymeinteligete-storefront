@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { shouldFilterStorefrontTrafficEvent } from "@/lib/analytics/bot-detection";
 import { enrichServerAnalyticsPayload } from "@/lib/analytics/server";
 import { buildStorefrontHeaders } from "@/lib/api/headers";
 import { STOREFRONT_INTERNAL_ERROR_CODES } from "@/lib/contracts/storefront-v1";
@@ -41,6 +42,25 @@ export async function POST(request: Request) {
   const realIp = request.headers.get("x-real-ip");
   const userAgent = request.headers.get("user-agent");
   const cookieHeader = request.headers.get("cookie");
+  const eventName =
+    typeof body === "object" && body !== null && "eventName" in body && typeof body.eventName === "string"
+      ? body.eventName
+      : null;
+
+  if (shouldFilterStorefrontTrafficEvent({ eventName, userAgent })) {
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          accepted: false,
+          delivered: false,
+          reason: "bot_user_agent_filtered",
+        },
+      },
+      { status: 202 },
+    );
+  }
+
   const enrichedBody =
     typeof body === "object" && body !== null
       ? enrichServerAnalyticsPayload({

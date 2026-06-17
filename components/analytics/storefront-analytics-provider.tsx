@@ -116,7 +116,7 @@ export function buildPageViewAnalyticsCommand({
     event: "PageView",
     googleEvent: "page_view",
     metaEvent: "PageView",
-    serverEvent: null,
+    serverEvent: "PageView",
     metaPayload: {
       page_path: path,
     },

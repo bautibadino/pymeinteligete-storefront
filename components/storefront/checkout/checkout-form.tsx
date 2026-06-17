@@ -758,6 +758,7 @@ export function CheckoutForm({
       event: "InitiateCheckout",
       googleEvent: "begin_checkout",
       metaEvent: "InitiateCheckout",
+      serverEvent: "InitiateCheckout",
       metaPayload: payload,
       googlePayload: payload,
       options: {
@@ -849,6 +850,7 @@ export function CheckoutForm({
       event: "AddPaymentInfo",
       googleEvent: "add_payment_info",
       metaEvent: "AddPaymentInfo",
+      serverEvent: "AddPaymentInfo",
       metaPayload: payload,
       googlePayload: payload,
       options: {

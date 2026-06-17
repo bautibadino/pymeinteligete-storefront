@@ -36,6 +36,7 @@ describe("storefront analytics client bridge", () => {
       event: "InitiateCheckout",
       googleEvent: "begin_checkout",
       metaEvent: "InitiateCheckout",
+      serverEvent: "InitiateCheckout",
       metaPayload: {
         content_ids: ["prod_1"],
         content_type: "product",
@@ -101,6 +102,7 @@ describe("storefront analytics client bridge", () => {
     bridge?.track({
       event: "AddToCart",
       metaEvent: "AddToCart",
+      serverEvent: "AddToCart",
       metaPayload: {
         content_ids: ["prod_1"],
         content_type: "product",
@@ -251,7 +253,7 @@ describe("storefront analytics client bridge", () => {
     );
   });
 
-  it("no golpea el proxy interno si el tenant no tiene analytics activos", () => {
+  it("sigue golpeando el proxy interno aunque el tenant no tenga pixels activos", () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
 
     (globalThis as any).window = {
@@ -272,13 +274,56 @@ describe("storefront analytics client bridge", () => {
     );
 
     bridge?.track({
-      event: "Contact",
-      metaEvent: "Contact",
+      event: "InitiateCheckout",
+      metaEvent: "InitiateCheckout",
+      serverEvent: "InitiateCheckout",
       metaPayload: {
-        eventId: "contact_disabled",
+        eventId: "checkout_disabled",
         content_name: "Sin analytics",
       },
-      options: { eventId: "contact_disabled" },
+      options: { eventId: "checkout_disabled" },
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toMatchObject({
+      eventName: "InitiateCheckout",
+      eventId: "checkout_disabled",
+      user: {
+        externalId: "anon_disabled",
+      },
+    });
+  });
+
+  it("no envia PageView al proxy interno cuando el user agent parece bot", () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+
+    (globalThis as any).window = {
+      location: {
+        pathname: "/catalogo",
+        search: "",
+      },
+      navigator: {
+        userAgent:
+          "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+      },
+    };
+    vi.stubGlobal("fetch", fetchMock);
+
+    const bridge = installStorefrontAnalyticsBridge(
+      {
+        meta: { enabled: false },
+        google: { enabled: false },
+        tiktok: { enabled: false },
+      },
+      { anonymous_id: "anon_bot" },
+    );
+
+    bridge?.track({
+      event: "PageView",
+      serverEvent: "PageView",
+      metaPayload: {
+        page_path: "/catalogo",
+      },
     });
 
     expect(fetchMock).not.toHaveBeenCalled();

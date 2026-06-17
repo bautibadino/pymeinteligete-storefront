@@ -1,4 +1,5 @@
 import type { StorefrontAnalyticsConfig } from "@/lib/analytics/config";
+import { shouldFilterStorefrontTrafficEvent } from "@/lib/analytics/bot-detection";
 import { extractAnalyticsCookies } from "@/lib/analytics/cookies";
 import {
   type AnalyticsBuyerIdentityInput,
@@ -407,6 +408,16 @@ function postStorefrontServerAnalytics(
   }).catch(() => undefined);
 }
 
+function resolveBrowserUserAgent(): string | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  return typeof window.navigator?.userAgent === "string"
+    ? window.navigator.userAgent
+    : undefined;
+}
+
 function resolveMetaPixelRegistry(): Record<string, true> | undefined {
   if (typeof window === "undefined") {
     return undefined;
@@ -556,6 +567,16 @@ function createAnalyticsBridge(
       const googleEventName = googleEvent ?? event;
       const tiktokEventName = tiktokEvent ?? event;
       const tiktokConfig = config.tiktok;
+      const browserUserAgent = resolveBrowserUserAgent();
+
+      if (
+        shouldFilterStorefrontTrafficEvent({
+          eventName: serverEvent ?? metaEvent ?? tiktokEvent ?? event,
+          userAgent: browserUserAgent,
+        })
+      ) {
+        return;
+      }
 
       if (config.meta.enabled && config.meta.pixelId) {
         const fbq = ensureMetaPixelBridge(config.meta.pixelId);
@@ -593,9 +614,7 @@ function createAnalyticsBridge(
         }
       }
 
-      const shouldPostServerAnalytics =
-        serverEvent !== null &&
-        (config.meta.enabled || config.google.enabled || tiktokConfig?.enabled === true);
+      const shouldPostServerAnalytics = typeof serverEvent === "string" && serverEvent.length > 0;
 
       if (shouldPostServerAnalytics) {
         postStorefrontServerAnalytics(

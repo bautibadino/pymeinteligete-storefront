@@ -56,7 +56,7 @@ function createAnalyticsBootstrap(): StorefrontBootstrap {
 }
 
 describe("storefront analytics traffic", () => {
-  it("no envia PageView al endpoint interno de analytics", () => {
+  it("envia PageView al endpoint interno de analytics para alimentar trafico real", () => {
     expect(
       buildPageViewAnalyticsCommand({
         href: "https://demo.test/catalogo",
@@ -65,7 +65,7 @@ describe("storefront analytics traffic", () => {
       }),
     ).toMatchObject({
       event: "PageView",
-      serverEvent: null,
+      serverEvent: "PageView",
     });
   });
 

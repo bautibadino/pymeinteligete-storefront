@@ -46,6 +46,7 @@ export function CheckoutPostPurchaseEffects({
         event: "Purchase",
         googleEvent: "purchase",
         metaEvent: "Purchase",
+        serverEvent: "Purchase",
         metaPayload: payload,
         googlePayload: payload,
         options: {
