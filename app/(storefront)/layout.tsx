@@ -9,8 +9,10 @@ import { StorefrontShell } from "@/components/storefront/storefront-shell";
 import { TenantThemeProvider } from "@/components/theme/TenantThemeProvider";
 import { resolveCustomExperienceKey } from "@/lib/experiences";
 import { shouldServePymeStoreMarketingLanding } from "@/lib/marketing/pyme-store-host";
+import { buildLocalBusinessJsonLd } from "@/lib/seo/json-ld";
 import { resolveRequestHostFromHeaders } from "@/lib/tenancy/resolve-request-host";
 import { resolveEffectiveTenantTheme } from "@/lib/theme";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
 
 async function isPymeStoreMarketingRequest(): Promise<boolean> {
   try {
@@ -40,9 +42,14 @@ export default async function StorefrontLayout({
 
   const theme = resolveEffectiveTenantTheme(experience.bootstrap);
   const customExperienceKey = resolveCustomExperienceKey(experience.bootstrap);
+  const localBusinessJsonLd = experience.bootstrap
+    ? buildLocalBusinessJsonLd(experience.bootstrap, experience.runtime.context.host)
+    : null;
 
   return (
-    <TenantThemeProvider theme={theme}>
+    <>
+      {localBusinessJsonLd && <JsonLdScript data={localBusinessJsonLd} />}
+      <TenantThemeProvider theme={theme}>
       <StorefrontAnalyticsProvider
         bootstrap={experience.bootstrap}
         host={experience.runtime.context.host}
@@ -67,5 +74,6 @@ export default async function StorefrontLayout({
         </StorefrontCartProvider>
       </StorefrontAnalyticsProvider>
     </TenantThemeProvider>
+    </>
   );
 }
