@@ -22,6 +22,8 @@ const DISALLOWED_PATHS = [
   "/*&sortBy=*",
   "/*?sortOrder=*",
   "/*&sortOrder=*",
+  "/*?category=*",
+  "/*&category=*",
 ] as const;
 
 export function buildTenantRobots(snapshot: TenantSeoSnapshot): MetadataRoute.Robots {

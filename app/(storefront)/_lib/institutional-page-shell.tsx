@@ -25,15 +25,42 @@ type InstitutionalPageShellProps = {
   children?: ReactNode;
 };
 
+function resolveInstitutionalDescription(pathname: string, tenantTitle: string): string | null {
+  switch (pathname) {
+    case "/preguntas-frecuentes":
+      return `Respondemos las dudas más frecuentes sobre pedidos, envíos y pagos en ${tenantTitle}.`;
+    case "/contacto":
+      return `Comunicate con ${tenantTitle}. Teléfono, WhatsApp y horarios de atención.`;
+    case "/envios-y-entregas":
+      return `Información sobre envíos, plazos y zonas de cobertura de ${tenantTitle}.`;
+    case "/garantia":
+      return `Política de garantías y devoluciones de ${tenantTitle}.`;
+    case "/medios-de-pago":
+      return `Medios de pago aceptados en ${tenantTitle}: efectivo, tarjetas y transferencia.`;
+    case "/sobre-nosotros":
+      return `Conocé más sobre ${tenantTitle}, nuestra historia y propuesta de valor.`;
+    case "/sucursales":
+      return `Encontrá las sucursales y puntos de atención de ${tenantTitle}.`;
+    case "/cambios-y-devoluciones":
+      return `Cómo gestionar cambios y devoluciones en ${tenantTitle}.`;
+    case "/mayoristas":
+      return `Condiciones mayoristas y canal B2B de ${tenantTitle}.`;
+    default:
+      return null;
+  }
+}
+
 export async function generateInstitutionalMetadata(
   pathname: string,
   title: string,
 ): Promise<Metadata> {
   const snapshot = await resolveTenantSeoSnapshot();
+  const description = resolveInstitutionalDescription(pathname, snapshot.title);
 
   return buildTenantMetadata(snapshot, {
     pathname,
     title: `${snapshot.title} | ${title}`,
+    description,
   });
 }
 

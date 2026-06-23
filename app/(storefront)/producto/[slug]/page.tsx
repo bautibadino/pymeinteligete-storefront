@@ -30,6 +30,19 @@ type ProductPageProps = {
   params: Promise<{ slug: string }>;
 };
 
+function buildProductDescription(
+  product: { name?: string; description?: string; brand?: string },
+  tenantTitle: string,
+  fallback: string | null,
+): string | null {
+  if (product.description) return product.description;
+  if (!product.name) return fallback;
+  const parts = [`Comprá ${product.name} en ${tenantTitle}.`];
+  if (product.brand) parts.push(`Marca ${product.brand}.`);
+  parts.push("Envíos a todo el país.");
+  return parts.join(" ");
+}
+
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
@@ -71,7 +84,7 @@ export async function generateMetadata({
     return buildTenantMetadata(snapshot, {
       pathname: `/producto/${slug}`,
       title: product.name ? `${product.name} | ${tenantTitle}` : `${tenantTitle} | Producto`,
-      description: product.description ?? snapshot.description,
+      description: buildProductDescription(product, tenantTitle, snapshot.description),
       imageUrl: productCard?.imageUrl ?? snapshot.ogImageUrl,
       noIndex: !productCard?.slug,
     });

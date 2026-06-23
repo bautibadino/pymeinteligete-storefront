@@ -70,9 +70,15 @@ export async function generateMetadata({
     ? `${resolution.selectedCategory.name} | ${snapshot.title}`
     : `${snapshot.title} | Catalogo`;
 
+  const description = resolution.selectedCategory
+    ? (resolution.selectedCategory.description ||
+        `Explorá ${resolution.selectedCategory.name.toLowerCase()} disponibles en ${snapshot.title}. Envíos a todo el país.`)
+    : null;
+
   return buildTenantMetadata(snapshot, {
     pathname: resolution.pathname,
     title,
+    description,
     noIndex: !shouldIndexCatalogQuery(resolution.query),
   });
 }
