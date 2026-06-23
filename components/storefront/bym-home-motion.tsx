@@ -252,7 +252,7 @@ export function BymHomeMotion({
         >
           <div
             className={[
-              "flex h-dvh w-full items-center overflow-hidden px-4 py-10 sm:px-6 lg:px-8 lg:py-16",
+              "relative flex h-dvh w-full items-center overflow-hidden px-4 py-10 sm:px-6 lg:px-8 lg:py-16",
               shouldPinBenefits
                 ? "sticky"
                 : "",
@@ -296,7 +296,7 @@ export function BymHomeMotion({
                     return (
                       <motion.article
                         key={`${benefit.title}-${index}`}
-                        className="relative grid h-[20rem] min-w-[82vw] overflow-hidden border border-white/14 bg-[#151515] p-5 shadow-[0_18px_64px_rgba(0,0,0,0.26)] backdrop-blur sm:min-w-[25rem] sm:p-6 lg:h-[21rem] lg:min-w-[30rem]"
+                        className="relative grid h-[20rem] min-w-[76vw] overflow-hidden rounded-2xl border border-white/14 bg-[#151515] p-5 shadow-[0_18px_64px_rgba(0,0,0,0.26)] backdrop-blur sm:min-w-[25rem] sm:p-6 lg:h-[21rem] lg:min-w-[30rem]"
                         {...(animate
                           ? {
                               initial: { x: -56, opacity: 0 },
@@ -346,6 +346,14 @@ export function BymHomeMotion({
                 </motion.div>
               </div>
             </div>
+
+            {shouldPinBenefits ? (
+              <motion.div
+                aria-hidden="true"
+                className="absolute bottom-0 left-0 h-[2px] w-full origin-left bg-[#f4c542]/50"
+                style={{ scaleX: scrollYProgress }}
+              />
+            ) : null}
           </div>
         </section>
       ) : null}

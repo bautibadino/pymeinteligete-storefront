@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { AddToCartButton } from "@/components/storefront/cart/add-to-cart-button";
 import { resolveCartItemPrice } from "@/lib/cart/storefront-cart";
@@ -64,7 +64,7 @@ export function ProductCardSpotlightCommerce({
   } = product;
 
   const isAvailable = stock === undefined || stock.available;
-  const renderedBadges = showBadges ? badges?.slice(0, 3) ?? [] : [];
+  const renderedBadges = showBadges ? badges?.slice(0, 2) ?? [] : [];
 
   return (
     <article
@@ -102,9 +102,6 @@ export function ProductCardSpotlightCommerce({
                     className="border border-white/70 bg-white/88 text-[10px] text-slate-700 shadow-none"
                   >
                     <ProductCardBadgeIcon badge={badge} />
-                    {index === 0 && !isProductCardShippingBadge(badge) ? (
-                      <Sparkles className="size-3" aria-hidden="true" />
-                    ) : null}
                     {badge.label}
                   </Badge>
                 ))}
@@ -155,7 +152,6 @@ export function ProductCardSpotlightCommerce({
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-muted">Precio final</p>
             <div data-price-row="final" className="flex flex-wrap items-center gap-2">
               <p className="text-[1.6rem] font-semibold leading-none text-foreground">
                 {price.formatted}
@@ -173,67 +169,44 @@ export function ProductCardSpotlightCommerce({
         </div>
 
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/60 pt-3">
-          <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-muted">Ficha</p>
-            <Link
-              href={href as Route}
-              prefetch={shouldPrefetchStorefrontLink(href)}
-              className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-foreground transition-colors hover:text-primary"
-            >
-              Ver detalle
-              <ArrowRight className="size-3.5" aria-hidden="true" />
-            </Link>
-            {!isAvailable && stock?.label ? (
-              <p className="mt-1 text-xs text-muted">{stock.label}</p>
-            ) : null}
-          </div>
+          <Link
+            href={href as Route}
+            prefetch={shouldPrefetchStorefrontLink(href)}
+            className="inline-flex items-center gap-1 text-sm font-medium text-foreground transition-colors hover:text-primary"
+          >
+            Ver detalle
+            <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
 
-          <div className="flex shrink-0 items-center gap-2">
-            {showAddToCart ? (
-              <AddToCartButton
-                item={{
-                  productId: product.id,
-                  slug: product.slug,
-                  name: product.name,
-                  href: product.href,
-                  price: resolveCartItemPrice({
-                    price: product.price,
-                    basePrice: product.basePrice,
-                  }),
-                  ...(product.brand ? { brand: product.brand } : {}),
-                  ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
-                }}
-                size="sm"
-                className="rounded-full px-4"
-                disabled={!isAvailable}
-                aria-label={`Agregar ${name} al carrito`}
-                unavailableLabel="Sin stock"
-              >
-                Agregar
-              </AddToCartButton>
-            ) : (
-              <Button asChild size="sm" variant="outline" className="rounded-full px-4">
-                <Link href={href as Route} prefetch={shouldPrefetchStorefrontLink(href)}>
-                  Ver
-                </Link>
-              </Button>
-            )}
-
-            <Button
-              asChild
-              size="icon"
-              variant="outline"
-              className="size-9 rounded-full border border-border/70 bg-white/90"
+          {showAddToCart ? (
+            <AddToCartButton
+              item={{
+                productId: product.id,
+                slug: product.slug,
+                name: product.name,
+                href: product.href,
+                price: resolveCartItemPrice({
+                  price: product.price,
+                  basePrice: product.basePrice,
+                }),
+                ...(product.brand ? { brand: product.brand } : {}),
+                ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+              }}
+              size="sm"
+              className="rounded-full px-4"
+              disabled={!isAvailable}
+              aria-label={`Agregar ${name} al carrito`}
+              unavailableLabel="Sin stock"
             >
-              <Link
-                href={href as Route}
-                prefetch={shouldPrefetchStorefrontLink(href)}
-                aria-label={`Ver ${name}`}
-              >
-                <ArrowRight className="size-4" aria-hidden="true" />
+              Agregar
+            </AddToCartButton>
+          ) : (
+            <Button asChild size="sm" variant="outline" className="rounded-full px-4">
+              <Link href={href as Route} prefetch={shouldPrefetchStorefrontLink(href)}>
+                Ver
               </Link>
             </Button>
-          </div>
+          )}
         </div>
       </div>
     </article>

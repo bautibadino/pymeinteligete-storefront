@@ -6,6 +6,7 @@ import {
   BymHomeMotion,
   type BymBenefit,
 } from "@/components/storefront/bym-home-motion";
+import { BymHeroParallax } from "@/components/storefront/bym-hero-parallax";
 import {
   mapCatalogProductsToCardData,
   selectProductsForGrid,
@@ -258,15 +259,17 @@ export function BymHomePage({ bootstrap, categories, products }: BymHomePageProp
         style={{ height: "100dvh", minHeight: "100dvh" }}
       >
         {fallbackImage ? (
-          <picture className="absolute inset-0 z-0 block h-full w-full">
-            {hero.mobileImage ? <source media="(max-width: 767px)" srcSet={hero.mobileImage.src} /> : null}
-            {hero.desktopImage ? <source media="(min-width: 768px)" srcSet={hero.desktopImage.src} /> : null}
-            <img
-              src={fallbackImage.src}
-              alt={hero.desktopImage?.alt ?? hero.mobileImage?.alt ?? hero.storeName}
-              className="h-full w-full object-cover"
-            />
-          </picture>
+          <BymHeroParallax>
+            <picture className="block h-full w-full">
+              {hero.mobileImage ? <source media="(max-width: 767px)" srcSet={hero.mobileImage.src} /> : null}
+              {hero.desktopImage ? <source media="(min-width: 768px)" srcSet={hero.desktopImage.src} /> : null}
+              <img
+                src={fallbackImage.src}
+                alt={hero.desktopImage?.alt ?? hero.mobileImage?.alt ?? hero.storeName}
+                className="h-full w-full object-cover"
+              />
+            </picture>
+          </BymHeroParallax>
         ) : (
           <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_70%_20%,rgba(244,197,66,0.22),transparent_32%),linear-gradient(135deg,#111,#050505)]" />
         )}
