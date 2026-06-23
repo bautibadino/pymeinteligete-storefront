@@ -24,11 +24,29 @@ import {
   getTenantSeoRequestContext,
   resolveTenantSeoSnapshotByRequest,
 } from "@/lib/seo";
+import {
+  buildBreadcrumbJsonLd,
+  buildProductJsonLd,
+} from "@/lib/seo/json-ld";
 import { StorefrontApiError, getProduct } from "@/lib/storefront-api";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+function buildProductDescription(
+  product: { name?: string; description?: string; brand?: string },
+  tenantTitle: string,
+  fallback: string | null,
+): string | null {
+  if (product.description) return product.description;
+  if (!product.name) return fallback;
+  const parts = [`Comprá ${product.name} en ${tenantTitle}.`];
+  if (product.brand) parts.push(`Marca ${product.brand}.`);
+  parts.push("Envíos a todo el país.");
+  return parts.join(" ");
+}
 
 export async function generateMetadata({
   params,
@@ -71,7 +89,7 @@ export async function generateMetadata({
     return buildTenantMetadata(snapshot, {
       pathname: `/producto/${slug}`,
       title: product.name ? `${product.name} | ${tenantTitle}` : `${tenantTitle} | Producto`,
-      description: product.description ?? snapshot.description,
+      description: buildProductDescription(product, tenantTitle, snapshot.description),
       imageUrl: productCard?.imageUrl ?? snapshot.ogImageUrl,
       noIndex: !productCard?.slug,
     });
@@ -112,9 +130,25 @@ export default async function ProductPage({ params }: ProductPageProps) {
       }
     : null;
 
+  const host = experience.runtime.context.host;
+  const canonicalBase = `https://${host}`;
+  const canonicalUrl = `${canonicalBase}/producto/${encodeURIComponent(slug)}`;
+  const tenantName = experience.bootstrap?.branding.storeName ?? host;
+
+  const productJsonLd = productCard
+    ? buildProductJsonLd(productCard, canonicalUrl, tenantName)
+    : null;
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Inicio", url: `${canonicalBase}/` },
+    { name: "Catálogo", url: `${canonicalBase}/catalogo` },
+    { name: productCard?.name ?? slug, url: canonicalUrl },
+  ]);
+
   if (customExperienceKey === "sportadventure-custom-v1") {
     return (
       <Fragment>
+        {productJsonLd && <JsonLdScript data={productJsonLd} />}
+        <JsonLdScript data={breadcrumbJsonLd} />
         <ProductViewTracker product={analyticsProduct} />
         {hasPreview ? <PreviewBridge /> : null}
         <SportAdventureProductExperience
@@ -129,6 +163,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (usePresentation) {
     return (
       <Fragment>
+        {productJsonLd && <JsonLdScript data={productJsonLd} />}
+        <JsonLdScript data={breadcrumbJsonLd} />
         <ProductViewTracker product={analyticsProduct} />
         {hasPreview ? <PreviewBridge /> : null}
         <PresentationRenderer
@@ -143,6 +179,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <Fragment>
+      {productJsonLd && <JsonLdScript data={productJsonLd} />}
+      <JsonLdScript data={breadcrumbJsonLd} />
       <ProductViewTracker product={analyticsProduct} />
       <SurfaceStateCard
         shopStatus={experience.bootstrap?.tenant.status ?? null}
