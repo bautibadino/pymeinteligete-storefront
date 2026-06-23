@@ -1,12 +1,8 @@
-import Link from "next/link";
-import type { Route } from "next";
-
 import { SocialProofCarousel } from "@/components/social-proof/social-proof-carousel";
 import {
-  BymHomeMotion,
-  type BymBenefit,
-} from "@/components/storefront/bym-home-motion";
-import { BymHeroParallax } from "@/components/storefront/bym-hero-parallax";
+  BymHeroScrollScene,
+} from "@/components/storefront/bym-hero-scroll-scene";
+import type { BymBenefit } from "@/components/storefront/bym-home-motion";
 import {
   mapCatalogProductsToCardData,
   selectProductsForGrid,
@@ -14,7 +10,6 @@ import {
 import { getStorefrontInstallmentsCount } from "@/lib/commerce/installments";
 import { getStorefrontInstallmentsLabel } from "@/lib/commerce/installments";
 import { normalizeProductGridContent, type ProductGridModule } from "@/lib/modules/product-grid";
-import { shouldPrefetchStorefrontLink } from "@/lib/navigation/prefetch";
 import { resolveProductGridTemplate } from "@/lib/templates/registry";
 import { resolveProductGridTemplateId } from "@/lib/templates/product-grid-catalog";
 import type {
@@ -246,7 +241,6 @@ function buildBymProductGridModule(
 
 export function BymHomePage({ bootstrap, categories, products }: BymHomePageProps) {
   const hero = getHeroContent(bootstrap);
-  const fallbackImage = hero.desktopImage ?? hero.mobileImage;
   const productGridModule = buildBymProductGridModule(bootstrap, products);
   const ProductGridTemplate = productGridModule
     ? resolveProductGridTemplate(productGridModule.variant)
@@ -254,70 +248,20 @@ export function BymHomePage({ bootstrap, categories, products }: BymHomePageProp
 
   return (
     <div data-bym-fullbleed="true">
-      <section
-        className="relative isolate flex items-end overflow-hidden bg-black text-white"
-        style={{ height: "100dvh", minHeight: "100dvh" }}
-      >
-        {fallbackImage ? (
-          <BymHeroParallax>
-            <picture className="block h-full w-full">
-              {hero.mobileImage ? <source media="(max-width: 767px)" srcSet={hero.mobileImage.src} /> : null}
-              {hero.desktopImage ? <source media="(min-width: 768px)" srcSet={hero.desktopImage.src} /> : null}
-              <img
-                src={fallbackImage.src}
-                alt={hero.desktopImage?.alt ?? hero.mobileImage?.alt ?? hero.storeName}
-                className="h-full w-full object-cover"
-              />
-            </picture>
-          </BymHeroParallax>
-        ) : (
-          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_70%_20%,rgba(244,197,66,0.22),transparent_32%),linear-gradient(135deg,#111,#050505)]" />
-        )}
-        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/82 via-black/30 to-black/8" />
-        <div className="absolute inset-x-0 top-0 z-10 h-40 bg-gradient-to-b from-black/42 to-transparent" />
-
-        <div className="relative z-20 mx-auto grid w-full max-w-7xl gap-10 px-4 pb-12 sm:px-6 lg:grid-cols-[minmax(0,0.72fr)_minmax(280px,0.28fr)] lg:px-8 lg:pb-16">
-          <div className="max-w-4xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#f4c542]">{hero.storeName}</p>
-            <h1 className="mt-5 text-5xl font-semibold leading-[0.94] tracking-[-0.04em] sm:text-7xl lg:text-8xl">
-              {hero.h1}
-            </h1>
-            {hero.intro ? (
-              <p className="mt-6 max-w-2xl text-base leading-7 text-white/76 sm:text-lg">{hero.intro}</p>
-            ) : null}
-          </div>
-
-          <div className="grid content-end gap-5 lg:justify-items-end">
-            <p className="max-w-xs text-sm leading-6 text-white/68">
-              {categories.length > 0
-                ? `${categories.length} categorías publicadas para compra online.`
-                : "Catálogo preparado para compra online y consulta comercial."}
-            </p>
-            <div className="flex flex-wrap gap-3 lg:justify-end">
-              <Link
-                href={hero.primaryCta.href as Route}
-                prefetch={shouldPrefetchStorefrontLink(hero.primaryCta.href)}
-                className="inline-flex min-h-12 items-center bg-white px-5 text-xs font-semibold uppercase tracking-[0.16em] text-black transition hover:bg-[#f4c542]"
-              >
-                {hero.primaryCta.label}
-              </Link>
-              <Link
-                href={hero.secondaryCta.href as Route}
-                prefetch={shouldPrefetchStorefrontLink(hero.secondaryCta.href)}
-                className="inline-flex min-h-12 items-center border border-white/40 px-5 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:bg-white hover:text-black"
-              >
-                {hero.secondaryCta.label}
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <BymHomeMotion
+      <BymHeroScrollScene
+        videoUrl="https://dcdz4hoyp9hteums.public.blob.vercel-storage.com/storefront/bym/hero-timelapse.mp4"
+        desktopImage={hero.desktopImage}
+        mobileImage={hero.mobileImage}
+        storeName={hero.storeName}
+        h1={hero.h1}
+        intro={hero.intro}
+        primaryCta={hero.primaryCta}
+        secondaryCta={hero.secondaryCta}
         benefits={hero.benefits}
         benefitsEyebrow={hero.benefitsEyebrow}
         benefitsTitle={hero.benefitsTitle}
         installmentsCount={hero.installmentsCount}
+        categoriesCount={categories.length}
       />
 
       {productGridModule && ProductGridTemplate ? (
